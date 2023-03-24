@@ -102,7 +102,7 @@ p {
 
 /* Section C */
 
-#section-c {
+#section-c, #section-c1, #section-c2 {
     background: #fff;
     color: #333;
     padding: 2em;
