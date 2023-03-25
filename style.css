@@ -25,6 +25,16 @@ p {
     padding: 1em 0;
 }
 
+a {
+    text-decoration: none;
+    color: #2690d4;
+    transition: color 0.3s ease;
+  }
+  
+  a:hover {
+    color: #fff;
+  }
+
 .btn {
     display: inline-block;
     background: #333;
@@ -60,7 +70,6 @@ p {
     opacity: 0.2;
 }
 
-
 #showcase h1 {
     padding-top: 100px;
     padding-bottom: 0;
@@ -68,6 +77,28 @@ p {
 
 #showcase .content-wrap,
 #section-a .content-wrap {
+    padding: 0 1.5em;
+}
+
+#showcase2 .bg-image {
+    position: absolute;
+    background: #333 url('https://images.pexels.com/photos/6687732/pexels-photo-6687732.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 100%;
+    height: 450px;
+    z-index: -1;
+    opacity: 0.2;
+}
+
+#showcase2 h1 {
+    padding-top: 100px;
+    padding-bottom: 0;
+}
+
+#showcase2 .content-wrap,
+#section-about-a .content-wrap {
     padding: 0 1.5em;
 }
 
