@@ -415,10 +415,12 @@
           <h2 class="section-heading">Contact Us</h2>
           <h3 class="section-subheading text-muted">Lorem ipsum dolor sit amet consectetur.</h3>
         </div>
+        <div id="success-message"></div>
       </div>
       <div class="row">
         <div class="col-lg-8 mx-auto text-center">
-          <form action="https://formspree.io/mrgvavyn" method="POST">
+            <form id="contact-form" method="POST" onsubmit="submitForm(event)">
+
             <div class="form-group">
               <input type="email" name="_replyto" class="form-control" placeholder="Your Email *" required>
             </div>
