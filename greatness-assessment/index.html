@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Greatness Self-Assessment — A Confidential Clinical Intake Form</title>
+<meta name="description" content="A satirical clinical self-assessment form for people who are, frankly, doing great. Not real. Not medical advice. Extremely serious in tone, not in content." />
+<link rel="canonical" href="https://thermalsock.github.io/greatness/" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="The Greatness Self-Assessment" />
+<meta property="og:description" content="A confidential clinical intake form for people who are, frankly, doing great." />
+<meta property="og:url" content="https://thermalsock.github.io/greatness/" />
+
+<style>
+:root {
+  --paper: #f4f2ec;
+  --panel: #ffffff;
+  --border: #c9c4b4;
+  --ink: #24231f;
+  --ink-muted: #6b6858;
+  --red: #a13a2e;
+  --stamp: #a13a2e;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "Courier New", Courier, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--sans); line-height: 1.5;
+}
+.wrap { max-width: 700px; margin: 0 auto; padding: 30px 20px 70px; }
+
+.form-sheet {
+  background: var(--panel); border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  position: relative; overflow: hidden;
+}
+
+.stamp {
+  position: absolute; top: 34px; right: -54px; width: 220px;
+  background: var(--stamp); color: #fff; text-align: center;
+  font-family: var(--mono); font-weight: 700; font-size: 0.72rem;
+  letter-spacing: 0.08em; padding: 5px 0; transform: rotate(28deg);
+  opacity: 0.9; pointer-events: none;
+}
+
+.form-header {
+  border-bottom: 2px solid var(--ink); padding: 26px 30px 18px;
+}
+.form-code { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-muted); }
+.form-title { font-size: 1.5rem; font-weight: 700; margin: 6px 0 4px; }
+.form-subtitle { font-size: 0.88rem; color: var(--ink-muted); }
+
+.field-row {
+  display: flex; gap: 14px; padding: 10px 30px; border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.82rem;
+}
+.field-row .label { color: var(--ink-muted); min-width: 110px; }
+.field-row .line { flex: 1; border-bottom: 1px dotted var(--border); }
+
+.section {
+  padding: 20px 30px; border-bottom: 1px solid var(--border);
+}
+.section-title {
+  font-family: var(--mono); font-size: 0.74rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--red);
+  margin-bottom: 14px;
+}
+
+.question { margin-bottom: 18px; }
+.question:last-child { margin-bottom: 0; }
+.q-text { font-size: 0.98rem; margin-bottom: 8px; }
+.q-note { font-size: 0.82rem; color: var(--ink-muted); font-style: italic; margin-top: 4px; }
+
+.options { display: flex; gap: 18px; flex-wrap: wrap; }
+.option { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+.option input { width: 15px; height: 15px; }
+
+.submit-area { padding: 26px 30px 34px; text-align: center; }
+.btn {
+  background: var(--ink); color: #fff; border: none; border-radius: 3px;
+  padding: 13px 30px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  font-family: var(--sans); letter-spacing: 0.02em;
+}
+.btn:hover { background: #3a382f; }
+
+.result {
+  display: none; padding: 26px 30px 34px; border-top: 2px solid var(--ink);
+  background: #faf8f0;
+}
+.result.show { display: block; }
+.result-code { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-muted); margin-bottom: 6px; }
+.result-title { font-size: 1.25rem; font-weight: 700; color: var(--red); margin-bottom: 10px; }
+.result-score { font-family: var(--mono); font-size: 2.2rem; font-weight: 700; margin: 10px 0; }
+.result-score .pct { font-size: 1.1rem; color: var(--ink-muted); }
+.result-body { font-size: 0.94rem; margin-top: 12px; }
+.result-body p { margin: 0 0 10px; }
+
+.fineprint {
+  max-width: 700px; margin: 20px auto 0; padding: 0 20px;
+  font-size: 0.74rem; color: var(--ink-muted); text-align: center; line-height: 1.6;
+}
+
+.header-bar { text-align: center; padding: 20px 0 6px; }
+.header-bar .brand { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.1em; color: var(--ink-muted); text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="header-bar">
+  <div class="brand">Department of Self-Regard &middot; Form GA-7</div>
+</div>
+
+<div class="wrap">
+  <div class="form-sheet">
+    <div class="stamp">CONFIDENTIAL*</div>
+
+    <div class="form-header">
+      <div class="form-code">FORM GA-7 (REV. THIS YEAR) &mdash; NOT FOR CLINICAL USE</div>
+      <div class="form-title">The Greatness Self-Assessment</div>
+      <div class="form-subtitle">A confidential intake form for people who are, frankly, doing great.</div>
+    </div>
+
+    <div class="field-row"><span class="label">PATIENT NAME</span><span class="line"></span></div>
+    <div class="field-row"><span class="label">DATE</span><span class="line"></span></div>
+    <div class="field-row"><span class="label">SELF-ASSESSED IQ</span><span class="line"></span></div>
+
+    <div class="section">
+      <div class="section-title">Section 1 &mdash; Daily Triumphs</div>
+      <div class="question">
+        <div class="q-text">1. Have you exceeded your own expectations today, or just everyone else's?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q1"> My own</label>
+          <label class="option"><input type="radio" name="q1"> Everyone's</label>
+          <label class="option"><input type="radio" name="q1"> Both, obviously</label>
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text">2. How many crises did you personally avert before lunch?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q2"> 0&ndash;1</label>
+          <label class="option"><input type="radio" name="q2"> 2&ndash;4</label>
+          <label class="option"><input type="radio" name="q2"> Several. I stopped counting.</label>
+        </div>
+        <div class="q-note">Round up. History usually does.</div>
+      </div>
+      <div class="question">
+        <div class="q-text">3. Did you hydrate today, or run on pure willpower?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q3"> Hydrated</label>
+          <label class="option"><input type="radio" name="q3"> Willpower</label>
+          <label class="option"><input type="radio" name="q3"> Willpower, and I'd like credit for it</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Section 2 &mdash; Cognitive Excellence</div>
+      <div class="question">
+        <div class="q-text">4. Can you name every country in the world, in order, with total confidence?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q4"> Yes</label>
+          <label class="option"><input type="radio" name="q4"> No, but I'd sound like I could</label>
+          <label class="option"><input type="radio" name="q4"> There are more than I remember there being</label>
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text">5. When counting, do you prefer numbers, vibes, or whatever feels right in the moment?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q5"> Numbers</label>
+          <label class="option"><input type="radio" name="q5"> Vibes</label>
+          <label class="option"><input type="radio" name="q5"> Whatever feels right</label>
+        </div>
+        <div class="q-note">All three are equally valid, especially the wrong one.</div>
+      </div>
+      <div class="question">
+        <div class="q-text">6. Do you believe you could pass literally any test ever devised, sight unseen?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q6"> Yes</label>
+          <label class="option"><input type="radio" name="q6"> Without studying</label>
+          <label class="option"><input type="radio" name="q6"> I already have, several times, this week</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Section 3 &mdash; Leadership Skills</div>
+      <div class="question">
+        <div class="q-text">7. How many problems have you solved today by simply declaring them solved?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q7"> A few</label>
+          <label class="option"><input type="radio" name="q7"> Most of them</label>
+          <label class="option"><input type="radio" name="q7"> All of them, loudly</label>
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text">8. Did you award yourself any medals today?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q8"> No</label>
+          <label class="option"><input type="radio" name="q8"> One</label>
+          <label class="option"><input type="radio" name="q8"> Several, and I gave a small speech</label>
+        </div>
+        <div class="q-note">Self-awarded medals count double.</div>
+      </div>
+      <div class="question">
+        <div class="q-text">9. How many people did you mentally dismiss from their jobs today?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q9"> None</label>
+          <label class="option"><input type="radio" name="q9"> A couple</label>
+          <label class="option"><input type="radio" name="q9"> I keep a running list</label>
+        </div>
+        <div class="q-note">Imaginary HR is still HR.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Section 4 &mdash; Physical &amp; Emotional Fortitude</div>
+      <div class="question">
+        <div class="q-text">10. Did you lift something heavy, or just describe lifting something heavy, in detail, to a stranger?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q10"> Lifted it</label>
+          <label class="option"><input type="radio" name="q10"> Described it</label>
+          <label class="option"><input type="radio" name="q10"> Described it at length, unprompted</label>
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text">11. Have you ever cried?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q11"> Yes, and that's fine</label>
+          <label class="option"><input type="radio" name="q11"> Rarely</label>
+          <label class="option"><input type="radio" name="q11"> I am simply built different</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Section 5 &mdash; Truth &amp; Reality</div>
+      <div class="question">
+        <div class="q-text">12. Do you consider facts more of a suggestion?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q12"> No, facts are facts</label>
+          <label class="option"><input type="radio" name="q12"> Sometimes</label>
+          <label class="option"><input type="radio" name="q12"> Reality is famously negotiable</label>
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text">13. How often do you cite a mysterious "everyone" who apparently agrees with you?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q13"> Never</label>
+          <label class="option"><input type="radio" name="q13"> Occasionally</label>
+          <label class="option"><input type="radio" name="q13"> Constantly, even when no one is saying anything</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Section 6 &mdash; Bonus Round</div>
+      <div class="question">
+        <div class="q-text">14. Did you ace this assessment?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="q14"> Yes</label>
+          <label class="option"><input type="radio" name="q14"> Obviously</label>
+          <label class="option"><input type="radio" name="q14"> Is that even a question</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn" id="submit-btn" type="button">Submit for Diagnosis</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="result-code">DIAGNOSIS &mdash; FORM GA-7 &mdash; SECTION 7</div>
+      <div class="result-title" id="result-title">Peak Performance. No Further Evaluation Needed.</div>
+      <div class="result-score"><span id="result-pct">104</span><span class="pct">% Cognitive Vigor</span></div>
+      <div class="result-body">
+        <p id="result-line1">This score exceeds the maximum possible score, which is itself a strong indicator.</p>
+        <p id="result-line2">No further testing is recommended, mostly because you'd pass that one too.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fineprint">
+    *Not actually confidential. Nothing is submitted, stored, or sent anywhere &mdash; this
+    entire form runs in your browser and forgets everything the moment you close the tab.
+    This is satire. It is not a real medical, psychological, or cognitive assessment, has
+    no diagnostic validity whatsoever, and everyone who takes it "passes," regardless of
+    any answer given, which is the entire joke. If you have genuine concerns about memory,
+    cognition, or mental health, please speak to an actual doctor.
+  </div>
+</div>
+
+<script>
+(function() {
+  var titles = [
+    "Peak Performance. No Further Evaluation Needed.",
+    "Certifiably Magnificent. Proceed With Confidence.",
+    "Off The Charts. We Had To Print A New Chart.",
+    "Exceptional. Possibly Concerning. Mostly Exceptional."
+  ];
+  var lines1 = [
+    "This score exceeds the maximum possible score, which is itself a strong indicator.",
+    "The assessment ran out of superlatives roughly halfway through.",
+    "Our scoring committee has requested a brief recess to compose itself."
+  ];
+  var lines2 = [
+    "No further testing is recommended, mostly because you'd pass that one too.",
+    "Please see yourself out. With confidence. As is customary.",
+    "A commemorative certificate is available upon request, from yourself, to yourself."
+  ];
+
+  document.getElementById('submit-btn').addEventListener('click', function() {
+    var pct = 100 + Math.floor(Math.random() * 12); // always absurdly over 100%
+    var title = titles[Math.floor(Math.random() * titles.length)];
+    var l1 = lines1[Math.floor(Math.random() * lines1.length)];
+    var l2 = lines2[Math.floor(Math.random() * lines2.length)];
+
+    document.getElementById('result-pct').textContent = pct;
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-line1').textContent = l1;
+    document.getElementById('result-line2').textContent = l2;
+
+    var result = document.getElementById('result');
+    result.classList.add('show');
+    result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
+</script>
+
+</body>
+</html>
