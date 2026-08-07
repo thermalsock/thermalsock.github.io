@@ -33,10 +33,44 @@ body {
 }
 .wrap { max-width: 420px; margin: 0 auto; padding: 0 18px; width: 100%; }
 
-header.top { border-bottom: 1px solid var(--border); padding: 16px 0; text-align: center; }
-.brand { font-family: var(--mono); font-weight: 700; font-size: 1.15rem; letter-spacing: 0.02em; }
+header.top {
+  border-bottom: none; padding: 26px 0 20px; text-align: center;
+  background: linear-gradient(180deg, #141618 0%, var(--bg) 100%);
+  position: relative;
+}
+header.top::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 10px, transparent 10px 16px);
+  opacity: 0.55;
+}
+.seal {
+  width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 50%;
+  border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center;
+  position: relative; background: radial-gradient(circle, #10231a 0%, var(--panel) 100%);
+}
+.seal::before {
+  content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1px dashed var(--accent); opacity: 0.5;
+}
+.seal .lock-icon { font-size: 1.5rem; line-height: 1; }
+.brand {
+  font-family: var(--mono); font-weight: 700; font-size: 1.55rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text);
+}
 .brand .accent { color: var(--accent); }
-.tagline { color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; }
+.badge-line {
+  display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 0.66rem;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
+  border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px;
+}
+.tagline { color: var(--text-muted); font-size: 0.82rem; margin-top: 12px; padding: 0 20px; }
+.btn.invite-btn {
+  margin-top: 16px; background: transparent; color: var(--accent); border: 1px solid var(--accent);
+  padding: 9px 18px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn.invite-btn:hover { background: rgba(52, 209, 124, 0.1); }
+.btn.invite-btn.copied { background: var(--accent); color: #06210f; }
+.invite-icon { font-size: 0.9rem; }
+.copyright { margin-top: 6px; color: #55595c; font-size: 0.72rem; }
 
 main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 22px 0 10px; }
 
@@ -100,6 +134,11 @@ footer.bottom { text-align: center; padding: 24px 0 40px; color: var(--text-mute
 @media (max-width: 400px) {
   .tile { width: 50px; height: 50px; font-size: 1.4rem; }
   .key { height: 44px; }
+  .seal { width: 46px; height: 46px; }
+  .seal .lock-icon { font-size: 1.25rem; }
+  .brand { font-size: 1.25rem; letter-spacing: 0.05em; }
+  .badge-line { font-size: 0.6rem; padding: 3px 11px; }
+  .tagline { font-size: 0.78rem; padding: 0 10px; }
 }
 
 </style>
@@ -108,8 +147,13 @@ footer.bottom { text-align: center; padding: 24px 0 40px; color: var(--text-mute
 
 <header class="top">
   <div class="wrap">
-    <div class="brand">&#128274; THE <span class="accent">VAULT</span></div>
+    <div class="seal"><span class="lock-icon">&#128274;</span></div>
+    <div class="brand">THE <span class="accent">VAULT</span></div>
+    <div class="badge-line">Official Daily Puzzle</div>
     <div class="tagline">One code. Six guesses. Everyone's cracking the same one today.</div>
+    <button class="btn invite-btn" id="invite-btn" type="button">
+      <span class="invite-icon">&#128279;</span> Invite a friend to play
+    </button>
   </div>
 </header>
 
@@ -127,7 +171,7 @@ footer.bottom { text-align: center; padding: 24px 0 40px; color: var(--text-mute
       <div class="result-code">THE VAULT</div>
       <div class="result-title" id="result-title"></div>
       <div class="streak-line" id="streak-line"></div>
-      <button class="btn" id="share-btn">Copy result</button>
+      <button class="btn" id="share-btn">Share result</button>
     </div>
   </div>
 </main>
@@ -143,7 +187,10 @@ footer.bottom { text-align: center; padding: 24px 0 40px; color: var(--text-mute
 </div>
 
 <footer class="bottom">
-  <div class="wrap">The Vault &mdash; no account, new code every day, nothing saved but your own streak.</div>
+  <div class="wrap">
+    The Vault &mdash; no account, new code every day, nothing saved but your own streak.
+    <div class="copyright">&copy; 2026 The Vault. All rights reserved.</div>
+  </div>
 </footer>
 
 <script>
@@ -472,19 +519,50 @@ function buildShareText(dateStr, guessScores, won, guessLimit) {
     else if (e.key === 'Enter') handleKey('ENTER');
   });
 
+  document.getElementById('invite-btn').addEventListener('click', function() {
+    const inviteText = "I'm cracking today's code on The Vault \u2014 think you can beat me?";
+    const inviteUrl = "https://thermalsock.github.io/vault/";
+
+    function showCopiedFeedback() {
+      const btn = document.getElementById('invite-btn');
+      const original = btn.innerHTML;
+      btn.textContent = 'Link copied!';
+      btn.classList.add('copied');
+      setTimeout(function() { btn.innerHTML = original; btn.classList.remove('copied'); }, 1500);
+    }
+
+    if (navigator.share) {
+      try {
+        navigator.share({ title: 'The Vault', text: inviteText, url: inviteUrl }).catch(function() {
+          /* user backed out of the share sheet — that's a deliberate choice, not an error, do nothing */
+        });
+      } catch (e) {
+        fallbackCopy(inviteText + ' ' + inviteUrl, showCopiedFeedback);
+      }
+    } else {
+      fallbackCopy(inviteText + ' ' + inviteUrl, showCopiedFeedback);
+    }
+  });
+
   document.getElementById('share-btn').addEventListener('click', function() {
     const text = buildShareText(today, saved.scores, saved.won, GUESS_LIMIT);
-    function done() {
+    function showCopiedFeedback() {
       const btn = document.getElementById('share-btn');
       const original = btn.textContent;
       btn.textContent = 'Copied!';
       btn.classList.add('copied');
       setTimeout(function() { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(function() { fallbackCopy(text, done); });
+    if (navigator.share) {
+      try {
+        navigator.share({ title: 'The Vault', text: text }).catch(function() {
+          /* user backed out of the share sheet — deliberate, not an error */
+        });
+      } catch (e) {
+        fallbackCopy(text, showCopiedFeedback);
+      }
     } else {
-      fallbackCopy(text, done);
+      fallbackCopy(text, showCopiedFeedback);
     }
   });
 
@@ -498,6 +576,15 @@ function buildShareText(dateStr, guessScores, won, guessLimit) {
     try { document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(el);
     onDone();
+  }
+
+  // On devices/browsers without native share support (mostly older
+  // desktop browsers), the buttons fall back to copy-to-clipboard —
+  // adjust the labels up front so they say what will actually happen.
+  if (!navigator.share) {
+    document.getElementById('share-btn').textContent = 'Copy result';
+    const inviteBtn = document.getElementById('invite-btn');
+    inviteBtn.innerHTML = '<span class="invite-icon">&#128279;</span> Copy invite link';
   }
 
   renderBoard();
