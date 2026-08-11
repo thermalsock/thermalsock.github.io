@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transient Lab</title>
+  <meta name="description" content="A MIDI synth training app -- scales, chords, and genre-based ear/hand training with real-time audio analysis.">
+  <link rel="icon" href="data:,">
+
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      background: #c6c6c6;
+      height: 100%;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Browser-compat banner -- hidden by default, shown by the check
+       script below only when Web MIDI genuinely isn't available.
+       Sits in normal document flow ABOVE the canvas (not overlaid on
+       top of it), so it never covers any of the app's own on-canvas
+       UI -- it pushes the canvas down instead. */
+    #compat-banner {
+      display: none;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: #3a2f0a;
+      color: #f0d080;
+      font: 600 13px -apple-system, system-ui, sans-serif;
+      text-align: center;
+    }
+    #compat-banner button {
+      flex: 0 0 auto;
+      background: none;
+      border: 1px solid #f0d080;
+      color: #f0d080;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    /* Canvas fills whatever space is left below the banner, scaled to
+       fit while keeping its real 1920x1080 aspect ratio -- the canvas
+       itself always draws at its native 1920x1080 resolution
+       (unchanged), this only affects its on-screen display size.
+       engine.js's click handler already scales pointer coordinates by
+       canvas.width/rect.width and canvas.height/rect.height, so a
+       CSS-scaled canvas was already handled correctly -- no JS
+       changes needed for this. */
+    #canvas-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* Support widget -- small, fixed corner, out of the way of the
+       app's own UI. Rudiment's store links are commented out below;
+       add them once those listings are live. */
+    #support-widget {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    #support-widget a img {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="compat-banner">
+    <span>Note input needs Chrome or Edge -- this browser doesn't support Web MIDI (audio analysis still works everywhere).</span>
+    <button id="compat-dismiss" type="button">Dismiss</button>
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="sequencer" width="1920" height="1080"></canvas>
+  </div>
+
+  <div id="support-widget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 45px !important;width: 163px !important;">
+    </a>
+    <!--
+      Add these once the listings are live:
+      <a href="STEAM_URL_HERE" target="_blank" rel="noopener">Rudiment on Steam</a>
+      <a href="APP_STORE_URL_HERE" target="_blank" rel="noopener">Rudiment on the App Store</a>
+    -->
+  </div>
+
+  <script>
+    // Web MIDI is Chrome/Edge/Firefox 108+ only -- Safari (desktop and
+    // iOS) has never shipped it and WebKit has no roadmap to. This app
+    // is MIDI-input-only with no on-screen fallback, so a visitor on
+    // an unsupported browser needs to know why nothing happens when
+    // they plug in a keyboard, rather than assuming the site is broken.
+    if (!('requestMIDIAccess' in navigator)) {
+      var banner = document.getElementById('compat-banner');
+      banner.style.display = 'flex';
+      document.getElementById('compat-dismiss').addEventListener('click', function () {
+        banner.style.display = 'none';
+      });
+    }
+  </script>
+
+  <script type="module" src="./engine.js"></script>
+</body>
+</html>
