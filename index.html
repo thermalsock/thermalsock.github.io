@@ -21,11 +21,6 @@
       flex-direction: column;
     }
 
-    /* Browser-compat banner -- hidden by default, shown by the check
-       script below only when Web MIDI genuinely isn't available.
-       Sits in normal document flow ABOVE the canvas (not overlaid on
-       top of it), so it never covers any of the app's own on-canvas
-       UI -- it pushes the canvas down instead. */
     #compat-banner {
       display: none;
       flex: 0 0 auto;
@@ -49,14 +44,6 @@
       cursor: pointer;
     }
 
-    /* Canvas fills whatever space is left below the banner, scaled to
-       fit while keeping its real 1920x1080 aspect ratio -- the canvas
-       itself always draws at its native 1920x1080 resolution
-       (unchanged), this only affects its on-screen display size.
-       engine.js's click handler already scales pointer coordinates by
-       canvas.width/rect.width and canvas.height/rect.height, so a
-       CSS-scaled canvas was already handled correctly -- no JS
-       changes needed for this. */
     #canvas-wrap {
       flex: 1 1 auto;
       display: flex;
@@ -71,9 +58,6 @@
       object-fit: contain;
     }
 
-    /* Support widget -- small, fixed corner, out of the way of the
-       app's own UI. Rudiment's store links are commented out below;
-       add them once those listings are live. */
     #support-widget {
       position: fixed;
       right: 14px;
@@ -104,19 +88,9 @@
     <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 45px !important;width: 163px !important;">
     </a>
-    <!--
-      Add these once the listings are live:
-      <a href="STEAM_URL_HERE" target="_blank" rel="noopener">Rudiment on Steam</a>
-      <a href="APP_STORE_URL_HERE" target="_blank" rel="noopener">Rudiment on the App Store</a>
-    -->
   </div>
 
   <script>
-    // Web MIDI is Chrome/Edge/Firefox 108+ only -- Safari (desktop and
-    // iOS) has never shipped it and WebKit has no roadmap to. This app
-    // is MIDI-input-only with no on-screen fallback, so a visitor on
-    // an unsupported browser needs to know why nothing happens when
-    // they plug in a keyboard, rather than assuming the site is broken.
     if (!('requestMIDIAccess' in navigator)) {
       var banner = document.getElementById('compat-banner');
       banner.style.display = 'flex';
