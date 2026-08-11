@@ -1,1 +1,0 @@
-# thermalsock.github.io
