@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thermalsock Labs - Modulus Studio</title>
+<meta name="description" content="Modulus Studio - a browser-based modulation modelling tool. Visualise LFOs, envelopes, performance controls, and random sources, and see how they combine to affect a destination.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    
+    --chassis: #0a0d16;
+    --panel: #12151f;
+    --panel-raised: #171b28;
+    --hairline: rgba(255,255,255,0.07);
+    --hairline-strong: rgba(255,255,255,0.14);
+    --text: #e8eaf2;
+    --text-dim: #7d8299;
+    --text-faint: #4d5165;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+    
+    --accent:   #a78bfa;
+    --danger:   #f87171;
+
+    --c-lfo1: #a78bfa;
+    --c-lfo2: #5fa8ff;
+    --c-env:  #5fd68a;
+    --c-perf: #e8a33d;
+    --c-rand: #ff7eb6;
+    --c-out:  #f4f2ea;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--chassis); color:var(--text);
+    font-family:var(--sans); overflow:hidden;
+  }
+  a{color:inherit;}
+  input,select,button{font-family:inherit;}
+
+  
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 20px; border-bottom:1px solid var(--hairline);
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .brand{ font-family:var(--mono); font-size:13px; letter-spacing:0.03em; display:flex; align-items:center; gap:11px; }
+  .brand-lockup{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+  .brand-lockup-text{ display:flex; flex-direction:column; line-height:1.2; }
+  .brand-appname{ font-family:'Hanken Grotesk', var(--mono); font-weight:700; font-size:13px; }
+  .brand-sub{ font-family:'Hanken Grotesk', var(--mono); font-size:10px; color:var(--text-dim); }
+  .brand .sep{ color:var(--text-faint); }
+  .brand .page{ color:var(--text-dim); }
+  .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:11px; letter-spacing:0.03em;
+    padding:5px 11px; border-radius:999px; border:1px solid var(--hairline-strong);
+    color:var(--text-dim); background:var(--panel);
+  }
+  .pill.live{ color:var(--c-env); border-color:rgba(95,214,138,0.35); }
+  .status-dot{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); }
+  .pill.live .status-dot{ background:var(--c-env); box-shadow:0 0 6px var(--c-env); animation:blink 2s ease-in-out infinite; }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .help-btn{ cursor:pointer; background:var(--panel); font-family:var(--mono); }
+  .help-btn:hover{ color:var(--text); border-color:var(--accent); }
+
+  
+  #tutorialOverlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(6,7,12,0.72);
+    display:none; align-items:center; justify-content:center;
+    backdrop-filter:blur(2px);
+  }
+  #tutorialOverlay.show{ display:flex; }
+  #tutorialBox{
+    width:min(560px, 92vw); max-height:86vh; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--hairline-strong);
+    border-radius:12px; box-shadow:0 24px 60px rgba(0,0,0,0.6);
+    position:relative;
+  }
+  #tutorialAccent{ height:4px; width:100%; border-radius:12px 12px 0 0; background:var(--accent); }
+  #tutorialInner{ padding:26px 28px 24px 28px; }
+  #tutorialClose{
+    position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:7px;
+    background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text-dim);
+    font-family:var(--mono); font-size:14px; cursor:pointer; line-height:1;
+  }
+  #tutorialClose:hover{ color:var(--text); border-color:var(--accent); }
+  #tutorialStepTag{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--text-faint); margin-bottom:8px;
+  }
+  #tutorialTitle{ font-size:21px; font-weight:700; margin:0 0 12px 0; color:var(--text); }
+  #tutorialBody{ font-size:14px; line-height:1.65; color:var(--text-dim); }
+  #tutorialBody p{ margin:0 0 12px 0; }
+  #tutorialBody strong{ color:var(--text); }
+  #tutorialBody ul{ margin:0 0 12px 0; padding-left:20px; }
+  #tutorialBody li{ margin-bottom:7px; }
+  #tutorialBody .swatch-inline{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:middle; }
+  #tutorialBody code{
+    font-family:var(--mono); font-size:12.5px; background:var(--chassis); border:1px solid var(--hairline-strong);
+    padding:1px 6px; border-radius:4px; color:var(--accent);
+  }
+  #tutorialFoot{
+    display:flex; align-items:center; justify-content:space-between; margin-top:22px;
+    padding-top:16px; border-top:1px solid var(--hairline);
+  }
+  #tutorialDots{ display:flex; gap:6px; }
+  #tutorialDots span{ width:6px; height:6px; border-radius:50%; background:var(--hairline-strong); }
+  #tutorialDots span.active{ background:var(--accent); }
+  #tutorialNavBtns{ display:flex; gap:8px; }
+  .tut-btn{
+    font-family:var(--mono); font-size:11.5px; padding:8px 15px; border-radius:7px; cursor:pointer;
+    border:1px solid var(--hairline-strong); background:var(--panel-raised); color:var(--text-dim);
+  }
+  .tut-btn:hover{ color:var(--text); border-color:var(--accent); }
+  .tut-btn.primary{ background:var(--accent); border-color:var(--accent); color:#0a0d16; font-weight:700; }
+  .tut-btn.primary:hover{ filter:brightness(1.1); }
+  .tut-skip{ font-family:var(--mono); font-size:11px; color:var(--text-faint); background:none; border:none; cursor:pointer; padding:8px 4px; }
+  .tut-skip:hover{ color:var(--text-dim); }
+
+  
+  .stage{ display:flex; gap:16px; padding:16px 18px; height:calc(100vh - 49px); min-height:0; }
+
+  .sidebar{ width:360px; flex:none; display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding-right:4px; }
+  .card{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    padding:14px 15px 15px 15px;
+  }
+  .card h3{
+    margin:0 0 10px 0; font-family:var(--mono); font-size:11px; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--text-dim); display:flex; align-items:center; gap:8px;
+  }
+  .card h3 .swatch{ width:9px; height:9px; border-radius:3px; flex:none; }
+
+  .source-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
+  .source-toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+  .source-toggle input{ accent-color:var(--src-color, var(--accent)); }
+  .source-toggle span{ font-size:12.5px; font-weight:600; }
+
+  .field-row{ display:grid; grid-template-columns:64px 1fr 46px; align-items:center; gap:8px; margin:7px 0; }
+  .field-row label{ font-size:10.5px; color:var(--text-dim); font-family:var(--mono); }
+  .field-row .val{ font-size:10.5px; color:var(--text-dim); font-family:var(--mono); text-align:right; }
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:4px; border-radius:2px;
+    background:var(--hairline-strong); outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:var(--src-color, var(--accent)); cursor:pointer; border:2px solid var(--chassis);
+  }
+  select{
+    width:100%; background:var(--panel-raised); color:var(--text); border:1px solid var(--hairline-strong);
+    border-radius:6px; padding:6px 8px; font-size:12px;
+  }
+  .seg{ display:flex; gap:4px; flex-wrap:wrap; margin:7px 0; }
+  .seg button{
+    flex:1; min-width:44px; background:var(--panel-raised); border:1px solid var(--hairline-strong);
+    color:var(--text-dim); border-radius:6px; padding:5px 6px; font-size:10.5px; cursor:pointer;
+  }
+  .seg button.active{ background:var(--src-color, var(--accent)); border-color:var(--src-color, var(--accent)); color:#0a0d16; font-weight:700; }
+
+  .source-body{ margin-top:8px; padding-top:2px; }
+  .source-body.collapsed{ display:none; }
+
+  
+  .route-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr 22px; gap:6px; align-items:center;
+    padding:7px 0; border-bottom:1px solid var(--hairline);
+  }
+  .route-row:last-of-type{ border-bottom:none; }
+  .route-row select{ font-size:11px; padding:5px 6px; }
+  .route-amt{ display:flex; align-items:center; gap:5px; }
+  .route-amt input{ flex:1; }
+  .route-amt .val{ font-family:var(--mono); font-size:10px; color:var(--text-dim); width:32px; text-align:right; }
+  .route-del{
+    background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:14px; padding:0;
+    width:20px; height:20px; border-radius:4px;
+  }
+  .route-del:hover{ color:var(--danger); background:rgba(248,113,113,0.1); }
+  .add-route{
+    width:100%; margin-top:8px; background:none; border:1px dashed var(--hairline-strong);
+    color:var(--text-dim); border-radius:6px; padding:8px; font-size:11px; cursor:pointer; font-family:var(--mono);
+  }
+  .add-route:hover{ color:var(--text); border-color:var(--accent); }
+
+  
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:14px; }
+  .viz-wrap{
+    flex:1; min-height:0; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    position:relative; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .viz-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:11px 16px; border-bottom:1px solid var(--hairline);
+  }
+  .viz-head h2{ margin:0; font-family:var(--mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); }
+  .viz-head .focus-select{ width:180px; }
+  #feedingNote{
+    padding:0 16px 10px 16px; font-size:11.5px; color:var(--text-faint); font-family:var(--mono);
+    border-bottom:1px solid var(--hairline);
+  }
+  #feedingNote strong{ color:var(--text-dim); font-weight:600; }
+  #feedingNote .none{ color:var(--danger); }
+  .viz-canvas-wrap{ flex:1; min-height:0; position:relative; }
+  canvas{ display:block; width:100%; height:100%; }
+
+  .legend{ display:flex; gap:16px; flex-wrap:wrap; padding:10px 16px; border-top:1px solid var(--hairline); }
+  .legend-item{ display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; color:var(--text-dim); }
+  .legend-item .sw{ width:14px; height:2px; border-radius:1px; }
+  .graph-hint{
+    padding:8px 16px 12px 16px; font-size:11.5px; color:var(--text-faint); line-height:1.5;
+    border-top:1px solid var(--hairline);
+  }
+  .graph-hint strong{ color:var(--text-dim); }
+
+  .bottom-row{ display:flex; gap:14px; height:150px; flex:none; }
+
+  .overview-panel{
+    flex:none; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    padding:12px 16px 14px 16px;
+  }
+  .overview-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+  .overview-head h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
+  .overview-head p{ margin:0; font-size:11px; color:var(--text-faint); }
+  .overview-strip{ display:flex; gap:10px; flex-wrap:wrap; }
+  .overview-card{
+    flex:1; min-width:150px; background:var(--panel-raised); border:1px solid var(--hairline-strong);
+    border-radius:7px; padding:8px 10px 6px 10px;
+  }
+  .overview-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .overview-card-head .name{ font-size:10.5px; font-weight:600; color:var(--text-dim); }
+  .overview-card-head .val{ font-family:var(--mono); font-size:10px; color:var(--text-faint); }
+  .overview-card canvas{ display:block; width:100%; height:36px; }
+  .overview-empty{ font-size:11.5px; color:var(--text-faint); padding:6px 2px; }
+  .dest-card{
+    flex:1; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    padding:12px 16px; display:flex; flex-direction:column; gap:8px;
+  }
+  .dest-card h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
+  .dest-canvas-wrap{ flex:1; min-height:0; }
+
+  .audio-card{
+    flex:none; width:220px; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    padding:12px 16px; display:flex; flex-direction:column; justify-content:center; gap:10px;
+  }
+  .audio-card h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
+  .toggle-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text-dim);
+    border-radius:7px; padding:9px; font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .toggle-btn.on{ background:var(--accent); border-color:var(--accent); color:#0a0d16; }
+  .audio-status{ font-family:var(--mono); font-size:10px; color:var(--text-faint); text-align:center; }
+
+  .io-row{ display:flex; gap:10px; }
+  .io-btn{
+    flex:1; background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text-dim);
+    border-radius:6px; padding:7px; font-family:var(--mono); font-size:10.5px; cursor:pointer;
+  }
+  .io-btn:hover{ color:var(--text); border-color:var(--accent); }
+
+  #legalBar{
+    position:fixed; left:0; right:0; bottom:0; z-index:9;
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    padding:4px 12px; font-size:10px; color:var(--text-faint);
+    background:rgba(10,13,22,0.9); border-top:1px solid var(--hairline);
+    font-family:'Hanken Grotesk', var(--mono);
+  }
+  #legalBar a{ color:var(--text-faint); text-decoration:none; }
+  #legalBar a:hover{ color:var(--text); }
+
+  #supportWidget{ position:fixed; right:14px; bottom:30px; z-index:10; }
+  #supportWidget img{ display:block; border-radius:6px; }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--hairline-strong); border-radius:4px; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <a href="../index.html" class="brand-lockup">
+        <svg width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#a78bfa"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname">Thermalsock Labs</span>
+        </span>
+      </a>
+      <span class="sep">/</span>
+      <span class="page">Modulus Studio</span>
+    </div>
+    <div class="topbar-right">
+      <button class="pill help-btn" id="helpBtn" type="button">? How this works</button>
+      <span class="pill" id="midiPill">MIDI unavailable</span>
+      <span class="pill live"><span class="status-dot"></span>Running</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="sidebar">
+
+      <div class="card">
+        <h3><span class="swatch" style="background:var(--c-lfo1)"></span>LFO 1</h3>
+        <div class="source-body" id="body-lfo1"></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="swatch" style="background:var(--c-lfo2)"></span>LFO 2</h3>
+        <div class="source-body" id="body-lfo2"></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="swatch" style="background:var(--c-env)"></span>Envelope</h3>
+        <div class="source-body" id="body-env"></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="swatch" style="background:var(--c-perf)"></span>Performance</h3>
+        <div class="source-body" id="body-perf"></div>
+      </div>
+
+      <div class="card">
+        <h3><span class="swatch" style="background:var(--c-rand)"></span>Random</h3>
+        <div class="source-body" id="body-rand"></div>
+      </div>
+
+      <div class="card">
+        <h3>Routing Matrix</h3>
+        <div id="routeRows"></div>
+        <button class="add-route" id="addRoute">+ ADD ROUTING</button>
+      </div>
+
+      <div class="card">
+        <h3>Preset</h3>
+        <div class="io-row">
+          <button class="io-btn" id="exportBtn">EXPORT JSON</button>
+          <button class="io-btn" id="importBtn">IMPORT JSON</button>
+        </div>
+        <input type="file" id="fileInput" accept="application/json" style="display:none">
+      </div>
+
+    </div>
+
+    <div class="main">
+      <div class="viz-wrap">
+        <div class="viz-head">
+          <h2>Modulation Output</h2>
+          <select class="focus-select" id="focusDest"></select>
+        </div>
+        <div id="feedingNote"></div>
+        <div class="viz-canvas-wrap"><canvas id="vizCanvas"></canvas></div>
+        <div class="legend" id="legend"></div>
+        <div class="graph-hint">Colored lines are each active source, already scaled by its routing amount - the <strong>white line is their sum</strong>, the actual signal this destination receives. With only one source routed here, white will always be a smaller copy of its color: that's the amount scaling it down, not a second source.</div>
+      </div>
+
+      <div class="overview-panel">
+        <div class="overview-head">
+          <h3>All Destinations, At Once</h3>
+          <p>Every destination with an active routing, live, side by side - this is the "see the filter and the amp together" view.</p>
+        </div>
+        <div class="overview-strip" id="overviewStrip"></div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="dest-card">
+          <h3 id="destTitle">Destination Preview</h3>
+          <div class="dest-canvas-wrap"><canvas id="destCanvas"></canvas></div>
+        </div>
+        <div class="audio-card">
+          <h3>Audio Overlay</h3>
+          <button class="toggle-btn" id="audioToggle">Enable Mic Input</button>
+          <div class="audio-status" id="audioStatus">Off - modulation only</div>
+        </div>
+        <div class="audio-card">
+          <h3>Hear It</h3>
+          <button class="toggle-btn" id="testToneToggle">Play Test Tone</button>
+          <div class="audio-status" id="testToneStatus">A held note, filtered and shaped live by Cutoff, Amp, Pitch &amp; Pan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="supportWidget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 38px !important;width: 138px !important;">
+    </a>
+  </div>
+  <div id="legalBar">
+    <span>© 2026 Thermalsock Labs</span>
+    <a href="../legal/privacy.html">Privacy</a>
+    <a href="../legal/disclaimer.html">Disclaimer</a>
+  </div>
+
+  <div id="tutorialOverlay">
+    <div id="tutorialBox">
+      <div id="tutorialAccent"></div>
+      <button id="tutorialClose" type="button">✕</button>
+      <div id="tutorialInner">
+        <div id="tutorialStepTag"></div>
+        <h2 id="tutorialTitle"></h2>
+        <div id="tutorialBody"></div>
+        <div id="tutorialFoot">
+          <div id="tutorialDots"></div>
+          <div id="tutorialNavBtns">
+            <button class="tut-skip" id="tutSkip" type="button">Skip</button>
+            <button class="tut-btn" id="tutBack" type="button">Back</button>
+            <button class="tut-btn primary" id="tutNext" type="button">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>(function () {
+  "use strict";
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  const SOURCES = {
+    lfo1: {
+      label: "LFO 1",
+      color: "var(--c-lfo1)",
+      enabled: true,
+      shape: "sine",
+      rate: 2,
+      depth: 80,
+      phase: 0,
+      polarity: "bi",
+    },
+    lfo2: {
+      label: "LFO 2",
+      color: "var(--c-lfo2)",
+      enabled: false,
+      shape: "triangle",
+      rate: 0.5,
+      depth: 60,
+      phase: 90,
+      polarity: "bi",
+    },
+    env: {
+      label: "Envelope",
+      color: "var(--c-env)",
+      enabled: false,
+      attack: 80,
+      decay: 250,
+      sustain: 60,
+      release: 400,
+      curve: "exp",
+      looping: false,
+      _phase: "idle",
+      _t: 0,
+      _level: 0,
+    },
+    perf: {
+      label: "Performance",
+      color: "var(--c-perf)",
+      enabled: true,
+      source: "modwheel",
+      modwheel: 0,
+      aftertouch: 0,
+      velocity: 64,
+    },
+    rand: {
+      label: "Random",
+      color: "var(--c-rand)",
+      enabled: false,
+      mode: "sh",
+      rate: 4,
+      chaos: 50,
+      _hold: 0,
+      _last: 0,
+      _t: 0,
+    },
+  };
+  const DESTINATIONS = [
+    { id: "cutoff", label: "Filter Cutoff" },
+    { id: "pitch", label: "Pitch" },
+    { id: "amp", label: "Amp" },
+    { id: "pwm", label: "PWM" },
+    { id: "mix", label: "Oscillator Mix" },
+    { id: "pan", label: "Pan" },
+  ];
+  let routes = [
+    { id: 1, source: "lfo1", dest: "cutoff", amount: 65 },
+    { id: 2, source: "env", dest: "amp", amount: 100 },
+    { id: 3, source: "perf", dest: "cutoff", amount: 35 },
+  ];
+  let routeIdCounter = 4;
+  let overviewCanvases = {};
+  function el(tag, attrs, children) {
+    const e = document.createElement(tag);
+    if (attrs)
+      for (const k in attrs) {
+        if (k === "class") e.className = attrs[k];
+        else if (k.startsWith("on")) e.addEventListener(k.slice(2), attrs[k]);
+        else e.setAttribute(k, attrs[k]);
+      }
+    (children || []).forEach((c) =>
+      e.appendChild(typeof c === "string" ? document.createTextNode(c) : c),
+    );
+    return e;
+  }
+  function sliderField(label, id, min, max, step, value, unit, onInput) {
+    const row = el("div", { class: "field-row" });
+    row.appendChild(el("label", {}, [label]));
+    const input = el("input", { type: "range", min, max, step, value, id });
+    const valSpan = el("span", { class: "val" }, [
+      String(value) + (unit || ""),
+    ]);
+    input.addEventListener("input", () => {
+      valSpan.textContent = input.value + (unit || "");
+      onInput(parseFloat(input.value));
+    });
+    row.appendChild(input);
+    row.appendChild(valSpan);
+    return row;
+  }
+  function formatHz(v) {
+    return (v < 1 ? v.toFixed(2) : v < 10 ? v.toFixed(1) : v.toFixed(0)) + "Hz";
+  }
+  function logSliderField(label, min, max, value, onInput) {
+    const row = el("div", { class: "field-row" });
+    row.appendChild(el("label", {}, [label]));
+    const toPos = (v) =>
+      Math.round((1e3 * Math.log(v / min)) / Math.log(max / min));
+    const toVal = (p) => min * Math.pow(max / min, p / 1e3);
+    const input = el("input", {
+      type: "range",
+      min: 0,
+      max: 1e3,
+      step: 1,
+      value: toPos(value),
+    });
+    const valSpan = el("span", { class: "val" }, [formatHz(value)]);
+    input.addEventListener("input", () => {
+      const v = toVal(parseFloat(input.value));
+      valSpan.textContent = formatHz(v);
+      onInput(v);
+    });
+    row.appendChild(input);
+    row.appendChild(valSpan);
+    return row;
+  }
+  function segField(label, options, current, onPick, srcKey) {
+    const wrap = el("div", {});
+    if (label)
+      wrap.appendChild(
+        el(
+          "label",
+          {
+            style:
+              "font-size:10.5px;color:var(--text-dim);font-family:var(--mono);",
+          },
+          [label],
+        ),
+      );
+    const seg = el("div", { class: "seg" });
+    options.forEach((opt) => {
+      const btn = el(
+        "button",
+        { type: "button", style: `--src-color:${SOURCES[srcKey].color}` },
+        [opt.label],
+      );
+      if (opt.value === current) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        seg
+          .querySelectorAll("button")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        onPick(opt.value);
+      });
+      seg.appendChild(btn);
+    });
+    wrap.appendChild(seg);
+    return wrap;
+  }
+  function buildLFO(key) {
+    const s = SOURCES[key];
+    const container = document.getElementById("body-" + key);
+    const body = el("div", {
+      class: "source-body" + (s.enabled ? "" : " collapsed"),
+    });
+    const headerRow = el("div", { class: "source-row" });
+    const label = el("label", { class: "source-toggle" });
+    const cb = el("input", {
+      type: "checkbox",
+      style: `--src-color:${s.color}`,
+    });
+    cb.checked = s.enabled;
+    cb.addEventListener("change", () => {
+      s.enabled = cb.checked;
+      body.classList.toggle("collapsed", !cb.checked);
+      history[key] = [];
+      renderLegend();
+    });
+    label.appendChild(cb);
+    label.appendChild(el("span", {}, ["Enabled"]));
+    headerRow.appendChild(label);
+    container.appendChild(headerRow);
+    body.appendChild(
+      segField(
+        null,
+        [
+          { label: "Sine", value: "sine" },
+          { label: "Tri", value: "triangle" },
+          { label: "Saw", value: "saw" },
+          { label: "Sqr", value: "square" },
+          { label: "Rand", value: "random" },
+          { label: "S&H", value: "sh" },
+        ],
+        s.shape,
+        (v) => (s.shape = v),
+        key,
+      ),
+    );
+    body.appendChild(
+      logSliderField("Rate", 0.02, 20, s.rate, (v) => (s.rate = v)),
+    );
+    body.appendChild(
+      sliderField("Depth", null, 0, 100, 1, s.depth, "%", (v) => (s.depth = v)),
+    );
+    body.appendChild(
+      sliderField("Phase", null, 0, 360, 1, s.phase, "°", (v) => (s.phase = v)),
+    );
+    body.appendChild(
+      segField(
+        "Polarity",
+        [
+          { label: "Uni", value: "uni" },
+          { label: "Bi", value: "bi" },
+        ],
+        s.polarity,
+        (v) => (s.polarity = v),
+        key,
+      ),
+    );
+    container.appendChild(body);
+  }
+  function buildEnv() {
+    const s = SOURCES.env;
+    const container = document.getElementById("body-env");
+    const body = el("div", {
+      class: "source-body" + (s.enabled ? "" : " collapsed"),
+    });
+    const headerRow = el("div", { class: "source-row" });
+    const label = el("label", { class: "source-toggle" });
+    const cb = el("input", {
+      type: "checkbox",
+      style: `--src-color:${s.color}`,
+    });
+    cb.checked = s.enabled;
+    cb.addEventListener("change", () => {
+      s.enabled = cb.checked;
+      body.classList.toggle("collapsed", !cb.checked);
+      history["env"] = [];
+      renderLegend();
+    });
+    label.appendChild(cb);
+    label.appendChild(el("span", {}, ["Enabled"]));
+    headerRow.appendChild(label);
+    const trigBtn = el(
+      "button",
+      {
+        class: "io-btn",
+        style: "flex:none;padding:5px 10px;",
+        onclick: () => {
+          s._phase = "attack";
+          s._t = 0;
+        },
+      },
+      ["TRIGGER"],
+    );
+    headerRow.appendChild(trigBtn);
+    container.appendChild(headerRow);
+    body.appendChild(
+      sliderField(
+        "Attack",
+        null,
+        1,
+        2e3,
+        1,
+        s.attack,
+        "ms",
+        (v) => (s.attack = v),
+      ),
+    );
+    body.appendChild(
+      sliderField(
+        "Decay",
+        null,
+        1,
+        2e3,
+        1,
+        s.decay,
+        "ms",
+        (v) => (s.decay = v),
+      ),
+    );
+    body.appendChild(
+      sliderField(
+        "Sustain",
+        null,
+        0,
+        100,
+        1,
+        s.sustain,
+        "%",
+        (v) => (s.sustain = v),
+      ),
+    );
+    body.appendChild(
+      sliderField(
+        "Release",
+        null,
+        1,
+        3e3,
+        1,
+        s.release,
+        "ms",
+        (v) => (s.release = v),
+      ),
+    );
+    body.appendChild(
+      segField(
+        "Curve",
+        [
+          { label: "Linear", value: "linear" },
+          { label: "Exp", value: "exp" },
+        ],
+        s.curve,
+        (v) => (s.curve = v),
+        "env",
+      ),
+    );
+    const loopRow = el("div", {
+      class: "source-row",
+      style: "margin-top:6px;",
+    });
+    const loopLabel = el("label", { class: "source-toggle" });
+    const loopCb = el("input", {
+      type: "checkbox",
+      style: `--src-color:${s.color}`,
+    });
+    loopCb.checked = s.looping;
+    loopCb.addEventListener("change", () => (s.looping = loopCb.checked));
+    loopLabel.appendChild(loopCb);
+    loopLabel.appendChild(el("span", {}, ["Loop (auto-retrigger)"]));
+    loopRow.appendChild(loopLabel);
+    body.appendChild(loopRow);
+    container.appendChild(body);
+  }
+  function buildPerf() {
+    const s = SOURCES.perf;
+    const container = document.getElementById("body-perf");
+    const body = el("div", {
+      class: "source-body" + (s.enabled ? "" : " collapsed"),
+    });
+    const headerRow = el("div", { class: "source-row" });
+    const label = el("label", { class: "source-toggle" });
+    const cb = el("input", {
+      type: "checkbox",
+      style: `--src-color:${s.color}`,
+    });
+    cb.checked = s.enabled;
+    cb.addEventListener("change", () => {
+      s.enabled = cb.checked;
+      body.classList.toggle("collapsed", !cb.checked);
+      history["perf"] = [];
+      renderLegend();
+    });
+    label.appendChild(cb);
+    label.appendChild(el("span", {}, ["Enabled"]));
+    headerRow.appendChild(label);
+    container.appendChild(headerRow);
+    body.appendChild(
+      segField(
+        "Drive with",
+        [
+          { label: "Mod Wheel", value: "modwheel" },
+          { label: "Aftertouch", value: "aftertouch" },
+          { label: "Velocity", value: "velocity" },
+        ],
+        s.source,
+        (v) => (s.source = v),
+        "perf",
+      ),
+    );
+    body.appendChild(
+      sliderField(
+        "Mod Wheel",
+        null,
+        0,
+        100,
+        1,
+        s.modwheel,
+        "",
+        (v) => (s.modwheel = v),
+      ),
+    );
+    body.appendChild(
+      sliderField(
+        "Aftertouch",
+        null,
+        0,
+        100,
+        1,
+        s.aftertouch,
+        "",
+        (v) => (s.aftertouch = v),
+      ),
+    );
+    body.appendChild(
+      sliderField(
+        "Velocity",
+        null,
+        0,
+        127,
+        1,
+        s.velocity,
+        "",
+        (v) => (s.velocity = v),
+      ),
+    );
+    container.appendChild(body);
+  }
+  function buildRand() {
+    const s = SOURCES.rand;
+    const container = document.getElementById("body-rand");
+    const body = el("div", {
+      class: "source-body" + (s.enabled ? "" : " collapsed"),
+    });
+    const headerRow = el("div", { class: "source-row" });
+    const label = el("label", { class: "source-toggle" });
+    const cb = el("input", {
+      type: "checkbox",
+      style: `--src-color:${s.color}`,
+    });
+    cb.checked = s.enabled;
+    cb.addEventListener("change", () => {
+      s.enabled = cb.checked;
+      body.classList.toggle("collapsed", !cb.checked);
+      history["rand"] = [];
+      renderLegend();
+    });
+    label.appendChild(cb);
+    label.appendChild(el("span", {}, ["Enabled"]));
+    headerRow.appendChild(label);
+    container.appendChild(headerRow);
+    body.appendChild(
+      segField(
+        null,
+        [
+          { label: "S&H", value: "sh" },
+          { label: "Smooth", value: "smooth" },
+          { label: "Walk", value: "walk" },
+        ],
+        s.mode,
+        (v) => (s.mode = v),
+        "rand",
+      ),
+    );
+    body.appendChild(
+      logSliderField("Rate", 0.1, 20, s.rate, (v) => (s.rate = v)),
+    );
+    body.appendChild(
+      sliderField("Chaos", null, 0, 100, 1, s.chaos, "%", (v) => (s.chaos = v)),
+    );
+    container.appendChild(body);
+  }
+  buildLFO("lfo1");
+  buildLFO("lfo2");
+  buildEnv();
+  buildPerf();
+  buildRand();
+  const routeRowsEl = document.getElementById("routeRows");
+  const focusSelect = document.getElementById("focusDest");
+  DESTINATIONS.forEach((d) =>
+    focusSelect.appendChild(el("option", { value: d.id }, [d.label])),
+  );
+  focusSelect.value = "cutoff";
+  function renderRoutes() {
+    routeRowsEl.innerHTML = "";
+    routes.forEach((r) => {
+      const row = el("div", { class: "route-row" });
+      const srcSel = el("select", {});
+      Object.keys(SOURCES).forEach((k) =>
+        srcSel.appendChild(el("option", { value: k }, [SOURCES[k].label])),
+      );
+      srcSel.value = r.source;
+      srcSel.addEventListener("change", () => {
+        r.source = srcSel.value;
+        renderFeedingNote();
+      });
+      const destSel = el("select", {});
+      DESTINATIONS.forEach((d) =>
+        destSel.appendChild(el("option", { value: d.id }, [d.label])),
+      );
+      destSel.value = r.dest;
+      destSel.addEventListener("change", () => {
+        r.dest = destSel.value;
+        renderFeedingNote();
+        rebuildOverviewStrip();
+      });
+      const amtWrap = el("div", { class: "route-amt" });
+      const amtInput = el("input", {
+        type: "range",
+        min: -100,
+        max: 100,
+        step: 1,
+        value: r.amount,
+      });
+      const amtVal = el("span", { class: "val" }, [r.amount + "%"]);
+      amtInput.addEventListener("input", () => {
+        r.amount = parseInt(amtInput.value, 10);
+        amtVal.textContent = r.amount + "%";
+        renderFeedingNote();
+      });
+      amtWrap.appendChild(amtInput);
+      amtWrap.appendChild(amtVal);
+      const delBtn = el(
+        "button",
+        {
+          class: "route-del",
+          onclick: () => {
+            routes = routes.filter((x) => x.id !== r.id);
+            renderRoutes();
+          },
+        },
+        ["×"],
+      );
+      row.appendChild(srcSel);
+      row.appendChild(destSel);
+      row.appendChild(amtWrap);
+      row.appendChild(delBtn);
+      routeRowsEl.appendChild(row);
+    });
+    renderFeedingNote();
+    rebuildOverviewStrip();
+  }
+  renderRoutes();
+  function renderFeedingNote() {
+    const focusDest = focusSelect.value;
+    const feeding = routes.filter((r) => r.dest === focusDest);
+    const noteEl = document.getElementById("feedingNote");
+    if (feeding.length === 0) {
+      noteEl.innerHTML =
+        '<span class="none">Nothing is routed to this destination yet</span> - add a routing below, or pick a different destination.';
+      return;
+    }
+    const parts = feeding.map((r) => {
+      const s = SOURCES[r.source];
+      const flag = s.enabled
+        ? ""
+        : " (source disabled - no effect until enabled)";
+      return `<strong>${s.label}</strong> at ${r.amount}%${flag}`;
+    });
+    noteEl.innerHTML = "Feeding this destination: " + parts.join(", ") + ".";
+  }
+  document.getElementById("addRoute").addEventListener("click", () => {
+    routes.push({
+      id: routeIdCounter++,
+      source: "lfo1",
+      dest: "cutoff",
+      amount: 50,
+    });
+    renderRoutes();
+  });
+  function evalLFO(s, tSec) {
+    const phaseRad = (s.phase / 360) * Math.PI * 2;
+    const w = tSec * s.rate * Math.PI * 2 + phaseRad;
+    let v;
+    switch (s.shape) {
+      case "sine":
+        v = Math.sin(w);
+        break;
+      case "triangle":
+        v = 2 * Math.abs(2 * ((w / (Math.PI * 2)) % 1) - 1) - 1;
+        break;
+      case "saw":
+        v = 2 * ((w / (Math.PI * 2)) % 1) - 1;
+        break;
+      case "square":
+        v = Math.sin(w) >= 0 ? 1 : -1;
+        break;
+      case "random":
+        v = Math.sin(w * 3.1) * 0.5 + Math.sin(w * 7.7) * 0.5;
+        break;
+      case "sh": {
+        const stepIdx = Math.floor(tSec * s.rate);
+        v = pseudoRandom(stepIdx + (s === SOURCES.lfo1 ? 0 : 1e3)) * 2 - 1;
+        break;
+      }
+      default:
+        v = 0;
+    }
+    if (s.polarity === "uni") v = (v + 1) / 2;
+    v *= s.depth / 100;
+    return Math.max(-1, Math.min(1, v));
+  }
+  function pseudoRandom(n) {
+    const x = Math.sin(n * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+  function evalEnv(s, dt) {
+    if (s._phase === "idle" && s.looping) {
+      s._phase = "attack";
+      s._t = 0;
+    }
+    if (s._phase !== "idle") {
+      s._t += dt * 1e3;
+      const shape = (frac) =>
+        s.curve === "exp" ? 1 - Math.pow(1 - frac, 2.2) : frac;
+      if (s._phase === "attack") {
+        const frac = Math.min(1, s._t / Math.max(1, s.attack));
+        s._level = shape(frac);
+        if (frac >= 1) {
+          s._phase = "decay";
+          s._t = 0;
+        }
+      } else if (s._phase === "decay") {
+        const frac = Math.min(1, s._t / Math.max(1, s.decay));
+        const sus = s.sustain / 100;
+        s._level = 1 - (1 - sus) * shape(frac);
+        if (frac >= 1) {
+          s._phase = "sustain";
+          s._t = 0;
+        }
+      } else if (s._phase === "sustain") {
+        s._level = s.sustain / 100;
+        if (s.looping && s._t > 600) {
+          s._phase = "release";
+          s._t = 0;
+        }
+      } else if (s._phase === "release") {
+        const frac = Math.min(1, s._t / Math.max(1, s.release));
+        const sus = s.sustain / 100;
+        s._level = sus * (1 - shape(frac));
+        if (frac >= 1) {
+          s._phase = s.looping ? "idle" : "idle";
+          s._t = 0;
+          s._level = 0;
+        }
+      }
+    }
+    return s._level * 2 - 1;
+  }
+  function evalPerf(s) {
+    const val =
+      s.source === "modwheel"
+        ? s.modwheel / 100
+        : s.source === "aftertouch"
+          ? s.aftertouch / 100
+          : s.velocity / 127;
+    return val * 2 - 1;
+  }
+  function evalRand(s, tSec, dt) {
+    if (s.mode === "sh") {
+      const stepIdx = Math.floor(tSec * s.rate);
+      if (stepIdx !== s._lastStep) {
+        s._lastStep = stepIdx;
+        s._hold = (pseudoRandom(stepIdx * 7.13) * 2 - 1) * (s.chaos / 100);
+      }
+      return s._hold;
+    } else if (s.mode === "smooth") {
+      return (
+        (Math.sin(tSec * s.rate * Math.PI * 2) * 0.6 +
+          Math.sin(tSec * s.rate * Math.PI * 2 * 2.3) * 0.4) *
+        (s.chaos / 100)
+      );
+    } else {
+      s._t += dt;
+      if (s._t * s.rate > 1) {
+        s._t = 0;
+        s._last += (pseudoRandom(tSec * 1e3) * 2 - 1) * 0.3 * (s.chaos / 100);
+        s._last = Math.max(-1, Math.min(1, s._last));
+      }
+      return s._last;
+    }
+  }
+  function evalSource(key, tSec, dt) {
+    const s = SOURCES[key];
+    if (!s.enabled) return 0;
+    if (key === "lfo1" || key === "lfo2") return evalLFO(s, tSec);
+    if (key === "env") return evalEnv(s, dt);
+    if (key === "perf") return evalPerf(s);
+    if (key === "rand") return evalRand(s, tSec, dt);
+    return 0;
+  }
+  const vizCanvas = document.getElementById("vizCanvas");
+  const vizCtx = vizCanvas.getContext("2d");
+  const destCanvas = document.getElementById("destCanvas");
+  const destCtx = destCanvas.getContext("2d");
+  function resizeCanvases() {
+    [vizCanvas, destCanvas].forEach((c) => {
+      const r = c.getBoundingClientRect();
+      c.width = Math.max(1, r.width * DPR);
+      c.height = Math.max(1, r.height * DPR);
+    });
+  }
+  window.addEventListener("resize", resizeCanvases);
+  resizeCanvases();
+  const HISTORY_SEC = 4;
+  const history = {
+    lfo1: [],
+    lfo2: [],
+    env: [],
+    perf: [],
+    rand: [],
+    combined: [],
+  };
+  const destHistory = {};
+  DESTINATIONS.forEach((d) => (destHistory[d.id] = []));
+  let historyStartT = null;
+  function colorOf(key) {
+    const map = {
+      lfo1: "--c-lfo1",
+      lfo2: "--c-lfo2",
+      env: "--c-env",
+      perf: "--c-perf",
+      rand: "--c-rand",
+    };
+    return getComputedStyle(document.body).getPropertyValue(map[key]).trim();
+  }
+  let audioCtx = null,
+    analyser = null,
+    audioData = null,
+    audioOn = false;
+  async function enableAudio() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const src = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      audioData = new Uint8Array(analyser.fftSize);
+      src.connect(analyser);
+      audioOn = true;
+      document.getElementById("audioToggle").classList.add("on");
+      document.getElementById("audioToggle").textContent = "Disable Mic Input";
+      document.getElementById("audioStatus").textContent =
+        "On - waveform behind graph";
+    } catch (e) {
+      document.getElementById("audioStatus").textContent =
+        "Mic access denied or unavailable";
+    }
+  }
+  function disableAudio() {
+    audioOn = false;
+    if (audioCtx) audioCtx.close();
+    audioCtx = null;
+    analyser = null;
+    document.getElementById("audioToggle").classList.remove("on");
+    document.getElementById("audioToggle").textContent = "Enable Mic Input";
+    document.getElementById("audioStatus").textContent =
+      "Off - modulation only";
+  }
+  document
+    .getElementById("audioToggle")
+    .addEventListener("click", () =>
+      audioOn ? disableAudio() : enableAudio(),
+    );
+  let testToneCtx = null,
+    testToneOsc = null,
+    testToneFilter = null,
+    testToneGain = null,
+    testTonePanner = null;
+  let testToneOn = false;
+  function startTestTone() {
+    testToneCtx = new (window.AudioContext || window.webkitAudioContext)();
+    testToneOsc = testToneCtx.createOscillator();
+    testToneOsc.type = "sawtooth";
+    testToneOsc.frequency.value = 220;
+    testToneFilter = testToneCtx.createBiquadFilter();
+    testToneFilter.type = "lowpass";
+    testToneFilter.frequency.value = 1e3;
+    testToneFilter.Q.value = 1.1;
+    testToneGain = testToneCtx.createGain();
+    testToneGain.gain.value = 0.001;
+    testToneOsc.connect(testToneFilter);
+    testToneFilter.connect(testToneGain);
+    if (testToneCtx.createStereoPanner) {
+      testTonePanner = testToneCtx.createStereoPanner();
+      testToneGain.connect(testTonePanner);
+      testTonePanner.connect(testToneCtx.destination);
+    } else {
+      testTonePanner = null;
+      testToneGain.connect(testToneCtx.destination);
+    }
+    testToneOsc.start();
+    testToneOn = true;
+    document.getElementById("testToneToggle").classList.add("on");
+    document.getElementById("testToneToggle").textContent = "Stop Test Tone";
+    document.getElementById("testToneStatus").textContent =
+      "Playing - Cutoff, Amp, Pitch & Pan are live. PWM/Mix have no audio here.";
+  }
+  function stopTestTone() {
+    testToneOn = false;
+    if (testToneOsc) {
+      try {
+        testToneOsc.stop();
+      } catch (e) {}
+    }
+    if (testToneCtx) {
+      testToneCtx.close();
+    }
+    testToneOsc =
+      testToneFilter =
+      testToneGain =
+      testTonePanner =
+      testToneCtx =
+        null;
+    document.getElementById("testToneToggle").classList.remove("on");
+    document.getElementById("testToneToggle").textContent = "Play Test Tone";
+    document.getElementById("testToneStatus").textContent =
+      "A held note, filtered and shaped live by Cutoff, Amp, Pitch & Pan";
+  }
+  document
+    .getElementById("testToneToggle")
+    .addEventListener("click", () =>
+      testToneOn ? stopTestTone() : startTestTone(),
+    );
+  function applyTestTone(allCombined) {
+    if (!testToneCtx) return;
+    const now = testToneCtx.currentTime;
+    const cutoffV = allCombined.cutoff;
+    const freq = 150 * Math.pow(6e3 / 150, (cutoffV + 1) / 2);
+    testToneFilter.frequency.setTargetAtTime(freq, now, 0.02);
+    const ampV = allCombined.amp;
+    const gainVal = Math.max(5e-4, ((ampV + 1) / 2) * 0.22);
+    testToneGain.gain.setTargetAtTime(gainVal, now, 0.02);
+    const pitchV = allCombined.pitch;
+    testToneOsc.detune.setTargetAtTime(pitchV * 1200, now, 0.02);
+    if (testTonePanner) {
+      testTonePanner.pan.setTargetAtTime(allCombined.pan, now, 0.02);
+    }
+  }
+  function rebuildOverviewStrip() {
+    const stripEl = document.getElementById("overviewStrip");
+    stripEl.innerHTML = "";
+    overviewCanvases = {};
+    const activeDestIds = [...new Set(routes.map((r) => r.dest))];
+    if (activeDestIds.length === 0) {
+      stripEl.appendChild(
+        el("div", { class: "overview-empty" }, [
+          "No active routings yet - add one in the Routing Matrix below to see it here.",
+        ]),
+      );
+      return;
+    }
+    DESTINATIONS.forEach((d) => {
+      if (!activeDestIds.includes(d.id)) return;
+      const card = el("div", { class: "overview-card" });
+      const head = el("div", { class: "overview-card-head" });
+      head.appendChild(el("span", { class: "name" }, [d.label]));
+      const valSpan = el("span", { class: "val" }, ["0%"]);
+      head.appendChild(valSpan);
+      card.appendChild(head);
+      const canvas = document.createElement("canvas");
+      card.appendChild(canvas);
+      stripEl.appendChild(card);
+      overviewCanvases[d.id] = {
+        canvas,
+        ctx: canvas.getContext("2d"),
+        valSpan,
+      };
+    });
+    resizeOverviewCanvases();
+  }
+  function resizeOverviewCanvases() {
+    Object.values(overviewCanvases).forEach(({ canvas }) => {
+      const r = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, r.width * DPR);
+      canvas.height = Math.max(1, r.height * DPR);
+    });
+  }
+  window.addEventListener("resize", resizeOverviewCanvases);
+  function drawOverviewStrip(allCombined) {
+    Object.keys(overviewCanvases).forEach((destId) => {
+      const { canvas, ctx, valSpan } = overviewCanvases[destId];
+      const w = canvas.width,
+        h = canvas.height;
+      if (w <= 1 || h <= 1) return;
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+      drawLine(ctx, w, h, destHistory[destId], "#f4f2ea", 1.6 * DPR, false);
+      valSpan.textContent = Math.round(allCombined[destId] * 100) + "%";
+    });
+  }
+  function renderLegend() {
+    const legend = document.getElementById("legend");
+    legend.innerHTML = "";
+    const items = [
+      ["lfo1", "LFO 1"],
+      ["lfo2", "LFO 2"],
+      ["env", "Envelope"],
+      ["perf", "Performance"],
+      ["rand", "Random"],
+    ];
+    items.forEach(([key, label]) => {
+      const s = SOURCES[key];
+      const item = el("div", { class: "legend-item" });
+      item.appendChild(
+        el("span", { class: "sw", style: `background:${colorOf(key)}` }),
+      );
+      item.appendChild(
+        document.createTextNode(label + (s.enabled ? "" : " (off)")),
+      );
+      legend.appendChild(item);
+    });
+    const outItem = el("div", { class: "legend-item" });
+    outItem.appendChild(
+      el("span", { class: "sw", style: "background:#f4f2ea;height:3px;" }),
+    );
+    outItem.appendChild(document.createTextNode("Combined Output"));
+    legend.appendChild(outItem);
+  }
+  renderLegend();
+  let lastT = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - lastT) / 1e3);
+    lastT = now;
+    const tSec = now / 1e3;
+    if (historyStartT === null) historyStartT = tSec;
+    const vals = {};
+    Object.keys(SOURCES).forEach(
+      (key) => (vals[key] = evalSource(key, tSec, dt)),
+    );
+    const allCombined = {};
+    DESTINATIONS.forEach((d) => {
+      let c = 0;
+      routes.forEach((r) => {
+        if (r.dest === d.id) c += vals[r.source] * (r.amount / 100);
+      });
+      allCombined[d.id] = Math.max(-1, Math.min(1, c));
+    });
+    const focusDest = focusSelect.value;
+    const combined = allCombined[focusDest];
+    Object.keys(vals).forEach((key) => {
+      history[key].push(vals[key]);
+      if (history[key].length > 600) history[key].shift();
+    });
+    history.combined.push(combined);
+    if (history.combined.length > 600) history.combined.shift();
+    DESTINATIONS.forEach((d) => {
+      destHistory[d.id].push(allCombined[d.id]);
+      if (destHistory[d.id].length > 300) destHistory[d.id].shift();
+    });
+    drawViz();
+    drawDest(combined, focusDest);
+    drawOverviewStrip(allCombined);
+    document.getElementById("destTitle").textContent =
+      "Destination Preview - " +
+      DESTINATIONS.find((d) => d.id === focusDest).label;
+    if (testToneOn) applyTestTone(allCombined);
+    requestAnimationFrame(frame);
+  }
+  function drawGrid(ctx, w, h, rows, cols) {
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 1;
+    for (let i = 1; i < cols; i++) {
+      const x = (w * i) / cols;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    for (let j = 1; j < rows; j++) {
+      const y = (h * j) / rows;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+  }
+  function drawLine(ctx, w, h, data, color, lineWidth, glow) {
+    if (data.length < 2) return;
+    ctx.beginPath();
+    const n = data.length;
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * w;
+      const y = h / 2 - data[i] * (h * 0.42);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    if (glow) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 6;
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  function drawViz() {
+    const w = vizCanvas.width,
+      h = vizCanvas.height;
+    vizCtx.clearRect(0, 0, w, h);
+    drawGrid(vizCtx, w, h, 4, 12);
+    vizCtx.strokeStyle = "rgba(255,255,255,0.12)";
+    vizCtx.beginPath();
+    vizCtx.moveTo(0, h / 2);
+    vizCtx.lineTo(w, h / 2);
+    vizCtx.stroke();
+    if (audioOn && analyser) {
+      analyser.getByteTimeDomainData(audioData);
+      vizCtx.beginPath();
+      for (let i = 0; i < audioData.length; i++) {
+        const x = (i / (audioData.length - 1)) * w;
+        const v = (audioData[i] - 128) / 128;
+        const y = h / 2 - v * (h * 0.4);
+        if (i === 0) vizCtx.moveTo(x, y);
+        else vizCtx.lineTo(x, y);
+      }
+      vizCtx.strokeStyle = "rgba(255,255,255,0.14)";
+      vizCtx.lineWidth = 1;
+      vizCtx.stroke();
+    }
+    const focusDest = focusSelect.value;
+    const activeKeys = new Set(
+      routes.filter((r) => r.dest === focusDest).map((r) => r.source),
+    );
+    ["lfo1", "lfo2", "env", "perf", "rand"].forEach((key) => {
+      if (!activeKeys.has(key) || !SOURCES[key].enabled) return;
+      drawLine(vizCtx, w, h, history[key], colorOf(key), 1.4 * DPR, false);
+    });
+    drawLine(vizCtx, w, h, history.combined, "#f4f2ea", 2.2 * DPR, true);
+  }
+  function drawDest(value, destId) {
+    const w = destCanvas.width,
+      h = destCanvas.height;
+    destCtx.clearRect(0, 0, w, h);
+    if (destId === "cutoff") {
+      const norm = (value + 1) / 2;
+      const cutoffX = w * 0.08 + norm * w * 0.84;
+      destCtx.beginPath();
+      for (let x = 0; x <= w; x += 2) {
+        const nx = x / w;
+        const rel = x - cutoffX;
+        let y;
+        if (rel < 0) y = h * 0.18;
+        else y = h * 0.18 + Math.min(1, rel / (w * 0.22)) * h * 0.68;
+        if (x === 0) destCtx.moveTo(x, y);
+        else destCtx.lineTo(x, y);
+      }
+      destCtx.strokeStyle = "#a78bfa";
+      destCtx.lineWidth = 2.2 * DPR;
+      destCtx.shadowColor = "#a78bfa";
+      destCtx.shadowBlur = 8;
+      destCtx.stroke();
+      destCtx.shadowBlur = 0;
+      destCtx.beginPath();
+      destCtx.moveTo(cutoffX, 0);
+      destCtx.lineTo(cutoffX, h);
+      destCtx.strokeStyle = "rgba(255,255,255,0.25)";
+      destCtx.lineWidth = 1;
+      destCtx.setLineDash([4, 4]);
+      destCtx.stroke();
+      destCtx.setLineDash([]);
+    } else {
+      const midY = h / 2;
+      destCtx.strokeStyle = "rgba(255,255,255,0.14)";
+      destCtx.lineWidth = 2;
+      destCtx.beginPath();
+      destCtx.moveTo(w * 0.06, midY);
+      destCtx.lineTo(w * 0.94, midY);
+      destCtx.stroke();
+      destCtx.beginPath();
+      destCtx.moveTo(w / 2, midY - 10 * DPR);
+      destCtx.lineTo(w / 2, midY + 10 * DPR);
+      destCtx.strokeStyle = "rgba(255,255,255,0.3)";
+      destCtx.stroke();
+      const x = w * 0.5 + value * (w * 0.44);
+      const r = 9 * DPR;
+      destCtx.beginPath();
+      destCtx.arc(x, midY, r, 0, Math.PI * 2);
+      destCtx.fillStyle = "#f4f2ea";
+      destCtx.shadowColor = "#f4f2ea";
+      destCtx.shadowBlur = 10;
+      destCtx.fill();
+      destCtx.shadowBlur = 0;
+      destCtx.font = `${11 * DPR}px ui-monospace, monospace`;
+      destCtx.fillStyle = "rgba(255,255,255,0.4)";
+      destCtx.textAlign = "center";
+      destCtx.fillText((value * 100).toFixed(0) + "%", x, midY - 18 * DPR);
+      destCtx.textAlign = "left";
+    }
+  }
+  focusSelect.addEventListener("change", () => {
+    renderLegend();
+    renderFeedingNote();
+  });
+  requestAnimationFrame(frame);
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const exportable = {};
+    Object.keys(SOURCES).forEach((k) => {
+      const { _phase, _t, _level, _hold, _last, _lastStep, ...clean } =
+        SOURCES[k];
+      exportable[k] = clean;
+    });
+    const data = {
+      kind: "modulus-studio-preset",
+      version: 1,
+      sources: exportable,
+      routes,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "modulation-preset.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+  document
+    .getElementById("importBtn")
+    .addEventListener("click", () =>
+      document.getElementById("fileInput").click(),
+    );
+  document.getElementById("fileInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.kind !== "modulus-studio-preset")
+          throw new Error("not a preset file");
+        Object.keys(data.sources || {}).forEach((k) => {
+          if (SOURCES[k]) Object.assign(SOURCES[k], data.sources[k]);
+        });
+        if (Array.isArray(data.routes)) {
+          routes = data.routes;
+          routeIdCounter = Math.max(1, ...routes.map((r) => r.id || 0)) + 1;
+        }
+        [
+          "body-lfo1",
+          "body-lfo2",
+          "body-env",
+          "body-perf",
+          "body-rand",
+        ].forEach((id) => (document.getElementById(id).innerHTML = ""));
+        buildLFO("lfo1");
+        buildLFO("lfo2");
+        buildEnv();
+        buildPerf();
+        buildRand();
+        renderRoutes();
+        renderLegend();
+      } catch (err) {
+        alert("Could not read that preset file: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+  if (navigator.requestMIDIAccess) {
+    navigator
+      .requestMIDIAccess()
+      .then((access) => {
+        const inputs = [...access.inputs.values()];
+        if (inputs.length === 0) return;
+        document.getElementById("midiPill").textContent =
+          "MIDI: " + (inputs[0].name || "connected");
+        document.getElementById("midiPill").classList.add("live");
+        inputs.forEach((input) => {
+          input.onmidimessage = (msg) => {
+            const [status, d1, d2] = msg.data;
+            const cmd = status & 240;
+            if (cmd === 176 && d1 === 1) {
+              SOURCES.perf.modwheel = Math.round((d2 / 127) * 100);
+              refreshPerfSlider();
+            }
+            if (cmd === 144 && d2 > 0) {
+              SOURCES.perf.velocity = d2;
+              refreshPerfSlider();
+            }
+            if (cmd === 208) {
+              SOURCES.perf.aftertouch = Math.round((d1 / 127) * 100);
+              refreshPerfSlider();
+            }
+          };
+        });
+      })
+      .catch(() => {});
+  }
+  function refreshPerfSlider() {}
+  const TUTORIAL_STEPS = [
+    {
+      tag: "Welcome",
+      title: "What this tool actually does",
+      body: `
+      <p>This is a <strong>modulation modelling tool</strong> - it doesn't make sound. It's built to help you understand something that's normally invisible on a real synth: what happens when two or three modulation sources are all pushing on the same knob at once.</p>
+      <p>The core idea is simple, and everything else is built on it:</p>
+      <ul>
+        <li>A <strong>source</strong> (an LFO, an envelope, a random generator&hellip;) produces a value that moves over time.</li>
+        <li>A <strong>routing</strong> sends that source to a <strong>destination</strong> (filter cutoff, pitch, amp&hellip;) at some <strong>amount</strong>.</li>
+        <li>If more than one routing targets the same destination, their contributions <strong>add together</strong>.</li>
+      </ul>
+      <p>That's it. The whole app is just: dial in sources on the left, wire them up in the middle, and watch the result on the right.</p>
+    `,
+    },
+    {
+      tag: "Step 1 of 5",
+      title: "Sources - the left sidebar",
+      body: `
+      <p>Five modulation generators, each with its own color and its own <strong>Enabled</strong> checkbox. Nothing contributes to anything until it's switched on:</p>
+      <ul>
+        <li><span class="swatch-inline" style="background:#a78bfa"></span><strong>LFO 1 / LFO 2</strong> - shape, rate, depth, phase, and uni/bi polarity, same controls a hardware LFO would give you.</li>
+        <li><span class="swatch-inline" style="background:#5fd68a"></span><strong>Envelope</strong> - a real ADSR. Hit <code>TRIGGER</code> to fire it once, or turn on <code>Loop</code> to have it auto-retrigger.</li>
+        <li><span class="swatch-inline" style="background:#e8a33d"></span><strong>Performance</strong> - mod wheel, aftertouch, or velocity. Drag the slider by hand, or plug in a MIDI controller and it'll respond live.</li>
+        <li><span class="swatch-inline" style="background:#ff7eb6"></span><strong>Random</strong> - sample &amp; hold, smooth random, or a random walk, with a chaos amount.</li>
+      </ul>
+      <p>These panels are just the instrument. Nothing happens until a source is wired to a destination - that's the next step.</p>
+    `,
+    },
+    {
+      tag: "Step 2 of 5",
+      title: "Routing Matrix - wiring sources to destinations",
+      body: `
+      <p>Each row is one connection: <strong>Source → Destination → Amount</strong>.</p>
+      <p>Amount runs from &minus;100% to +100% - negative amounts invert the source, which is exactly how you'd get an LFO to pull a filter <em>down</em> instead of up. Use <strong>+ ADD ROUTING</strong> to wire up more connections, or the <strong>✕</strong> to remove one.</p>
+      <p>Nothing stops you from routing the same source to several destinations at once, or stacking several sources onto the same destination - that stacking is actually the most useful thing to experiment with, since it's the part you can't easily see on real hardware.</p>
+    `,
+    },
+    {
+      tag: "Step 3 of 5",
+      title: "Modulation Output - reading the graph",
+      body: `
+      <p>The <strong>focus dropdown</strong> at the top-right of the graph picks which destination you're currently looking at. The graph only draws routings that target <em>that</em> destination - so if a source is enabled but not routed there, it won't appear, even though it's still running.</p>
+      <p>Each active source draws in its own color, scaled by its routing amount. The <strong>thick white line</strong> is the sum of all of them - the actual combined modulation signal that destination would receive. Watching how the white line relates to the colored lines underneath it is the whole point of the tool.</p>
+    `,
+    },
+    {
+      tag: "Step 4 of 5",
+      title: "Destination Preview",
+      body: `
+      <p>The panel along the bottom translates the combined signal into something closer to what it would actually do. <strong>Filter Cutoff</strong> gets a real sweeping lowpass-response curve; other destinations get a simpler moving gauge. Either way, it's the same combined value from the graph above, just shown as an effect rather than a line on a chart.</p>
+      <p>Two extras, both optional: <strong>Enable Mic Input</strong> layers your real audio faintly behind the graph so you can eyeball modulation against actual sound, and <strong>Export/Import JSON</strong> under Preset lets you save a routing setup and bring it back later.</p>
+    `,
+    },
+    {
+      tag: "Try it",
+      title: "You're set - a quick experiment",
+      body: `
+      <p>Turn on <strong>LFO 2</strong>, add a routing (<code>LFO 2 → Filter Cutoff → 50%</code>), and switch the focus dropdown to <strong>Filter Cutoff</strong> if it isn't already. You'll see LFO 1 and LFO 2 as two separate colored lines, and the white combined line doing something neither of them does alone.</p>
+      <p>That's the habit worth building: pick a destination, stack two or three sources onto it, and watch what the sum actually looks like before you dial the same thing in on real hardware.</p>
+      <p>Come back to this any time with the <strong>? How this works</strong> button at the top.</p>
+    `,
+    },
+  ];
+  let tutStep = 0;
+  const tutorialOverlay = document.getElementById("tutorialOverlay");
+  const tutStepTag = document.getElementById("tutorialStepTag");
+  const tutTitle = document.getElementById("tutorialTitle");
+  const tutBody = document.getElementById("tutorialBody");
+  const tutDots = document.getElementById("tutorialDots");
+  const tutBack = document.getElementById("tutBack");
+  const tutNext = document.getElementById("tutNext");
+  function renderTutorialStep() {
+    const step = TUTORIAL_STEPS[tutStep];
+    tutStepTag.textContent = step.tag;
+    tutTitle.textContent = step.title;
+    tutBody.innerHTML = step.body;
+    tutDots.innerHTML = "";
+    TUTORIAL_STEPS.forEach((_, i) => {
+      const dot = document.createElement("span");
+      if (i === tutStep) dot.classList.add("active");
+      tutDots.appendChild(dot);
+    });
+    tutBack.style.visibility = tutStep === 0 ? "hidden" : "visible";
+    tutNext.textContent =
+      tutStep === TUTORIAL_STEPS.length - 1 ? "Done" : "Next";
+  }
+  function openTutorial(fromStart) {
+    if (fromStart) tutStep = 0;
+    renderTutorialStep();
+    tutorialOverlay.classList.add("show");
+  }
+  function closeTutorial() {
+    tutorialOverlay.classList.remove("show");
+    try {
+      localStorage.setItem("modviz-tutorial-seen", "1");
+    } catch (e) {}
+  }
+  document
+    .getElementById("helpBtn")
+    .addEventListener("click", () => openTutorial(true));
+  document
+    .getElementById("tutorialClose")
+    .addEventListener("click", closeTutorial);
+  document.getElementById("tutSkip").addEventListener("click", closeTutorial);
+  tutorialOverlay.addEventListener("click", (e) => {
+    if (e.target === tutorialOverlay) closeTutorial();
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && tutorialOverlay.classList.contains("show"))
+      closeTutorial();
+  });
+  tutBack.addEventListener("click", () => {
+    if (tutStep > 0) {
+      tutStep--;
+      renderTutorialStep();
+    }
+  });
+  tutNext.addEventListener("click", () => {
+    if (tutStep < TUTORIAL_STEPS.length - 1) {
+      tutStep++;
+      renderTutorialStep();
+    } else closeTutorial();
+  });
+  try {
+    if (!localStorage.getItem("modviz-tutorial-seen")) openTutorial(true);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
