@@ -1,0 +1,561 @@
+/* synth-panel.css — extends the tokens defined in styles.css (chassis,
+   panel, hairline, accent, mono) with components specific to recreating an
+   instrument control panel: knobs, mini switches, section blocks, and the
+   patch-select strip.
+
+   Deliberately an original visual treatment (dark card sections, accent-
+   green pointers) rather than a pixel copy of Sequential's exact branding,
+   colors, or logo — this recreates the *functional control layout* of a
+   Take 5 for programming reference, not its trade dress.
+*/
+
+.synth-layout {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  gap: 16px;
+  padding: 16px 22px 30px 22px;
+}
+
+/* --- Sidebar: the full browsable library, always visible ------------------ */
+
+.sound-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 10px;
+}
+.sound-nav-group + .sound-nav-group { margin-top: 14px; }
+.sound-nav-group h4 {
+  margin: 4px 8px 6px;
+  font-family: var(--sans);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.sound-nav-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1.3;
+}
+.sound-nav-item:hover { background: var(--panel-raised); color: var(--text); }
+.sound-nav-item.active {
+  background: rgba(77, 255, 158, 0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* --- Main content: controls + details, filling remaining space ------------ */
+
+.sound-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.synth-intro {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: 0;
+  flex: 0 0 auto;
+}
+.synth-intro strong { color: var(--text); }
+
+/* --- Section blocks ----------------------------------------------------- */
+
+.synth-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* Oscillators / Mixer / Filter / Envelopes / ADSR / Suggested Effects /
+   Modulation — 7 equal columns in one row, all the same height (grid rows
+   stretch by default), spanning the full width. Each section's own content
+   is then centered/distributed vertically within that shared height via the
+   rules below, rather than just sitting at the top of an oversized box. */
+.controls-row {
+  display: grid;
+  /* Proportional, not equal — Oscillators/Envelopes genuinely hold more
+     controls (2 rows of 4) than Mixer/Filter (a handful of knobs), so equal
+     columns left visible dead space around Mixer/Filter's smaller content
+     once it was centered inside a same-width box. Sized to content instead. */
+  grid-template-columns: 1.3fr 0.85fr 0.75fr 1.3fr 1fr 1.1fr 0.9fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.example-row {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.example-row .sound-example-card {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+/* preserveAspectRatio="xMidYMid meet" on the SVG itself keeps the chart's
+   own proportions intact — this just stops the flex box from forcing it
+   wider/taller than the square viewBox wants to be. */
+.adsr-window {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.adsr-window .adsr-chart {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.synth-section {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.synth-section h3 {
+  margin: 0 0 10px;
+  font-family: var(--sans);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.synth-row.top .synth-section { flex: 1 1 140px; }
+
+.filter-controls { gap: 40px; }
+
+.synth-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Mixer/Filter each have a single row of knobs — center that row vertically
+   within the section now that all 7 sections share the same (taller) height.
+   Placed AFTER .synth-controls deliberately: same specificity, so source
+   order decides — this must come later to actually win the cascade. */
+.mixer-controls,
+.filter-controls {
+  flex: 1;
+  align-items: center;
+}
+
+/* --- Knob ----------------------------------------------------------------
+   Two layers: a tick-mark ring (CSS repeating-conic-gradient, masked into an
+   annulus so it surrounds the knob without filling it — mirrors the printed
+   scale ticks on a real synth panel) and the knob body itself (radial-
+   gradient for a metallic/plastic highlight, plus a white pointer with a
+   glowing tip). --angle is still the only thing that varies per instance. */
+
+.knob-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 54px;
+}
+
+.knob-svg {
+  width: 46px;
+  height: 46px;
+  overflow: visible;
+}
+.knob-svg.large {
+  width: 62px;
+  height: 62px;
+}
+
+.knob-ring-bg {
+  fill: var(--panel-raised);
+  stroke: var(--hairline-strong);
+  stroke-width: 1;
+}
+.knob-tick {
+  stroke: var(--text-dim);
+  stroke-width: 1.5;
+}
+.knob-num {
+  font-family: var(--sans);
+  font-size: 8px;
+  fill: var(--text-dim);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.knob-body {
+  fill: url(#knobBodyGrad);
+  stroke: var(--hairline-strong);
+  stroke-width: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.knob-pointer {
+  transform-origin: 35px 35px;
+  transform: rotate(var(--angle, -110deg));
+}
+.knob-pointer-line {
+  stroke: #ffffff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
+}
+.knob-pointer-dot {
+  fill: #ffffff;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
+}
+
+.knob-label {
+  font-family: var(--sans);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* --- Oscillator rows (matches reference: OSC1/OSC2 stacked rows, side label) --- */
+
+.osc-section { flex: 1 1 300px; }
+.osc-rows {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+}
+.osc-row { display: flex; align-items: flex-end; gap: 12px; }
+.osc-side-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+/* Octave knob: small LED dots instead of a numbered ring, like a real octave selector */
+.knob-octave { overflow: visible; }
+.knob-led {
+  fill: var(--panel);
+  stroke: var(--hairline-strong);
+  stroke-width: 0.8;
+}
+.knob-led.on {
+  fill: #ff5c5c;
+  filter: drop-shadow(0 0 2px rgba(255, 92, 92, 0.7));
+}
+
+/* Small square momentary-style buttons (Sync / FM / Env Routing) */
+.mini-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  padding-bottom: 8px;
+}
+.mini-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: linear-gradient(160deg, var(--panel-raised), #0a0c14);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+}
+.mini-btn.on {
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 6px var(--accent-dim), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+/* --- Mixer: OSC1/SUB, FM button, OSC2/Noise columns, matching reference grouping --- */
+.mixer-col { display: flex; flex-direction: column; gap: 10px; }
+
+/* --- Filter: orange-ringed Cutoff as the visual centerpiece --- */
+.filter-side-knobs { display: flex; flex-direction: column; gap: 10px; }
+.filter-cutoff .knob-tick { stroke: #ff8c1a; stroke-width: 2; }
+.filter-cutoff .knob-num { fill: #ff8c1a; }
+.filter-cutoff .knob-ring-bg { stroke: #ff8c1a; stroke-width: 1.5; }
+
+/* --- Mini switch (kept for any remaining pill-style toggles) ---------------- */
+
+.switch-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 52px;
+}
+.switch-mini {
+  width: 30px;
+  height: 15px;
+  border-radius: 6px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  position: relative;
+}
+.switch-mini::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: var(--pos, 2px);
+  width: 11px;
+  height: 9px;
+  border-radius: 5px;
+  background: var(--text-dim);
+}
+.switch-mini.on::after { background: var(--accent); left: 17px; }
+
+/* --- Small buttons (memory/seq/arp) --------------------------------------- */
+
+.synth-btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.synth-btn {
+  font-family: var(--sans);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: default;
+}
+.synth-btn.on { color: var(--accent); border-color: var(--accent-dim); }
+
+/* --- Mini display screen -------------------------------------------------- */
+
+.mini-display {
+  background: #04140d;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--accent);
+  text-shadow: 0 0 6px var(--accent-dim);
+  margin-bottom: 10px;
+}
+
+.envelope-blocks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+}
+.envelope-block h4 {
+  margin: 0 0 6px;
+  font-family: var(--sans);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+/* --- Patch select strip ---------------------------------------------------- */
+
+.patch-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.patch-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  color: var(--text-dim);
+  font-family: var(--sans);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.patch-btn.on { color: var(--accent); border-color: var(--accent-dim); background: rgba(77, 255, 158, 0.08); }
+
+@media (max-width: 900px) {
+  .synth-row { flex-direction: column; }
+}
+
+/* --- Explanation area ------------------------------------------------------ */
+
+.explain-title {
+  font-family: var(--sans);
+  font-size: 19px;
+  margin: 0 0 10px;
+  color: var(--text);
+}
+.explain-copy {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+  max-width: 780px;
+  margin: 0 0 16px;
+}
+.explain-copy strong { color: var(--text); }
+
+/* --- Sound example card ---------------------------------------------------- */
+
+.sound-example-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex: 0 0 auto;
+}
+.sound-example-header h2 { margin: 0; }
+.sound-select {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.sound-select:focus { outline: 1px solid var(--accent-dim); }
+.sound-category-tag {
+  font-family: var(--sans);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--teal);
+  background: rgba(77, 232, 201, 0.12);
+  border: 1px solid rgba(77, 232, 201, 0.3);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.sound-settings-list {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 2;
+  margin: 0 0 4px;
+  padding-left: 20px;
+}
+.sound-settings-list strong { color: var(--accent); }
+
+/* --- Suggested Effects / Modulation windows -------------------------------- */
+
+.suggestion-window { justify-content: flex-start; }
+.suggestion-block + .suggestion-block { margin-top: 14px; }
+.suggestion-block h4 {
+  margin: 0 0 4px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.suggestion-type {
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: none;
+  font-weight: 400;
+}
+.suggestion-text {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+/* --- ADSR chart (right column of the sound card) ---------------------------
+   Colored per-phase fill areas + outline stroke, modeled on a classic
+   labeled ADSR diagram — built dynamically per preset in soundDesign.js,
+   these classes just supply the styling. */
+.adsr-fill-attack { fill: var(--danger); fill-opacity: 0.75; }
+.adsr-fill-decay { fill: var(--amber); fill-opacity: 0.75; }
+.adsr-fill-sustain { fill: var(--teal); fill-opacity: 0.75; }
+.adsr-fill-release { fill: var(--violet); fill-opacity: 0.75; }
+.adsr-outline {
+  fill: none;
+  stroke: #f5f6fa;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 3px rgba(245, 246, 250, 0.4));
+}
+.adsr-axis { stroke: var(--hairline-strong); stroke-width: 1.5; }
+.adsr-axis-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  fill: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.adsr-phase-label {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+  text-anchor: middle;
+}
+.adsr-phase-sub {
+  font-family: var(--sans);
+  font-size: 9px;
+  fill: var(--text-dim);
+  text-anchor: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.adsr-marker-line { stroke-width: 1.4; stroke-dasharray: 3 3; }
+.adsr-marker-text {
+  font-family: var(--sans);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

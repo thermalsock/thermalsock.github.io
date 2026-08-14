@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transient Lab</title>
+  <meta name="description" content="A MIDI synth training app -- scales, chords, and genre-based ear/hand training with real-time audio analysis.">
+  <link rel="icon" href="data:,">
+
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      background: #c6c6c6;
+      height: 100%;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Browser-compat banner -- hidden by default, shown by the check
+       script below only when Web MIDI genuinely isn't available.
+       Sits in normal document flow ABOVE the canvas (not overlaid on
+       top of it), so it never covers any of the app's own on-canvas
+       UI -- it pushes the canvas down instead. */
+    #compat-banner {
+      display: none;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: #3a2f0a;
+      color: #f0d080;
+      font: 600 13px -apple-system, system-ui, sans-serif;
+      text-align: center;
+    }
+    #compat-banner button {
+      flex: 0 0 auto;
+      background: none;
+      border: 1px solid #f0d080;
+      color: #f0d080;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    /* Canvas fills whatever space is left below the banner, scaled to
+       fit while keeping its real 1920x1080 aspect ratio -- the canvas
+       itself always draws at its native 1920x1080 resolution
+       (unchanged), this only affects its on-screen display size.
+       engine.js's click handler already scales pointer coordinates by
+       canvas.width/rect.width and canvas.height/rect.height, so a
+       CSS-scaled canvas was already handled correctly -- no JS
+       changes needed for this. */
+    #canvas-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* Support widget -- small, fixed corner, out of the way of the
+       app's own UI. Rudiment's store links are commented out below;
+       add them once those listings are live. */
+    #support-widget {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    #support-widget a img {
+      display: block;
+    }
+    #support-widget .store-link {
+      display: block;
+      font: 600 12px -apple-system, system-ui, sans-serif;
+      background: #1c1f26;
+      color: #e8e6df;
+      border: 1px solid #343945;
+      border-radius: 6px;
+      padding: 7px 12px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    #support-widget .store-link:hover { border-color: #e8a33d; }
+    #support-widget .store-link.pending {
+      color: #7a7d87;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Thin strip in normal document flow at the very top, above the
+       compat-banner -- same "push the canvas down, never overlay it"
+       technique as the banner below, so it can't collide with the
+       canvas-drawn TopBar controls (lesson title left, fullscreen/theme
+       buttons right). Always visible; this is the hub wayfinding link.
+       Matches the icon+lockup brand treatment used on the hub and every
+       other Thermalsock Labs app page -- this strip is site-shell, not
+       part of the app itself, so it stays in sync with that pattern. */
+    #hub-strip {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      background: #14151a;
+    }
+    #hub-strip a {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+    }
+    #hub-strip a:hover .hs-appname { filter: brightness(1.15); }
+    #hub-strip .hs-mark { flex: none; display: block; }
+    #hub-strip .hs-text { display: flex; flex-direction: column; line-height: 1.15; }
+    #hub-strip .hs-appname {
+      font: 800 12.5px -apple-system, system-ui, sans-serif;
+      color: #e8a020;
+      letter-spacing: 0.01em;
+    }
+    #hub-strip .hs-sub {
+      font: 600 9.5px 'Courier Prime', -apple-system, system-ui, sans-serif;
+      color: #7a7d87;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="hub-strip">
+    <a href="../index.html">
+      <svg class="hs-mark" width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+        <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+        <rect x="23" y="2" width="9" height="9" fill="#e8a020"/>
+        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+      </svg>
+      <span class="hs-text">
+        <span class="hs-appname">Transient Lab</span>
+        <span class="hs-sub">Thermalsock Labs</span>
+      </span>
+    </a>
+  </div>
+
+  <div id="compat-banner">
+    <span>Note input needs Chrome or Edge -- this browser doesn't support Web MIDI (audio analysis still works everywhere).</span>
+    <button id="compat-dismiss" type="button">Dismiss</button>
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="sequencer" width="1920" height="1080"></canvas>
+  </div>
+
+  <div id="support-widget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 45px !important;width: 163px !important;">
+    </a>
+    <a class="store-link" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">🎮 Rudiment on Steam</a>
+    <span class="store-link pending" title="App Store review in progress">📱 Rudiment on the App Store - coming soon</span>
+  </div>
+
+  <script>
+    // Web MIDI is Chrome/Edge/Firefox 108+ only -- Safari (desktop and
+    // iOS) has never shipped it and WebKit has no roadmap to. This app
+    // is MIDI-input-only with no on-screen fallback, so a visitor on
+    // an unsupported browser needs to know why nothing happens when
+    // they plug in a keyboard, rather than assuming the site is broken.
+    if (!('requestMIDIAccess' in navigator)) {
+      var banner = document.getElementById('compat-banner');
+      banner.style.display = 'flex';
+      document.getElementById('compat-dismiss').addEventListener('click', function () {
+        banner.style.display = 'none';
+      });
+    }
+  </script>
+
+  <script type="module" src="./engine.js"></script>
+</body>
+</html>

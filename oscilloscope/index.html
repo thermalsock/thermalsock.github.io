@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thermalsock Labs — Web Oscilloscope</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Permission gate: shown until the user explicitly starts capture. -->
+  <div id="gate" class="gate">
+    <div class="gate-panel">
+      <h1>Web Oscilloscope</h1>
+      <p class="gate-sub">Thermalsock Labs</p>
+      <p class="gate-copy">
+        This is a real dual-trace oscilloscope running entirely in your browser.
+        Plug an audio interface or microphone into your computer, then start capture
+        below — your browser will ask permission to use it. Nothing is recorded or
+        sent anywhere; all analysis happens locally.
+      </p>
+
+      <label class="field">
+        <span>Input device</span>
+        <select id="deviceSelect">
+          <option value="">Default input</option>
+        </select>
+      </label>
+
+      <button id="startBtn" class="btn-primary">Start capture</button>
+      <p id="gateError" class="gate-error" hidden></p>
+    </div>
+  </div>
+
+  <!-- Main scope UI -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <a href="../index.html" class="brand-lockup">
+        <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#4dff9e"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname" style="color:#4dff9e">Oscilloscope</span>
+          <span class="brand-sub">Thermalsock Labs</span>
+        </span>
+      </a>
+      <div class="topbar-right">
+        <span id="modePill" class="pill mode">Time Domain</span>
+        <span class="pill live">
+          <span id="statusDot" class="status-dot"></span>
+          <span id="statusText">Not running</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="scope-wrap" id="scopeWrap">
+        <canvas id="scopeCanvas"></canvas>
+      </div>
+
+      <aside class="panel">
+        <section class="card hero-card">
+          <div class="hero-label" id="heroLabel">Frequency</div>
+          <div class="hero-value"><span id="heroValueNum">--</span><span class="hero-unit" id="heroUnit"></span></div>
+          <div class="hero-sub" id="heroSub">&nbsp;</div>
+        </section>
+
+        <section class="card panel-group">
+          <h2>
+            <span class="chip violet" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Display
+          </h2>
+          <div class="row">
+            <label for="displayMode">Mode</label>
+            <select id="displayMode">
+              <option value="time">Time Domain</option>
+              <option value="xy">XY / Lissajous</option>
+              <option value="spectrum">FFT / Spectrum</option>
+              <option value="spectrogram">Spectrogram</option>
+              <option value="chromagram">Chromagram</option>
+              <option value="harmonics">Harmonics / Tuner</option>
+              <option value="balance">Harmonic Balance</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="themeSelect">Theme</label>
+            <select id="themeSelect"></select>
+          </div>
+          <div class="row">
+            <label for="chBToggle">Channel B</label>
+            <input type="checkbox" id="chBToggle" checked />
+          </div>
+        </section>
+
+        <section class="card panel-group">
+          <h2>
+            <span class="chip amber" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M2 8h7M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Trigger
+          </h2>
+          <div class="row">
+            <label for="triggerMode">Mode</label>
+            <select id="triggerMode">
+              <option value="auto">Auto</option>
+              <option value="normal">Normal</option>
+              <option value="single">Single</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="triggerSlope">Slope</label>
+            <select id="triggerSlope">
+              <option value="rising">Rising</option>
+              <option value="falling">Falling</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="triggerLevel">Level</label>
+            <input type="range" id="triggerLevel" min="-1" max="1" step="0.01" value="0" />
+          </div>
+          <div class="row">
+            <label>Status</label>
+            <span id="triggerStatus" class="status-value">--</span>
+          </div>
+          <button id="singleShotBtn" class="btn-secondary">Force Single Capture</button>
+        </section>
+
+        <section class="card panel-group">
+          <h2>
+            <span class="chip teal" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M8 2v12M4.5 5.5 8 2l3.5 3.5M4.5 10.5 8 14l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Vertical
+          </h2>
+          <div class="row">
+            <label for="vScale">Gain (input amp)</label>
+            <input type="range" id="vScale" min="0.2" max="10" step="0.1" value="1" />
+          </div>
+        </section>
+
+        <section class="card panel-group readout">
+          <h2>
+            <span class="chip pink" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M8 1v3.5M8 11.5V15M1 8h3.5M11.5 8H15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </span>
+            Cursors
+          </h2>
+          <div class="row">
+            <label for="cursorsToggle">Show cursors</label>
+            <input type="checkbox" id="cursorsToggle" />
+          </div>
+          <dl>
+            <dt>&Delta;T</dt><dd id="cursorDeltaT">--</dd>
+            <dt>Freq (1/&Delta;T)</dt><dd id="cursorFreq">--</dd>
+            <dt>&Delta;V</dt><dd id="cursorDeltaV">--</dd>
+          </dl>
+        </section>
+
+        <section class="card panel-group readout">
+          <h2>
+            <span class="chip blue" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><rect x="2" y="8" width="2.4" height="6" fill="currentColor"/><rect x="6.8" y="4" width="2.4" height="10" fill="currentColor"/><rect x="11.6" y="6.5" width="2.4" height="7.5" fill="currentColor"/></svg>
+            </span>
+            Measurements — Ch A
+          </h2>
+          <dl>
+            <dt>Vpp</dt><dd id="measVpp">--</dd>
+            <dt>RMS</dt><dd id="measRms">--</dd>
+            <dt>Frequency</dt><dd id="measFreq">--</dd>
+            <dt>Period</dt><dd id="measPeriod">--</dd>
+            <dt>Peak (FFT)</dt><dd id="measPeakFreq">--</dd>
+          </dl>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="supportWidget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
+    </a>
+  </div>
+  <div id="legalBar">
+    <span>© 2026 Thermalsock Labs</span>
+    <a href="../legal/privacy.html">Privacy</a>
+    <a href="../legal/disclaimer.html">Disclaimer</a>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

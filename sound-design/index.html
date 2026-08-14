@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thermalsock Labs — Sound Design</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/synth-panel.css" />
+</head>
+<body>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="knobBodyGrad" cx="35%" cy="30%" r="75%">
+        <stop offset="0%" stop-color="#565d78" />
+        <stop offset="55%" stop-color="#20232f" />
+        <stop offset="100%" stop-color="#08090f" />
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <header class="topbar">
+      <a href="../index.html" class="brand-lockup">
+        <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#5fa8ff"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname" style="color:#5fa8ff">Sound Design</span>
+          <span class="brand-sub">Thermalsock Labs</span>
+        </span>
+      </a>
+      <div class="topbar-right">
+        <span class="pill mode">Sequential Take 5 — patch reference</span>
+      </div>
+    </header>
+
+    <main class="synth-layout">
+      <nav class="sound-sidebar" id="soundSidebar"></nav>
+
+      <div class="sound-main">
+        <!-- Core signal path: OSCILLATORS / MIXER / FILTER / ENVELOPES -->
+        <div class="synth-row main controls-row">
+
+        <section class="synth-section osc-section">
+          <h3>Oscillators</h3>
+          <div class="osc-rows">
+            <div class="osc-row">
+              <span class="osc-side-label">OSC 1</span>
+              <div class="knob-wrap"><svg class="knob-svg knob-octave" viewBox="0 0 70 70"><circle cx="16" cy="12" r="2.3" class="knob-led" /><circle cx="27" cy="5" r="2.3" class="knob-led on" /><circle cx="43" cy="5" r="2.3" class="knob-led" /><circle cx="54" cy="12" r="2.3" class="knob-led" /><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrOsc1Octave" style="--angle:-30deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Octave</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrOsc1Pitch" style="--angle:-90deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Pitch</span></div>
+              <div class="mini-btn-wrap"><div class="mini-btn" id="btnSync"></div><span class="knob-label">Sync</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrOsc1Shape" style="--angle:-20deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Shape</span></div>
+            </div>
+            <div class="osc-row">
+              <span class="osc-side-label">OSC 2</span>
+              <div class="knob-wrap"><svg class="knob-svg knob-octave" viewBox="0 0 70 70"><circle cx="16" cy="12" r="2.3" class="knob-led" /><circle cx="27" cy="5" r="2.3" class="knob-led on" /><circle cx="43" cy="5" r="2.3" class="knob-led" /><circle cx="54" cy="12" r="2.3" class="knob-led" /><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrOsc2Octave" style="--angle:0deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Octave</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrOsc2Pitch" style="--angle:10deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Pitch</span></div>
+              <div class="mini-btn-wrap"><div class="mini-btn" id="btnOsc2Low"></div><span class="knob-label">Osc 2 Low</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrOsc2Shape" style="--angle:-20deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Shape</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="synth-section">
+          <h3>Mixer</h3>
+          <div class="synth-controls mixer-controls">
+            <div class="mixer-col"><div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrMixOsc1" style="--angle:-60deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Osc 1</span></div><div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrMixOsc1Sub" style="--angle:-110deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Osc 1 Sub</span></div></div>
+            <div class="mixer-col"><div class="mini-btn-wrap"><div class="mini-btn" id="btnFm"></div><span class="knob-label">FM 2→1</span></div></div>
+            <div class="mixer-col"><div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrMixOsc2" style="--angle:-60deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Osc 2</span></div><div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrMixNoise" style="--angle:-110deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Noise</span></div></div>
+          </div>
+        </section>
+
+        <section class="synth-section">
+          <h3>Filter</h3>
+          <div class="synth-controls filter-controls">
+            <div class="filter-side-knobs"><div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFilterResonance" style="--angle:-90deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Resonance</span></div><div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFilterDrive" style="--angle:0deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Drive</span></div></div>
+            <div class="knob-wrap"><svg class="knob-svg large filter-cutoff" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFilterCutoff" style="--angle:-50deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Cutoff</span></div>
+          </div>
+        </section>
+
+
+        <section class="synth-section">
+          <h3>Envelopes</h3>
+
+          <div class="envelope-blocks">
+          <div class="envelope-block">
+            <h4>Filter Env</h4>
+            <div class="synth-controls">
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFEnvAttack" style="--angle:-95deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Attack</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFEnvDecay" style="--angle:-40deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Decay</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFEnvSustain" style="--angle:-10deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Sustain</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrFEnvRelease" style="--angle:-60deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Release</span></div>
+            </div>
+          </div>
+
+          <div class="envelope-block">
+            <h4>Amp Env</h4>
+            <div class="synth-controls">
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrAEnvAttack" style="--angle:-110deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Attack</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrAEnvDecay" style="--angle:-30deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Decay</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrAEnvSustain" style="--angle:20deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Sustain</span></div>
+              <div class="knob-wrap"><svg class="knob-svg" viewBox="0 0 70 70"><circle cx="35" cy="35" r="24" class="knob-ring-bg" /><line x1="17.3" y1="52.7" x2="13.8" y2="56.2" class="knob-tick" /><line x1="10.0" y1="35.0" x2="5.0" y2="35.0" class="knob-tick" /><line x1="17.3" y1="17.3" x2="13.8" y2="13.8" class="knob-tick" /><line x1="35.0" y1="10.0" x2="35.0" y2="5.0" class="knob-tick" /><line x1="52.7" y1="17.3" x2="56.2" y2="13.8" class="knob-tick" /><line x1="60.0" y1="35.0" x2="65.0" y2="35.0" class="knob-tick" /><line x1="52.7" y1="52.7" x2="56.2" y2="56.2" class="knob-tick" /><text x="11.7" y="58.3" class="knob-num">0</text><text x="2.0" y="35.0" class="knob-num">2</text><text x="11.7" y="11.7" class="knob-num">4</text><text x="58.3" y="11.7" class="knob-num">8</text><text x="68.0" y="35.0" class="knob-num">10</text><text x="58.3" y="58.3" class="knob-num">12</text><circle cx="35" cy="35" r="20" class="knob-body" /><g class="knob-pointer" id="ptrAEnvRelease" style="--angle:-50deg"><line x1="35" y1="35" x2="35" y2="19" class="knob-pointer-line" /><circle cx="35" cy="19" r="2" class="knob-pointer-dot" /></g></svg><span class="knob-label">Release</span></div>
+            </div>
+          </div>
+          </div>
+        </section>
+
+        <section class="synth-section adsr-window">
+          <h3>ADSR</h3>
+          <svg id="adsrChart" class="adsr-chart" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet"></svg>
+        </section>
+
+        <section class="synth-section suggestion-window">
+          <h3>Suggested Effects</h3>
+          <div class="suggestion-block">
+            <h4>Delay <span class="suggestion-type" id="suggDelayType"></span></h4>
+            <p class="suggestion-text" id="suggDelayText"></p>
+          </div>
+          <div class="suggestion-block">
+            <h4>Reverb <span class="suggestion-type" id="suggReverbType"></span></h4>
+            <p class="suggestion-text" id="suggReverbText"></p>
+          </div>
+        </section>
+
+        <section class="synth-section suggestion-window">
+          <h3>Modulation</h3>
+          <p class="suggestion-text" id="suggModText"></p>
+        </section>
+      </div>
+
+      <div class="synth-row main example-row">
+        <section class="card sound-example-card" style="flex: 1 1 100%;">
+          <div class="sound-example-header">
+            <h2 class="explain-title" id="soundTitle">Classic Analog Bass</h2>
+            <span class="sound-category-tag" id="soundCategoryTag">Bread-and-Butter Analog</span>
+          </div>
+          <p class="explain-copy" id="soundBlurb">
+            The workhorse Moog/Prophet-style bass: a raw, fast-moving low end built from a
+            single oscillator's harmonics reinforced by a sub, then snapped into shape by a
+            quick filter envelope so the attack has punch without staying bright.
+          </p>
+          <ul class="sound-settings-list" id="soundSettingsList">
+            <li><strong>Oscillators</strong> — Osc 1 shape: saw or square; Osc 2 an octave down as sub reinforcement</li>
+            <li><strong>Mixer</strong> — Osc 1 and Sub high, Osc 2/Noise low or off</li>
+            <li><strong>Filter</strong> — Cutoff low-to-mid, moderate resonance, Env Amount high for a fast sweep</li>
+            <li><strong>Filter Env</strong> — Fast Attack, short-to-medium Decay, low Sustain, short Release</li>
+            <li><strong>Amp Env</strong> — Fast Attack, Sustain high enough to hold the note, short Release</li>
+          </ul>
+        </section>
+      </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="supportWidget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
+    </a>
+  </div>
+  <div id="legalBar">
+    <span>© 2026 Thermalsock Labs</span>
+    <a href="../legal/privacy.html">Privacy</a>
+    <a href="../legal/disclaimer.html">Disclaimer</a>
+  </div>
+
+  <script type="module" src="js/soundDesign.js"></script>
+</body>
+</html>
