@@ -3,92 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thermalsock Labs — Disclaimer</title>
+<title>Thermalsock Labs - Disclaimer</title>
 <meta name="description" content="Disclaimer and trademark notice for Thermalsock Labs.">
 <link rel="icon" href="data:,">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@500;700;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#171009; --bg-panel:#211710; --bg-raised:#2b1e14;
-    --hairline:rgba(237,226,204,0.09); --hairline-hi:rgba(237,226,204,0.18);
-    --paper:#ede2cc; --paper-dim:#b3a48c; --paper-faint:#726351;
-    --copper:#c9793d; --copper-hi:#e8a561; --brass:#c9a04f; --verdigris:#6fab9c;
-    --display:'Big Shoulders Stencil Display', sans-serif;
-    --serif:'Fraunces', Georgia, serif;
-    --mono:'Courier Prime', ui-monospace, monospace;
+    --chassis:#0a0d16;
+    --panel:#12151f;
+    --hairline:rgba(255,255,255,0.08);
+    --hairline-strong:rgba(255,255,255,0.16);
+    --text:#e8eaf2;
+    --text-dim:#9a9fb5;
+    --text-faint:#5c6178;
+    --amber:#ffb454;
+    --green:#4dff9e;
+    --violet:#a78bfa;
+    --sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   }
   *{box-sizing:border-box;}
-  body{ margin:0; background:var(--bg); color:var(--paper); font-family:var(--serif); line-height:1.65; }
-  a{ color:var(--copper-hi); }
-  a:hover{ filter:brightness(1.15); }
-
-  #vignette{
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201,121,61,0.12), transparent 60%);
+  body{
+    margin:0;background:var(--chassis);color:var(--text);
+    font-family:var(--sans);line-height:1.6;
   }
+  a{color:var(--amber);}
+  a:hover{filter:brightness(1.15);}
 
   header{
-    position:relative; z-index:1;
-    padding:20px 30px; border-bottom:1px solid var(--hairline);
-    display:flex; align-items:center;
+    padding:22px 24px;border-bottom:1px solid var(--hairline);
+    display:flex;align-items:center;
   }
-  .brand-lockup{ display:flex; align-items:center; gap:12px; text-decoration:none; }
+  .brand-lockup{ display:flex; align-items:center; gap:11px; text-decoration:none; }
   .brand-mark{ flex:none; }
   .brand-lockup-text{ display:flex; flex-direction:column; line-height:1.2; }
-  .brand-appname{ font-family:var(--mono); font-weight:700; font-size:14px; color:var(--verdigris); letter-spacing:0.02em; }
-  .brand-sub{ font-family:var(--mono); font-size:10px; color:var(--paper-faint); letter-spacing:0.03em; }
+  .brand-appname{ font-weight:800; font-size:15px; color:var(--violet); }
+  .brand-sub{ font-size:10.5px; color:var(--text-dim); letter-spacing:0.02em; }
 
-  main{ position:relative; z-index:1; max-width:720px; margin:0 auto; padding:56px 30px 90px 30px; }
-  .doc-eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--paper-faint); margin-bottom:12px; }
-  h1{ font-family:var(--display); font-weight:700; font-size:44px; text-transform:uppercase; margin:0 0 8px 0; letter-spacing:0.01em; color:var(--paper); }
-  .updated{ font-family:var(--mono); font-size:11.5px; color:var(--paper-faint); margin-bottom:44px; }
-  h2{ font-family:var(--display); font-weight:700; font-size:21px; text-transform:uppercase; letter-spacing:0.01em; margin:40px 0 14px 0; color:var(--copper-hi); }
-  p{ color:var(--paper-dim); margin:0 0 15px 0; font-size:15px; }
-  strong{ color:var(--paper); font-weight:600; }
-
-  .brand-list{ display:flex; flex-wrap:wrap; gap:9px; margin:0 0 16px 0; }
+  main{
+    max-width:720px;margin:0 auto;padding:50px 24px 90px 24px;
+  }
+  .doc-eyebrow{
+    font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-faint);
+    margin-bottom:10px;
+  }
+  h1{ font-size:32px; font-weight:800; margin:0 0 6px 0; letter-spacing:-0.01em; }
+  .updated{ font-size:13px; color:var(--text-faint); margin-bottom:40px; }
+  h2{ font-size:18px; font-weight:700; margin:36px 0 12px 0; color:var(--text); }
+  p{ color:var(--text-dim); margin:0 0 14px 0; font-size:14.5px; }
+  ul{ color:var(--text-dim); font-size:14.5px; padding-left:20px; margin:0 0 14px 0; }
+  li{ margin-bottom:6px; }
+  strong{ color:var(--text); }
+  .note{
+    background:var(--panel);border:1px solid var(--hairline);border-radius:10px;
+    padding:16px 18px;margin:20px 0;font-size:13.5px;color:var(--text-dim);
+  }
+  .brand-list{
+    display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px 0;
+  }
   .brand-chip{
-    font-family:var(--mono); font-size:12px; background:var(--bg-panel); border:1px solid var(--hairline-hi);
-    border-radius:2px; padding:5px 12px; color:var(--paper-dim);
+    font-size:12.5px;background:var(--panel);border:1px solid var(--hairline);
+    border-radius:999px;padding:5px 12px;color:var(--text-dim);
   }
 
   footer{
-    position:relative; z-index:1;
-    border-top:1px solid var(--hairline); padding:26px 30px 40px 30px;
-    max-width:720px; margin:0 auto; font-family:var(--mono); font-size:11px; color:var(--paper-faint);
-    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    border-top:1px solid var(--hairline);
+    padding:26px 24px 40px 24px;
+    max-width:720px;margin:0 auto;
+    font-size:12px;color:var(--text-faint);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
   }
-  footer a{ color:var(--paper-dim); text-decoration:none; }
-  footer a:hover{ color:var(--copper-hi); }
+  footer a{ color:var(--text-dim); text-decoration:none; }
+  footer a:hover{ color:var(--amber); }
   footer .foot-links{ display:flex; gap:16px; }
 </style>
 </head>
 <body>
 
-  <div id="vignette"></div>
-
   <header>
     <a href="../index.html" class="brand-lockup">
       <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="1" y="2" width="9" height="9" stroke="#6b5d4a" stroke-width="1.4"/>
-        <rect x="12" y="2" width="9" height="9" stroke="#6b5d4a" stroke-width="1.4"/>
-        <rect x="23" y="2" width="9" height="9" fill="#c9793d"/>
-        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#6fab9c" stroke-width="1.6"/>
+        <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+        <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+        <rect x="23" y="2" width="9" height="9" fill="#a78bfa"/>
+        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
       </svg>
       <span class="brand-lockup-text">
-        <span class="brand-appname">THERMALSOCK LABS</span>
-        <span class="brand-sub">&larr; back to the bench</span>
+        <span class="brand-appname">Thermalsock Labs</span>
+        <span class="brand-sub">← Back to the hub</span>
       </span>
     </a>
   </header>
 
   <main>
-    <div class="doc-eyebrow">§ Legal</div>
+    <div class="doc-eyebrow">Legal</div>
     <h1>Disclaimer</h1>
     <div class="updated">Last updated: August 2026</div>
 
-    <h2>Independent, Fan-Made Tools</h2>
+    <h2>Independent, fan-made tools</h2>
     <p>Thermalsock Labs is an independent project, built for personal use and shared publicly. It is <strong>not affiliated with, sponsored by, endorsed by, or officially connected to</strong> any hardware or software manufacturer referenced on this site, including but not limited to the brands named in Signal Path's device library:</p>
     <div class="brand-list">
       <span class="brand-chip">Sequential</span>
@@ -104,13 +114,13 @@
     </div>
     <p>All product names, logos, and brand names referenced are the property of their respective owners, used here only to identify the real hardware the tools describe. No claim of ownership over any of these trademarks is made or implied.</p>
 
-    <h2>Reference Material, Not Official Documentation</h2>
+    <h2>Reference material, not official documentation</h2>
     <p>Signal Path's device settings, patch suggestions, and wiring notes are written as a practical reference for a specific personal studio setup, informed by publicly available manufacturer manuals and general product knowledge. They are <strong>not official manufacturer documentation</strong> and may not reflect the latest firmware, hardware revisions, or manufacturer-recommended practices. Always consult the manufacturer's own manual for your specific device before making changes you're unsure about, especially around wiring and power.</p>
 
-    <h2>No Warranty</h2>
-    <p>All tools on this site are provided <strong>"as is,"</strong> without warranty of any kind, express or implied. Sound Design's synth patch suggestions, Signal Path's settings guidance, and Transient Lab's lesson content are offered for practice and educational purposes — your own ears and judgment are the final word on what sounds right for your setup.</p>
+    <h2>No warranty</h2>
+    <p>All tools on this site are provided <strong>"as is,"</strong> without warranty of any kind, express or implied. Sound Design's synth patch suggestions, Signal Path's settings guidance, and Transient Lab's lesson content are offered for practice and educational purposes - your own ears and judgment are the final word on what sounds right for your setup.</p>
 
-    <h2>Trademark Inquiries</h2>
+    <h2>Trademark inquiries</h2>
     <p>If you're a rights holder with a concern about how your brand or product name is used on this site, reach out via the <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">Buy Me a Coffee</a> page's messaging and it will be addressed promptly.</p>
   </main>
 
@@ -118,7 +128,7 @@
     <div>© 2026 Thermalsock Labs. All rights reserved.</div>
     <div class="foot-links">
       <a href="../index.html">Home</a>
-      <a href="privacy.html">Privacy</a>
+      <a href="privacy.html">Privacy Policy</a>
       <a href="disclaimer.html">Disclaimer</a>
     </div>
   </footer>

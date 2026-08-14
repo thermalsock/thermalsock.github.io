@@ -1,13 +1,13 @@
-# Web Oscilloscope — Thermalsock Labs
+# Web Oscilloscope - Thermalsock Labs
 
 A professional-grade oscilloscope that runs entirely in the browser via the
-Web Audio API. No build step, no dependencies — plain HTML/CSS/JS, ready to
+Web Audio API. No build step, no dependencies - plain HTML/CSS/JS, ready to
 drop onto GitHub Pages as-is.
 
 ## Running locally (VS Code)
 
 Because this uses ES modules (`<script type="module">`) and `getUserMedia`,
-it **must be served over HTTP** — opening `index.html` directly via
+it **must be served over HTTP** - opening `index.html` directly via
 `file://` will fail (module imports get blocked, and some browsers refuse
 mic access on `file://` entirely).
 
@@ -20,7 +20,7 @@ Easiest options in VS Code:
   ```
   then open `http://localhost:8000` in your browser.
 
-Grant microphone/input permission when prompted — that's your audio
+Grant microphone/input permission when prompted - that's your audio
 interface or mic being captured. Nothing is recorded or sent anywhere;
 all analysis happens client-side.
 
@@ -55,9 +55,9 @@ js/main.js           Wires it all together + the render loop
 
 ## Known rough edges to revisit
 
-- Frequency/period measurement uses zero-crossing detection — solid on clean
+- Frequency/period measurement uses zero-crossing detection - solid on clean
   periodic signals, will get noisy on complex/noisy waveforms (FFT-based
   measurement is the planned fix, ties into the spectrum view feature).
 - Cursors are currently fixed-position placeholders, not yet draggable.
-- No persisted settings (theme/trigger config resets on reload) — worth a
+- No persisted settings (theme/trigger config resets on reload) - worth a
   localStorage-backed preset save/load pass later.

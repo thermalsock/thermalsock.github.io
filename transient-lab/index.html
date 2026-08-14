@@ -8,7 +8,6 @@
   <link rel="icon" href="data:,">
 
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     html, body {
@@ -106,14 +105,6 @@
       pointer-events: none;
     }
 
-    /* Thin strip in normal document flow at the very top, above the
-       compat-banner -- same "push the canvas down, never overlay it"
-       technique as the banner below, so it can't collide with the
-       canvas-drawn TopBar controls (lesson title left, fullscreen/theme
-       buttons right). Always visible; this is the hub wayfinding link.
-       Matches the icon+lockup brand treatment used on the hub and every
-       other Thermalsock Labs app page -- this strip is site-shell, not
-       part of the app itself, so it stays in sync with that pattern. */
     #hub-strip {
       flex: 0 0 auto;
       display: flex;
@@ -137,7 +128,7 @@
       letter-spacing: 0.01em;
     }
     #hub-strip .hs-sub {
-      font: 600 9.5px 'Courier Prime', -apple-system, system-ui, sans-serif;
+      font: 600 9.5px -apple-system, system-ui, sans-serif;
       color: #7a7d87;
       letter-spacing: 0.02em;
     }

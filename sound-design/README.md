@@ -1,4 +1,4 @@
-# Sound Design — Thermalsock Labs
+# Sound Design - Thermalsock Labs
 
 A patch-programming reference for the Sequential Take 5: oscillators, mixer,
 filter, envelopes, ADSR shape, suggested effects, and modulation notes,
@@ -7,7 +7,7 @@ patches, percussive/plucked sounds, and drones/atmospheres.
 
 This was originally a second page inside the Web Oscilloscope app; it's
 split out here as its own self-contained tool since it doesn't share any
-actual functionality with the scope — no audio input, no analysis, just a
+actual functionality with the scope - no audio input, no analysis, just a
 patch browser and reference panel.
 
 ## Running locally
@@ -33,5 +33,5 @@ js/soundDesign.js    Rendering + interaction logic
 js/synthPresets.js   The actual patch data (categories, patches, notes)
 ```
 
-No build step, no dependencies — plain HTML/CSS/JS, ready to drop onto
+No build step, no dependencies - plain HTML/CSS/JS, ready to drop onto
 GitHub Pages or any static host as-is.

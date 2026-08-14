@@ -4,317 +4,271 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thermalsock Labs</title>
-<meta name="description" content="Thermalsock Labs — browser-based tools for sound and music experimentation: a real-time oscilloscope, a synth patch reference, a hardware rig mapper, an ear trainer, and Rudiment on Steam.">
+<meta name="description" content="Thermalsock Labs - browser-based tools for sound and music experimentation: a real-time oscilloscope, an ear/hand trainer, a hardware rig mapper, and Rudiment on Steam.">
 <link rel="icon" href="data:,">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@500;700;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* ---- Warm bakelite/copper test-bench palette ----
-       Dominant: near-black espresso brown (not navy). Accent: copper/PCB-trace
-       orange as the primary interactive color. Brass for secondary warmth.
-       Verdigris (oxidized-copper teal) reserved ONLY for "live/on" states --
-       a genuine sharp spark against an otherwise warm, low-saturation field. */
-    --bg:        #171009;
-    --bg-panel:  #211710;
-    --bg-raised: #2b1e14;
-    --hairline:  rgba(237,226,204,0.09);
-    --hairline-hi: rgba(237,226,204,0.18);
-
-    --paper:      #ede2cc;
-    --paper-dim:  #b3a48c;
-    --paper-faint:#726351;
-
-    --copper:     #c9793d;
-    --copper-hi:  #e8a561;
-    --brass:      #c9a04f;
-    --verdigris:  #6fab9c;
-    --rust-red:   #b8503a;
-
-    --display: 'Big Shoulders Stencil Display', sans-serif;
-    --serif:   'Fraunces', Georgia, serif;
-    --mono:    'Courier Prime', ui-monospace, monospace;
+    --chassis:#0a0d16;
+    --panel:#12151f;
+    --panel-raised:#171b28;
+    --hairline:rgba(255,255,255,0.08);
+    --hairline-strong:rgba(255,255,255,0.16);
+    --text:#e8eaf2;
+    --text-dim:#7d8299;
+    --text-faint:#4d5165;
+    --amber:#ffb454;
+    --green:#4dff9e;
+    --violet:#a78bfa;
+    --teal:#4de8c9;
+    --blue:#5fa8ff;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+    --sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
-    margin:0;background:var(--bg);color:var(--paper);
-    font-family:var(--serif); line-height:1.6;
+    margin:0;background:var(--chassis);color:var(--text);
+    font-family:var(--sans);line-height:1.5;
     -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
   }
   a{color:inherit;}
 
-  /* ---------- Atmosphere: PCB copper-trace texture + paper grain + vignette ---------- */
-  #atmosphere{
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-  }
-  #traceLayer{
-    position:absolute; inset:0;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='none' stroke='%23c9793d' stroke-width='1.1' opacity='0.10'%3E%3Cpath d='M0 40 H70 L90 60 V140 L110 160 H220'/%3E%3Cpath d='M20 0 V30 L40 50 H140 L160 30 V0'/%3E%3Cpath d='M220 190 H150 L130 170 V90'/%3E%3Ccircle cx='90' cy='60' r='4'/%3E%3Ccircle cx='40' cy='50' r='4'/%3E%3Ccircle cx='130' cy='170' r='4'/%3E%3Ccircle cx='160' cy='30' r='3'/%3E%3C/g%3E%3C/svg%3E");
-    background-size:220px 220px;
-  }
-  #vignette{
-    position:absolute; inset:0;
-    background:
-      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201,121,61,0.16), transparent 60%),
-      radial-gradient(ellipse 1200px 800px at 50% 100%, rgba(0,0,0,0.5), transparent 60%);
-  }
-  #grain{
-    position:absolute; inset:0; opacity:0.05; mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:50;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:overlay;
   }
 
-  /* ---------- Header rail ---------- */
-  .railtop{
-    position:relative; z-index:2;
-    display:flex; align-items:center; justify-content:space-between;
-    gap:14px; flex-wrap:wrap;
-    padding:18px 20px; border-bottom:1px solid var(--hairline);
-  }
-  .railtop .tag{
-    font-family:var(--mono); font-size:11px; letter-spacing:0.14em; color:var(--paper-faint);
-  }
-  .led-live{ display:inline-flex; align-items:center; gap:7px; }
-  .led-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--verdigris);
-    box-shadow:0 0 7px var(--verdigris);
-    animation:ledBlink 2.6s ease-in-out infinite;
-  }
-  @keyframes ledBlink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-
-  /* ---------- Hero ---------- */
+  
   .hero{
-    position:relative; z-index:2;
-    max-width:1120px; margin:0 auto; padding:80px 30px 0 30px;
+    position:relative;
+    padding:74px 24px 0 24px;
+    max-width:1080px;margin:0 auto;
+    text-align:left;
   }
   .hero-eyebrow{
-    opacity:0; animation:riseIn 0.7s ease-out 0.15s forwards;
-    font-family:var(--mono); font-size:11.5px; letter-spacing:0.16em; text-transform:uppercase;
-    color:var(--copper-hi); margin-bottom:22px; display:flex; align-items:center; gap:10px;
+    font-family:var(--sans);font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--text-faint);margin-bottom:18px;display:flex;align-items:center;gap:10px;
   }
-  .hero-eyebrow::before{ content:'§01'; color:var(--paper-faint); }
-
-  .wordmark{
-    opacity:0; animation:stampIn 0.9s cubic-bezier(.2,.9,.25,1) 0.32s forwards;
-    font-family:var(--display); font-weight:700;
-    font-size:clamp(46px,9.5vw,132px);
-    line-height:0.85; letter-spacing:0.005em;
-    margin:0; color:var(--paper);
-    text-transform:uppercase;
-    max-width:100%;
+  .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+  .hero-title-row{ display:flex; align-items:center; gap:clamp(10px,2vw,20px); }
+  .brand-mark-hero{ flex:none; width:clamp(42px,9vw,110px); height:auto; }
+  .hero h1{
+    font-family:var(--sans);font-weight:800;
+    font-size:clamp(38px, 7vw, 78px);
+    letter-spacing:-0.01em;
+    margin:0;line-height:0.98;
+    color:var(--text);
   }
-  .wordmark .line2{ color:var(--copper); display:block; }
-  @keyframes stampIn{
-    0%{ opacity:0; transform:scale(1.06) translateY(14px); filter:blur(3px); }
-    60%{ opacity:1; }
-    100%{ opacity:1; transform:scale(1) translateY(0); filter:blur(0); }
-  }
-  @keyframes riseIn{
-    from{ opacity:0; transform:translateY(10px); }
-    to{ opacity:1; transform:translateY(0); }
-  }
-
+  .hero h1 .accent{color:var(--amber);}
   .hero-sub{
-    opacity:0; animation:riseIn 0.7s ease-out 0.62s forwards;
-    font-family:var(--serif); font-style:italic; font-weight:400;
-    font-size:clamp(17px,2.3vw,22px); color:var(--paper-dim);
-    max-width:600px; margin:26px 0 0 0;
+    font-size:clamp(15px,2.1vw,19px);color:var(--text-dim);
+    max-width:560px;margin:22px 0 0 0;font-weight:400;
   }
-  .hero-sub strong{ color:var(--paper); font-weight:600; font-style:normal; }
+  .hero-sub strong{color:var(--text);font-weight:600;}
 
-  /* ---------- VU meter bank (signature element) ---------- */
-  .meterbank{
-    opacity:0; animation:riseIn 0.8s ease-out 0.85s forwards;
-    margin:46px 0 0 0; border:1px solid var(--hairline); border-radius:4px;
-    background:linear-gradient(180deg, var(--bg-raised), var(--bg-panel));
-    padding:20px 22px 16px 22px;
-    display:flex; align-items:flex-end; gap:26px; flex-wrap:wrap;
+  
+  .scope-strip{
+    margin:44px 0 0 0;
+    height:120px;border-radius:10px;
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    position:relative;overflow:hidden;
   }
-  .meterbank canvas{ display:block; }
-  .meter-label{
-    font-family:var(--mono); font-size:9.5px; letter-spacing:0.1em; color:var(--paper-faint);
-    text-align:center; margin-top:4px; text-transform:uppercase;
-  }
-  .meter-unit{ display:flex; flex-direction:column; align-items:center; }
-
-  .scroll-cue{
-    opacity:0; animation:riseIn 0.6s ease-out 1.05s forwards;
-    text-align:center; margin:26px 0 60px 0;
-    font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em; color:var(--paper-faint);
+  .scope-strip canvas{display:block;width:100%;height:100%;}
+  .scope-strip-label{
+    position:absolute;top:10px;left:14px;
+    font-family:var(--sans);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--text-faint);pointer-events:none;
   }
 
-  /* ---------- Rack section ---------- */
-  .rack{ position:relative; z-index:2; max-width:1120px; margin:0 auto; padding:0 30px 100px 30px; }
+  .hero-scroll-cue{
+    display:flex;justify-content:center;margin:22px 0 54px 0;
+    font-family:var(--sans);font-size:10px;letter-spacing:0.12em;color:var(--text-faint);
+  }
+
+  
+  .rack{
+    max-width:1080px;margin:0 auto;padding:0 24px 90px 24px;
+  }
   .rack-heading{
-    display:flex; align-items:baseline; gap:16px; margin:0 0 30px 0;
+    display:flex;align-items:baseline;gap:14px;margin:0 0 26px 0;
+    font-family:var(--sans);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-faint);
   }
-  .rack-heading .num{ font-family:var(--mono); font-size:12px; color:var(--copper); }
-  .rack-heading h2{
-    font-family:var(--display); font-weight:700; font-size:22px; letter-spacing:0.03em;
-    text-transform:uppercase; margin:0; color:var(--paper);
-  }
-  .rack-heading .rule{ flex:1; height:1px; background:var(--hairline); }
+  .rack-heading::after{content:'';flex:1;height:1px;background:var(--hairline);}
 
-  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  }
   @media (max-width:760px){ .grid{ grid-template-columns:1fr; } }
 
   .module{
     position:relative;
-    opacity:0; animation:moduleIn 0.6s cubic-bezier(.2,.8,.3,1) forwards;
-    background:var(--bg-panel);
+    background:var(--panel);
     border:1px solid var(--hairline);
-    border-radius:3px;
-    padding:24px 24px 22px 24px;
-    transition:border-color 0.18s ease, transform 0.18s ease;
+    border-radius:10px;
+    padding:26px 24px 22px 24px;
+    display:flex;flex-direction:column;
+    transition:border-color 0.15s ease, transform 0.15s ease;
   }
-  .module:nth-child(1){ animation-delay:1.1s; }
-  .module:nth-child(2){ animation-delay:1.18s; }
-  .module:nth-child(3){ animation-delay:1.26s; }
-  .module:nth-child(4){ animation-delay:1.34s; }
-  .module:nth-child(5){ animation-delay:1.42s; }
-  @keyframes moduleIn{
-    from{ opacity:0; transform:translateY(16px); }
-    to{ opacity:1; transform:translateY(0); }
+  .module:hover{border-color:var(--hairline-strong);transform:translateY(-2px);}
+  .module-strip{
+    position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;
   }
-  .module:hover{ border-color:var(--hairline-hi); transform:translateY(-2px); }
-  .module::before{
-    content:''; position:absolute; top:0; left:16px; right:16px; height:2px;
-    background:var(--mod-color, var(--copper));
+  .module-screws span{
+    position:absolute;width:4px;height:4px;border-radius:50%;background:#000;opacity:0.5;
   }
-  .bolt{ position:absolute; width:3px; height:3px; border-radius:50%; background:#000; opacity:0.55; }
-  .bolt.tl{ top:9px; left:9px; } .bolt.tr{ top:9px; right:9px; }
-  .bolt.bl{ bottom:9px; left:9px; } .bolt.br{ bottom:9px; right:9px; }
+  .module-screws span:nth-child(1){top:14px;left:14px;}
+  .module-screws span:nth-child(2){top:14px;right:14px;}
+  .module-screws span:nth-child(3){bottom:14px;left:14px;}
+  .module-screws span:nth-child(4){bottom:14px;right:14px;}
 
-  .module-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:5px; }
-  .module-name{ font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:0.02em; text-transform:uppercase; color:var(--paper); }
-  .module-led{ width:6px; height:6px; border-radius:50%; margin-top:7px; flex:none; background:var(--verdigris); box-shadow:0 0 6px var(--verdigris); }
+  .module-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+  .module-name{font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:0.01em;}
+  .module-led{width:7px;height:7px;border-radius:50%;margin-top:6px;flex:none;}
   .module-kicker{
-    font-family:var(--mono); font-size:10px; letter-spacing:0.09em; text-transform:uppercase;
-    color:var(--mod-color, var(--copper)); margin-bottom:13px;
+    font-family:var(--sans);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--text-faint);margin-bottom:14px;
   }
-  .module-desc{ font-family:var(--serif); font-size:14px; color:var(--paper-dim); margin:0 0 20px 0; line-height:1.55; }
+  .module-desc{font-size:13.5px;color:var(--text-dim);flex:1;margin:0 0 20px 0;}
+  .module-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 
-  .module-actions{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
   .btn{
-    font-family:var(--mono); font-size:11.5px; letter-spacing:0.04em;
-    padding:9px 16px; border-radius:2px; text-decoration:none;
-    display:inline-flex; align-items:center; gap:7px;
-    border:1px solid var(--mod-color, var(--copper));
+    font-family:var(--sans);font-size:11.5px;letter-spacing:0.05em;
+    padding:9px 16px;border-radius:6px;text-decoration:none;
+    display:inline-flex;align-items:center;gap:7px;
+    border:1px solid var(--hairline-strong);
   }
-  .btn-fill{ background:var(--mod-color, var(--copper)); color:#171009; font-weight:700; }
-  .btn-fill:hover{ filter:brightness(1.1); }
-  .btn-ghost{ color:var(--paper-dim); border-color:var(--hairline-hi); }
-  .btn-ghost:hover{ color:var(--paper); border-color:var(--paper-dim); }
-  .btn-disabled{ color:var(--paper-faint); border-color:var(--hairline); cursor:default; }
-  .module-status{ margin-left:auto; font-family:var(--mono); font-size:9.5px; color:var(--paper-faint); letter-spacing:0.06em; }
+  .btn-primary{background:var(--amber);color:#0a0d16;border-color:var(--amber);font-weight:700;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{color:var(--text-dim);background:transparent;}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-dim);}
+  .btn-disabled{color:var(--text-faint);background:transparent;cursor:default;}
 
-  /* ---------- Footer ---------- */
+  .module-status{
+    font-family:var(--sans);font-size:10px;letter-spacing:0.06em;color:var(--text-faint);
+    margin-left:auto;
+  }
+
+  
   footer{
-    position:relative; z-index:2;
     border-top:1px solid var(--hairline);
-    padding:30px 30px 50px 30px; max-width:1120px; margin:0 auto;
-    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;
+    padding:34px 24px 50px 24px;
+    max-width:1080px;margin:0 auto;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
   }
-  footer .foot-left{ font-family:var(--mono); font-size:10.5px; color:var(--paper-faint); letter-spacing:0.04em; }
-  footer .foot-right{ display:flex; gap:18px; flex-wrap:wrap; }
-  footer a.foot-link{ font-family:var(--mono); font-size:10.5px; color:var(--paper-dim); text-decoration:none; letter-spacing:0.03em; }
-  footer a.foot-link:hover{ color:var(--copper-hi); }
+  footer .foot-left{font-family:var(--sans);font-size:11px;color:var(--text-faint);letter-spacing:0.04em;}
+  footer .foot-right{display:flex;gap:16px;align-items:center;}
+  footer a.foot-link{
+    font-family:var(--sans);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:0.04em;
+  }
+  footer a.foot-link:hover{color:var(--amber);}
 
-  @media (max-width:480px){
-    .railtop{ padding:14px 18px; }
-    .railtop .tag{ font-size:9.5px; }
-    .hero{ padding:56px 20px 0 20px; }
-    .rack{ padding:0 20px 80px 20px; }
-  }
   @media (prefers-reduced-motion: reduce){
-    .hero-eyebrow,.wordmark,.hero-sub,.meterbank,.scroll-cue,.module{ animation:none !important; opacity:1 !important; }
+    html{scroll-behavior:auto;}
   }
 </style>
 </head>
 <body>
 
-  <div id="atmosphere">
-    <div id="traceLayer"></div>
-    <div id="vignette"></div>
-    <div id="grain"></div>
-  </div>
-
-  <div class="railtop">
-    <span class="tag">THERMALSOCK LABS &middot; BENCH No. 01</span>
-    <span class="led-live"><span class="led-dot"></span><span class="tag">ALL CHANNELS LIVE</span></span>
-  </div>
-
   <div class="hero">
-    <div class="hero-eyebrow">Browser-based &middot; nothing to install &middot; plug in and go</div>
-    <h1 class="wordmark">THERMALSOCK<span class="line2">LABS</span></h1>
-    <p class="hero-sub">A bench of small instruments for making, learning, and studying sound &mdash; <strong>built to be used, not just looked at.</strong> Plug in a mic, a MIDI keyboard, or nothing at all.</p>
-
-    <div class="meterbank" id="meterbank">
-      <div class="meter-unit"><canvas id="vu1" width="120" height="76"></canvas><div class="meter-label">Ch. A</div></div>
-      <div class="meter-unit"><canvas id="vu2" width="120" height="76"></canvas><div class="meter-label">Ch. B</div></div>
-      <div class="meter-unit"><canvas id="vu3" width="120" height="76"></canvas><div class="meter-label">Aux</div></div>
+    <div class="hero-eyebrow"><span class="dot"></span>ALL SYSTEMS LIVE - BROWSER-BASED, NOTHING TO INSTALL</div>
+    <div class="hero-title-row">
+      <svg class="brand-mark-hero" width="52" height="19" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+        <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+        <rect x="23" y="2" width="9" height="9" fill="#a78bfa"/>
+        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+      </svg>
+      <h1>THERMALSOCK<span class="accent">·</span>LABS</h1>
     </div>
+    <p class="hero-sub">A bench of small tools for making, learning, and studying sound - <strong>built to be used, not just looked at.</strong> Plug in a mic, a MIDI keyboard, or nothing at all.</p>
 
-    <div class="scroll-cue">&#9662; the instruments</div>
+    <div class="scope-strip">
+      <div class="scope-strip-label">CH1 · LIVE</div>
+      <canvas id="heroScope"></canvas>
+    </div>
   </div>
+
+  <div class="hero-scroll-cue">▾ THE BENCH</div>
 
   <div class="rack">
-    <div class="rack-heading"><span class="num">§02</span><h2>Instruments On The Bench</h2><span class="rule"></span></div>
+    <div class="rack-heading">Instruments - 04 web, 01 native</div>
     <div class="grid">
 
-      <div class="module" style="--mod-color:#7fd99a">
-        <div class="bolt tl"></div><div class="bolt tr"></div><div class="bolt bl"></div><div class="bolt br"></div>
-        <div class="module-head"><div class="module-name">Oscilloscope</div><div class="module-led"></div></div>
+      <div class="module">
+        <div class="module-strip" style="background:var(--green);"></div>
+        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
+        <div class="module-head">
+          <div class="module-name">Web Oscilloscope</div>
+          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+        </div>
         <div class="module-kicker">Real-time signal analysis</div>
-        <p class="module-desc">A real dual-trace scope in your browser &mdash; time domain, XY/Lissajous, FFT spectrum, spectrogram, chromagram, and a harmonic tuner. Runs on your mic or interface; nothing leaves your machine.</p>
+        <p class="module-desc">A real dual-trace oscilloscope in your browser. Time domain, XY/Lissajous, FFT spectrum, spectrogram, chromagram, and a harmonic tuner. Runs on your mic or audio interface; nothing is recorded or sent anywhere.</p>
         <div class="module-actions">
-          <a class="btn btn-fill" href="oscilloscope/index.html">Open &rarr;</a>
-          <span class="module-status">WEB &middot; LIVE</span>
+          <a class="btn btn-primary" href="oscilloscope/index.html">Open Oscilloscope →</a>
+          <span class="module-status">Web · live</span>
         </div>
       </div>
 
-      <div class="module" style="--mod-color:#7fb3d9">
-        <div class="bolt tl"></div><div class="bolt tr"></div><div class="bolt bl"></div><div class="bolt br"></div>
-        <div class="module-head"><div class="module-name">Sound Design</div><div class="module-led"></div></div>
+      <div class="module">
+        <div class="module-strip" style="background:var(--blue);"></div>
+        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
+        <div class="module-head">
+          <div class="module-name">Sound Design</div>
+          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+        </div>
         <div class="module-kicker">Synth patch reference</div>
-        <p class="module-desc">A patch-programming guide for the Sequential Take 5 &mdash; oscillators, mixer, filter, envelopes, ADSR &mdash; walked through for dozens of patches, analog bass to atmospheric drone.</p>
+        <p class="module-desc">A patch-programming guide for the Sequential Take 5 - oscillators, mixer, filter, envelopes, ADSR, and suggested effects, walked through for dozens of patches from analog bass to atmospheric drones.</p>
         <div class="module-actions">
-          <a class="btn btn-fill" href="sound-design/index.html">Open &rarr;</a>
-          <span class="module-status">WEB &middot; LIVE</span>
+          <a class="btn btn-primary" href="sound-design/index.html">Open Sound Design →</a>
+          <span class="module-status">Web · live</span>
         </div>
       </div>
 
-      <div class="module" style="--mod-color:#c9a04f">
-        <div class="bolt tl"></div><div class="bolt tr"></div><div class="bolt bl"></div><div class="bolt br"></div>
-        <div class="module-head"><div class="module-name">Transient Lab</div><div class="module-led"></div></div>
+      <div class="module">
+        <div class="module-strip" style="background:var(--violet);"></div>
+        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
+        <div class="module-head">
+          <div class="module-name">Transient Lab</div>
+          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+        </div>
         <div class="module-kicker">Ear &amp; hand training</div>
-        <p class="module-desc">Scales, chords, and genre lessons &mdash; drone, psybient, ambient house, hauntology &mdash; with real-time MIDI note judging. Plug in a keyboard and train against real content packs.</p>
+        <p class="module-desc">Scales, chords, and genre-based lessons - drone, psybient, ambient house, hauntology - with real-time MIDI note judging and audio analysis. Plug in a MIDI keyboard and train against real content packs, no DAW required.</p>
         <div class="module-actions">
-          <a class="btn btn-fill" href="transient-lab/index.html">Open &rarr;</a>
-          <span class="module-status">WEB &middot; LIVE</span>
+          <a class="btn btn-primary" href="transient-lab/index.html">Open Transient Lab →</a>
+          <span class="module-status">Web · live</span>
         </div>
       </div>
 
-      <div class="module" style="--mod-color:#c9793d">
-        <div class="bolt tl"></div><div class="bolt tr"></div><div class="bolt bl"></div><div class="bolt br"></div>
-        <div class="module-head"><div class="module-name">Signal Path</div><div class="module-led"></div></div>
+      <div class="module">
+        <div class="module-strip" style="background:var(--amber);"></div>
+        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
+        <div class="module-head">
+          <div class="module-name">Signal Path</div>
+          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+        </div>
         <div class="module-kicker">Hardware rig mapper</div>
-        <p class="module-desc">An interactive wiring diagram for a real hardware studio &mdash; every cable, every device, plus a settings deep-dive per unit. Built for practicing a live set without a laptop in sight.</p>
+        <p class="module-desc">An interactive wiring diagram for a real hardware studio - every device, every audio/MIDI/CV/power cable, plus a settings deep-dive per device. Built for practicing and running a live set without a laptop in sight.</p>
         <div class="module-actions">
-          <a class="btn btn-fill" href="signal-path/index.html">Open &rarr;</a>
-          <span class="module-status">WEB &middot; LIVE</span>
+          <a class="btn btn-primary" href="signal-path/index.html">Open Signal Path →</a>
+          <span class="module-status">Web · live</span>
         </div>
       </div>
 
-      <div class="module" style="--mod-color:#b8503a">
-        <div class="bolt tl"></div><div class="bolt tr"></div><div class="bolt bl"></div><div class="bolt br"></div>
-        <div class="module-head"><div class="module-name">Rudiment</div><div class="module-led"></div></div>
+      <div class="module">
+        <div class="module-strip" style="background:var(--teal);"></div>
+        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
+        <div class="module-head">
+          <div class="module-name">Rudiment</div>
+          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
+        </div>
         <div class="module-kicker">Drum rudiment trainer</div>
         <p class="module-desc">A standalone rudiment trainer, built as a native game rather than a browser tool. Live on Steam now; the App Store release is currently in review.</p>
         <div class="module-actions">
-          <a class="btn btn-fill" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">View on Steam &rarr;</a>
-          <a class="btn btn-disabled">App Store &mdash; in review</a>
+          <a class="btn btn-primary" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">🎮 View on Steam →</a>
+          <a class="btn btn-disabled" title="App Store review in progress">📱 App Store - in review</a>
         </div>
       </div>
 
@@ -322,100 +276,95 @@
   </div>
 
   <footer>
-    <div class="foot-left">&copy; 2026 THERMALSOCK LABS &middot; MADE ON THE BENCH, NOT IN THE CLOUD</div>
+    <div class="foot-left">© 2026 THERMALSOCK LABS - MADE ON THE BENCH, NOT IN THE CLOUD</div>
     <div class="foot-right">
-      <a class="foot-link" href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">Buy me a coffee</a>
+      <a class="foot-link" href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">☕ Buy me a coffee</a>
       <a class="foot-link" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">Rudiment on Steam</a>
       <a class="foot-link" href="legal/privacy.html">Privacy Policy</a>
       <a class="foot-link" href="legal/disclaimer.html">Disclaimer</a>
     </div>
   </footer>
 
-<script>
-// Signature element: three idling analog VU meters, needles driven by layered
-// sine motion plus a little random jitter so they read as "alive" rather than
-// mechanically looping. Cheap, dependency-free, respects reduced-motion.
-(function(){
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const meters = ['vu1','vu2','vu3'].map((id,i)=>({
-    canvas: document.getElementById(id),
-    phase: i*1.7,
-    speed: 0.6 + i*0.13,
-    jitter: 0
-  }));
-
-  function drawMeter(m, t){
-    const canvas = m.canvas;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width, h = canvas.height;
-    ctx.clearRect(0,0,w,h);
-
-    const cx = w/2, cy = h*0.92, r = h*0.82;
-
-    // face
-    ctx.beginPath();
-    ctx.moveTo(cx-r, cy);
-    ctx.arc(cx, cy, r, Math.PI, 2*Math.PI);
-    ctx.closePath();
-    ctx.fillStyle = '#0f0a06';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(237,226,204,0.14)';
+<script>(function () {
+  const canvas = document.getElementById("heroScope");
+  const ctx = canvas.getContext("2d");
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * DPR;
+    canvas.height = rect.height * DPR;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+  let t = 0;
+  function draw() {
+    const w = canvas.width,
+      h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
     ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // arc ticks
-    for(let i=0;i<=8;i++){
-      const a = Math.PI + (i/8)*Math.PI;
-      const inner = r*0.78, outer = r*0.92;
-      const x1 = cx+Math.cos(a)*inner, y1 = cy+Math.sin(a)*inner;
-      const x2 = cx+Math.cos(a)*outer, y2 = cy+Math.sin(a)*outer;
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
-      ctx.strokeStyle = i>=6 ? 'rgba(184,80,58,0.6)' : 'rgba(237,226,204,0.28)';
-      ctx.lineWidth = 1.2;
+    const cols = 12,
+      rows = 4;
+    for (let i = 1; i < cols; i++) {
+      const x = (w * i) / cols;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
       ctx.stroke();
     }
-
-    // needle angle: layered sines + tiny random jitter, clamped to the arc
-    const raw = Math.sin(t*m.speed + m.phase)*0.36
-              + Math.sin(t*m.speed*2.7 + m.phase)*0.12
-              + m.jitter;
-    const norm = Math.max(0, Math.min(1, 0.55 + raw));
-    const angle = Math.PI + norm*Math.PI;
-
-    const nx = cx + Math.cos(angle)*r*0.86;
-    const ny = cy + Math.sin(angle)*r*0.86;
+    for (let j = 1; j < rows; j++) {
+      const y = (h * j) / rows;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(nx, ny);
-    ctx.strokeStyle = '#e8a561';
-    ctx.lineWidth = 1.6;
-    ctx.shadowColor = '#c9793d';
-    ctx.shadowBlur = 4;
+    const mid = h / 2;
+    for (let x = 0; x <= w; x += 2) {
+      const nx = x / w;
+      const y =
+        mid +
+        Math.sin(nx * 14 + t * 1.3) * h * 0.1 +
+        Math.sin(nx * 3.1 + t * 0.4) * h * 0.16 +
+        Math.sin(nx * 27 + t * 2.1) * h * 0.025;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = "#4dff9e";
+    ctx.shadowColor = "#4dff9e";
+    ctx.shadowBlur = 8 * DPR;
+    ctx.lineWidth = 2 * DPR;
     ctx.stroke();
     ctx.shadowBlur = 0;
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, 3, 0, Math.PI*2);
-    ctx.fillStyle = '#c9a04f';
-    ctx.fill();
+    const sweepX = ((t * 0.15) % 1) * w;
+    const grad = ctx.createLinearGradient(
+      sweepX - 40 * DPR,
+      0,
+      sweepX + 40 * DPR,
+      0,
+    );
+    grad.addColorStop(0, "rgba(255,180,84,0)");
+    grad.addColorStop(0.5, "rgba(255,180,84,0.18)");
+    grad.addColorStop(1, "rgba(255,180,84,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
   }
-
-  if(reduceMotion){
-    meters.forEach(m=>drawMeter(m, 0));
-    return;
+  if (reduceMotion) {
+    t = 2;
+    draw();
+  } else {
+    let loop2 = function () {
+      t += 0.016;
+      draw();
+      requestAnimationFrame(loop2);
+    };
+    var loop = loop2;
+    requestAnimationFrame(loop2);
   }
-
-  let t = 0;
-  function loop(){
-    t += 0.016;
-    meters.forEach(m=>{
-      if(Math.random()<0.02) m.jitter = (Math.random()-0.5)*0.25;
-      m.jitter *= 0.94;
-      drawMeter(m, t);
-    });
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
 })();
 </script>
 </body>

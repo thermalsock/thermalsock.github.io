@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thermalsock Labs — Web Oscilloscope</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+  <title>Thermalsock Labs - Web Oscilloscope</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-  <!-- Permission gate: shown until the user explicitly starts capture. -->
+  
   <div id="gate" class="gate">
     <div class="gate-panel">
       <h1>Web Oscilloscope</h1>
@@ -18,7 +16,7 @@
       <p class="gate-copy">
         This is a real dual-trace oscilloscope running entirely in your browser.
         Plug an audio interface or microphone into your computer, then start capture
-        below — your browser will ask permission to use it. Nothing is recorded or
+        below - your browser will ask permission to use it. Nothing is recorded or
         sent anywhere; all analysis happens locally.
       </p>
 
@@ -34,7 +32,7 @@
     </div>
   </div>
 
-  <!-- Main scope UI -->
+  
   <div id="app" class="app" hidden>
     <header class="topbar">
       <a href="../index.html" class="brand-lockup">
@@ -168,7 +166,7 @@
             <span class="chip blue" aria-hidden="true">
               <svg viewBox="0 0 16 16"><rect x="2" y="8" width="2.4" height="6" fill="currentColor"/><rect x="6.8" y="4" width="2.4" height="10" fill="currentColor"/><rect x="11.6" y="6.5" width="2.4" height="7.5" fill="currentColor"/></svg>
             </span>
-            Measurements — Ch A
+            Measurements - Ch A
           </h2>
           <dl>
             <dt>Vpp</dt><dd id="measVpp">--</dd>

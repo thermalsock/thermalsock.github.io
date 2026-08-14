@@ -1,20 +1,4 @@
-/* Design tokens ---------------------------------------------------------
-   Chassis: near-black navy. Cards: raised glass panels with soft hairlines
-   and a touch of depth via shadow, not gradients. One consistent accent
-   thread (green) runs through every interactive/live element — the start
-   button, the live status dot, focus rings, the hero glow — tying the
-   whole chrome to the same "the scope is alive" signal the CRT trace
-   itself uses. Category chips (Display/Trigger/Vertical/Cursors/
-   Measurements) get their own restrained multi-hue palette purely as
-   small 18px grouping badges, not as competing interactive accents.
-   Type: system-ui sans throughout — the shared chrome font across every
-   Thermalsock Labs app (matches Transient Lab, the reference for the
-   site's shared conventions: fonts, corner radii, pill/control shapes).
-   Monospace is kept available (--mono) but reserved for dense numeric
-   alignment only, not general chrome.
-   Corner radii follow the shared scale: 10px windows/panels, 6px
-   controls/buttons, fully-rounded pills for status/nav badges.
-------------------------------------------------------------------------- */
+
 
 :root {
   --chassis: #0a0d16;
@@ -49,7 +33,7 @@ html, body {
   font-family: var(--sans);
 }
 
-/* --- Permission gate ("boot screen") ------------------------------------ */
+
 
 .gate {
   height: 100%;
@@ -62,11 +46,7 @@ html, body {
     var(--chassis);
 }
 
-/* [hidden] must win over the .gate/.app display:flex rules above and below —
-   otherwise the browser's built-in "hidden means display:none" behavior gets
-   silently overridden by our own class, and toggling .hidden in JS does
-   nothing visible. This exact bug has already regressed once (lost during a
-   full stylesheet rewrite) — do not remove this rule when restyling. */
+
 .gate[hidden],
 .app[hidden] {
   display: none;
@@ -172,7 +152,7 @@ select {
   line-height: 1.4;
 }
 
-/* --- Main app shell ------------------------------------------------------ */
+
 
 .app {
   height: 100%;
@@ -296,7 +276,7 @@ select {
   min-height: 0;
 }
 
-/* --- Scope display --------------------------------------------------- */
+
 
 .scope-wrap {
   flex: 1;
@@ -315,7 +295,7 @@ select {
   display: block;
 }
 
-/* --- Right panel ------------------------------------------------------ */
+
 
 .panel {
   width: 280px;
@@ -408,7 +388,7 @@ select {
 .status-value.hold { color: #fbbf24; }
 .status-value.armed { color: #fbbf24; }
 
-/* --- Hero stat card ----------------------------------------------------- */
+
 
 .hero-card {
   background: linear-gradient(160deg, var(--panel-raised), var(--panel));
@@ -455,11 +435,11 @@ select {
   .card { flex: 1 1 220px; }
 }
 
-/* --- Support widget & legal bar ------------------------------------------ */
+
 
 #supportWidget {
   position: fixed;
-  left: 14px;
+  right: 14px;
   bottom: 34px;
   z-index: 10;
 }
@@ -481,12 +461,3 @@ select {
 }
 #legalBar a { color: var(--text-dim); text-decoration: none; }
 #legalBar a:hover { color: var(--accent); }
-
-/* Site-wide brand thread: header lockup + legal bar use the shared
-   Thermalsock Labs typewriter mono (Courier Prime), matching the hub and
-   every other app page. Scoped to just these connective-tissue elements --
-   the app's own interior chrome (buttons, panel labels, chips) keeps its
-   established --sans/--mono system untouched. */
-.brand-appname, .brand-sub, #legalBar, #legalBar a {
-  font-family: 'Courier Prime', var(--mono);
-}
