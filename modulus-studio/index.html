@@ -601,6 +601,7 @@
       body.classList.toggle("collapsed", !cb.checked);
       history[key] = [];
       renderLegend();
+      renderFeedingNote();
     });
     label.appendChild(cb);
     label.appendChild(el("span", {}, ["Enabled"]));
@@ -663,6 +664,7 @@
       body.classList.toggle("collapsed", !cb.checked);
       history["env"] = [];
       renderLegend();
+      renderFeedingNote();
     });
     label.appendChild(cb);
     label.appendChild(el("span", {}, ["Enabled"]));
@@ -776,6 +778,7 @@
       body.classList.toggle("collapsed", !cb.checked);
       history["perf"] = [];
       renderLegend();
+      renderFeedingNote();
     });
     label.appendChild(cb);
     label.appendChild(el("span", {}, ["Enabled"]));
@@ -850,6 +853,7 @@
       body.classList.toggle("collapsed", !cb.checked);
       history["rand"] = [];
       renderLegend();
+      renderFeedingNote();
     });
     label.appendChild(cb);
     label.appendChild(el("span", {}, ["Enabled"]));
