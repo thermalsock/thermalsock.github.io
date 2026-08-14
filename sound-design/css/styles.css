@@ -439,7 +439,7 @@ select {
 
 #supportWidget {
   position: fixed;
-  right: 14px;
+  left: 14px;
   bottom: 34px;
   z-index: 10;
 }
@@ -461,3 +461,8 @@ select {
 }
 #legalBar a { color: var(--text-dim); text-decoration: none; }
 #legalBar a:hover { color: var(--accent); }
+
+
+.brand-appname, .brand-sub, #legalBar, #legalBar a {
+  font-family: 'Hanken Grotesk', var(--mono);
+}

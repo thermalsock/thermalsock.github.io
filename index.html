@@ -4,271 +4,279 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thermalsock Labs</title>
-<meta name="description" content="Thermalsock Labs - browser-based tools for sound and music experimentation: a real-time oscilloscope, an ear/hand trainer, a hardware rig mapper, and Rudiment on Steam.">
+<meta name="description" content="Thermalsock Labs - browser-based tools for sound and music experimentation: a real-time oscilloscope, a synth patch reference, a hardware rig mapper, an ear trainer, and Rudiment on Steam.">
 <link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
 <style>
+  
   :root{
-    --chassis:#0a0d16;
-    --panel:#12151f;
-    --panel-raised:#171b28;
-    --hairline:rgba(255,255,255,0.08);
-    --hairline-strong:rgba(255,255,255,0.16);
-    --text:#e8eaf2;
-    --text-dim:#7d8299;
-    --text-faint:#4d5165;
-    --amber:#ffb454;
-    --green:#4dff9e;
-    --violet:#a78bfa;
-    --teal:#4de8c9;
-    --blue:#5fa8ff;
-    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
-    --sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    
+    --bg:        #1a1a1a;
+    --bg-panel:  #202020;
+    --bg-raised: #262626;
+    --border:    #2a2a2a;
+    --border-hi: #363636;
+
+    --text:       #fafafa;
+    --text-muted: #a3a3a3;
+    --text-faint: #6b6b6b;
+
+    --primary:      #df6035;
+    --primary-hi:   #e97a54;
+    --primary-soft: rgba(223,96,53,0.14);
+    --primary-fg:   #fff8f5;
+
+    --secondary:    #284167;
+    --accent:       #2a3666;
+    --muted:        #2a2a2a;
+    --destructive:  #ef4444;
+
+    --amber: var(--primary); --amber-hi: var(--primary-hi); --amber-fg: var(--primary-fg);
+    --green:  #4dff9e;
+    --violet: #a78bfa;
+    --blue:   var(--secondary);
+    --coral:  var(--destructive);
+
+    --sans: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --radius: 10px;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
-    margin:0;background:var(--chassis);color:var(--text);
-    font-family:var(--sans);line-height:1.5;
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); line-height:1.6;
     -webkit-font-smoothing:antialiased;
   }
   a{color:inherit;}
 
   
-  body::before{
-    content:'';position:fixed;inset:0;pointer-events:none;z-index:50;
-    background:repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
-    mix-blend-mode:overlay;
+  #atmosphere{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  #glow{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse 900px 480px at 50% -8%, rgba(223,96,53,0.10), transparent 60%);
+  }
+  #dotgrid{
+    position:absolute; inset:0; opacity:0.5;
+    background-image:radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size:28px 28px;
+    mask-image:radial-gradient(ellipse 1100px 700px at 50% 0%, black 40%, transparent 75%);
   }
 
   
-  .hero{
-    position:relative;
-    padding:74px 24px 0 24px;
-    max-width:1080px;margin:0 auto;
-    text-align:left;
+  .navrail{
+    position:relative; z-index:2;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px; border-bottom:1px solid var(--border);
   }
-  .hero-eyebrow{
-    font-family:var(--sans);font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
-    color:var(--text-faint);margin-bottom:18px;display:flex;align-items:center;gap:10px;
+  .badge{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:11.5px; font-weight:600; letter-spacing:0.02em;
+    color:var(--text-muted);
+    background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:999px; padding:5px 12px;
   }
-  .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
-  .hero-title-row{ display:flex; align-items:center; gap:clamp(10px,2vw,20px); }
-  .brand-mark-hero{ flex:none; width:clamp(42px,9vw,110px); height:auto; }
-  .hero h1{
-    font-family:var(--sans);font-weight:800;
-    font-size:clamp(38px, 7vw, 78px);
-    letter-spacing:-0.01em;
-    margin:0;line-height:0.98;
-    color:var(--text);
+  .badge .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+  
+  .hero{ position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:88px 32px 0 32px; }
+  .hero-top{
+    opacity:0; animation:fadeUp 0.6s ease-out 0.05s forwards;
+    display:flex; align-items:center; gap:14px; margin-bottom:26px;
   }
-  .hero h1 .accent{color:var(--amber);}
+  .brand-mark-hero{ flex:none; }
+  .wordmark{
+    opacity:0; animation:fadeUp 0.6s ease-out 0.15s forwards;
+    font-family:var(--sans); font-weight:800;
+    font-size:clamp(38px,6.4vw,74px);
+    letter-spacing:-0.02em; line-height:1.02;
+    margin:0; color:var(--text);
+  }
+  .wordmark .dot{ color:var(--amber); }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+
   .hero-sub{
-    font-size:clamp(15px,2.1vw,19px);color:var(--text-dim);
-    max-width:560px;margin:22px 0 0 0;font-weight:400;
+    opacity:0; animation:fadeUp 0.6s ease-out 0.28s forwards;
+    font-size:clamp(15px,1.9vw,18px); color:var(--text-muted);
+    max-width:600px; margin:0 0 0 0; font-weight:400;
   }
-  .hero-sub strong{color:var(--text);font-weight:600;}
+  .hero-sub strong{ color:var(--text); font-weight:600; }
 
   
   .scope-strip{
-    margin:44px 0 0 0;
-    height:120px;border-radius:10px;
-    background:var(--panel);
-    border:1px solid var(--hairline);
-    position:relative;overflow:hidden;
+    opacity:0; animation:fadeUp 0.7s ease-out 0.42s forwards;
+    margin:38px 0 0 0; height:130px; border-radius:var(--radius);
+    background:var(--bg-panel); border:1px solid var(--border);
+    position:relative; overflow:hidden;
   }
-  .scope-strip canvas{display:block;width:100%;height:100%;}
+  .scope-strip canvas{ display:block; width:100%; height:100%; }
   .scope-strip-label{
-    position:absolute;top:10px;left:14px;
-    font-family:var(--sans);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
-    color:var(--text-faint);pointer-events:none;
+    position:absolute; top:12px; left:16px;
+    font-size:10.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--text-faint); pointer-events:none;
   }
 
-  .hero-scroll-cue{
-    display:flex;justify-content:center;margin:22px 0 54px 0;
-    font-family:var(--sans);font-size:10px;letter-spacing:0.12em;color:var(--text-faint);
+  .hero-scroll{
+    opacity:0; animation:fadeUp 0.6s ease-out 0.55s forwards;
+    display:flex; justify-content:center; margin:22px 0 60px 0;
+    font-size:11px; font-weight:600; letter-spacing:0.08em; color:var(--text-faint);
   }
 
   
-  .rack{
-    max-width:1080px;margin:0 auto;padding:0 24px 90px 24px;
+  .section{ position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:0 32px 100px 32px; }
+  .section-head{ display:flex; align-items:center; gap:12px; margin:0 0 24px 0; }
+  .section-head h2{
+    font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--text-muted); margin:0;
   }
-  .rack-heading{
-    display:flex;align-items:baseline;gap:14px;margin:0 0 26px 0;
-    font-family:var(--sans);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-faint);
-  }
-  .rack-heading::after{content:'';flex:1;height:1px;background:var(--hairline);}
+  .section-head .rule{ flex:1; height:1px; background:var(--border); }
 
-  .grid{
-    display:grid;grid-template-columns:1fr 1fr;gap:18px;
-  }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   @media (max-width:760px){ .grid{ grid-template-columns:1fr; } }
 
-  .module{
+  .card{
+    opacity:0; animation:cardIn 0.5s ease-out forwards;
     position:relative;
-    background:var(--panel);
-    border:1px solid var(--hairline);
-    border-radius:10px;
-    padding:26px 24px 22px 24px;
-    display:flex;flex-direction:column;
-    transition:border-color 0.15s ease, transform 0.15s ease;
+    background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:var(--radius); padding:22px 22px 20px 22px;
+    transition:border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
   }
-  .module:hover{border-color:var(--hairline-strong);transform:translateY(-2px);}
-  .module-strip{
-    position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;
-  }
-  .module-screws span{
-    position:absolute;width:4px;height:4px;border-radius:50%;background:#000;opacity:0.5;
-  }
-  .module-screws span:nth-child(1){top:14px;left:14px;}
-  .module-screws span:nth-child(2){top:14px;right:14px;}
-  .module-screws span:nth-child(3){bottom:14px;left:14px;}
-  .module-screws span:nth-child(4){bottom:14px;right:14px;}
+  .card:nth-child(1){ animation-delay:0.62s; }
+  .card:nth-child(2){ animation-delay:0.68s; }
+  .card:nth-child(3){ animation-delay:0.74s; }
+  .card:nth-child(4){ animation-delay:0.80s; }
+  .card:nth-child(5){ animation-delay:0.86s; }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .card:hover{ border-color:var(--border-hi); background:var(--bg-raised); transform:translateY(-1px); }
 
-  .module-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
-  .module-name{font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:0.01em;}
-  .module-led{width:7px;height:7px;border-radius:50%;margin-top:6px;flex:none;}
-  .module-kicker{
-    font-family:var(--sans);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
-    color:var(--text-faint);margin-bottom:14px;
+  .card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:4px; }
+  .card-name{ font-size:16.5px; font-weight:700; color:var(--text); letter-spacing:-0.005em; }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10px; font-weight:600; letter-spacing:0.04em;
+    color:var(--green); background:rgba(77,255,158,0.1); border:1px solid rgba(77,255,158,0.25);
+    border-radius:999px; padding:3px 9px;
   }
-  .module-desc{font-size:13.5px;color:var(--text-dim);flex:1;margin:0 0 20px 0;}
-  .module-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .status-pill .dot{ width:5px; height:5px; border-radius:50%; background:var(--green); }
 
+  .card-kicker{
+    font-size:11px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--card-accent, var(--amber)); margin-bottom:12px;
+  }
+  .card-desc{ font-size:13.5px; color:var(--text-muted); margin:0 0 20px 0; line-height:1.6; }
+
+  .card-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .btn{
-    font-family:var(--sans);font-size:11.5px;letter-spacing:0.05em;
-    padding:9px 16px;border-radius:6px;text-decoration:none;
-    display:inline-flex;align-items:center;gap:7px;
-    border:1px solid var(--hairline-strong);
+    font-family:var(--sans); font-size:13px; font-weight:600;
+    padding:8px 15px; border-radius:7px; text-decoration:none;
+    display:inline-flex; align-items:center; gap:6px;
+    border:1px solid transparent;
   }
-  .btn-primary{background:var(--amber);color:#0a0d16;border-color:var(--amber);font-weight:700;}
-  .btn-primary:hover{filter:brightness(1.08);}
-  .btn-ghost{color:var(--text-dim);background:transparent;}
-  .btn-ghost:hover{color:var(--text);border-color:var(--text-dim);}
-  .btn-disabled{color:var(--text-faint);background:transparent;cursor:default;}
-
-  .module-status{
-    font-family:var(--sans);font-size:10px;letter-spacing:0.06em;color:var(--text-faint);
-    margin-left:auto;
-  }
+  .btn-primary{ background:var(--amber); color:var(--amber-fg); }
+  .btn-primary:hover{ background:var(--amber-hi); }
+  .btn-outline{ background:transparent; border-color:var(--border-hi); color:var(--text-muted); }
+  .btn-outline:hover{ color:var(--text); border-color:var(--text-muted); }
+  .btn-disabled{ background:transparent; border-color:var(--border); color:var(--text-faint); cursor:default; }
+  .card-meta{ margin-left:auto; font-size:11px; color:var(--text-faint); font-weight:500; }
 
   
   footer{
-    border-top:1px solid var(--hairline);
-    padding:34px 24px 50px 24px;
-    max-width:1080px;margin:0 auto;
-    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+    position:relative; z-index:2;
+    border-top:1px solid var(--border);
+    padding:26px 32px 46px 32px; max-width:1080px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
   }
-  footer .foot-left{font-family:var(--sans);font-size:11px;color:var(--text-faint);letter-spacing:0.04em;}
-  footer .foot-right{display:flex;gap:16px;align-items:center;}
-  footer a.foot-link{
-    font-family:var(--sans);font-size:11px;color:var(--text-dim);text-decoration:none;letter-spacing:0.04em;
-  }
-  footer a.foot-link:hover{color:var(--amber);}
+  footer .foot-left{ font-size:12px; color:var(--text-faint); }
+  footer .foot-right{ display:flex; gap:20px; flex-wrap:wrap; }
+  footer a.foot-link{ font-size:12.5px; color:var(--text-muted); text-decoration:none; }
+  footer a.foot-link:hover{ color:var(--amber); }
 
   @media (prefers-reduced-motion: reduce){
-    html{scroll-behavior:auto;}
+    .hero-top,.wordmark,.hero-sub,.scope-strip,.hero-scroll,.card{ animation:none !important; opacity:1 !important; }
   }
 </style>
 </head>
 <body>
 
+  <div id="atmosphere"><div id="glow"></div><div id="dotgrid"></div></div>
+
+  <div class="navrail">
+    <span class="badge"><span class="dot"></span>All systems live</span>
+    <span class="badge">Browser-based &middot; nothing to install</span>
+  </div>
+
   <div class="hero">
-    <div class="hero-eyebrow"><span class="dot"></span>ALL SYSTEMS LIVE - BROWSER-BASED, NOTHING TO INSTALL</div>
-    <div class="hero-title-row">
-      <svg class="brand-mark-hero" width="52" height="19" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-        <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
+    <div class="hero-top">
+      <svg class="brand-mark-hero" width="46" height="17" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="1" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
+        <rect x="12" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
         <rect x="23" y="2" width="9" height="9" fill="#a78bfa"/>
         <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
       </svg>
-      <h1>THERMALSOCK<span class="accent">·</span>LABS</h1>
+      <h1 class="wordmark">Thermalsock<span class="dot">&middot;</span>Labs</h1>
     </div>
     <p class="hero-sub">A bench of small tools for making, learning, and studying sound - <strong>built to be used, not just looked at.</strong> Plug in a mic, a MIDI keyboard, or nothing at all.</p>
 
     <div class="scope-strip">
-      <div class="scope-strip-label">CH1 · LIVE</div>
+      <div class="scope-strip-label">Ch1 &middot; Live</div>
       <canvas id="heroScope"></canvas>
     </div>
+
+    <div class="hero-scroll">&#9662; the instruments</div>
   </div>
 
-  <div class="hero-scroll-cue">▾ THE BENCH</div>
-
-  <div class="rack">
-    <div class="rack-heading">Instruments - 04 web, 01 native</div>
+  <div class="section">
+    <div class="section-head"><h2>Instruments</h2><span class="rule"></span></div>
     <div class="grid">
 
-      <div class="module">
-        <div class="module-strip" style="background:var(--green);"></div>
-        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
-        <div class="module-head">
-          <div class="module-name">Web Oscilloscope</div>
-          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
-        </div>
-        <div class="module-kicker">Real-time signal analysis</div>
-        <p class="module-desc">A real dual-trace oscilloscope in your browser. Time domain, XY/Lissajous, FFT spectrum, spectrogram, chromagram, and a harmonic tuner. Runs on your mic or audio interface; nothing is recorded or sent anywhere.</p>
-        <div class="module-actions">
-          <a class="btn btn-primary" href="oscilloscope/index.html">Open Oscilloscope →</a>
-          <span class="module-status">Web · live</span>
+      <div class="card" style="--card-accent:var(--green)">
+        <div class="card-head"><span class="card-name">Web Oscilloscope</span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-kicker">Real-time signal analysis</div>
+        <p class="card-desc">A real dual-trace oscilloscope in your browser. Time domain, XY/Lissajous, FFT spectrum, spectrogram, chromagram, and a harmonic tuner. Runs on your mic or audio interface; nothing is recorded or sent anywhere.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="oscilloscope/index.html">Open Oscilloscope &rarr;</a>
+          <span class="card-meta">Web</span>
         </div>
       </div>
 
-      <div class="module">
-        <div class="module-strip" style="background:var(--blue);"></div>
-        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
-        <div class="module-head">
-          <div class="module-name">Sound Design</div>
-          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
-        </div>
-        <div class="module-kicker">Synth patch reference</div>
-        <p class="module-desc">A patch-programming guide for the Sequential Take 5 - oscillators, mixer, filter, envelopes, ADSR, and suggested effects, walked through for dozens of patches from analog bass to atmospheric drones.</p>
-        <div class="module-actions">
-          <a class="btn btn-primary" href="sound-design/index.html">Open Sound Design →</a>
-          <span class="module-status">Web · live</span>
+      <div class="card" style="--card-accent:var(--blue)">
+        <div class="card-head"><span class="card-name">Sound Design</span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-kicker">Synth patch reference</div>
+        <p class="card-desc">A patch-programming guide for the Sequential Take 5 - oscillators, mixer, filter, envelopes, ADSR, and suggested effects, walked through for dozens of patches from analog bass to atmospheric drones.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="sound-design/index.html">Open Sound Design &rarr;</a>
+          <span class="card-meta">Web</span>
         </div>
       </div>
 
-      <div class="module">
-        <div class="module-strip" style="background:var(--violet);"></div>
-        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
-        <div class="module-head">
-          <div class="module-name">Transient Lab</div>
-          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
-        </div>
-        <div class="module-kicker">Ear &amp; hand training</div>
-        <p class="module-desc">Scales, chords, and genre-based lessons - drone, psybient, ambient house, hauntology - with real-time MIDI note judging and audio analysis. Plug in a MIDI keyboard and train against real content packs, no DAW required.</p>
-        <div class="module-actions">
-          <a class="btn btn-primary" href="transient-lab/index.html">Open Transient Lab →</a>
-          <span class="module-status">Web · live</span>
+      <div class="card" style="--card-accent:var(--amber)">
+        <div class="card-head"><span class="card-name">Transient Lab</span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-kicker">Ear &amp; hand training</div>
+        <p class="card-desc">Scales, chords, and genre-based lessons - drone, psybient, ambient house, hauntology - with real-time MIDI note judging and audio analysis. Plug in a MIDI keyboard and train against real content packs.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="transient-lab/index.html">Open Transient Lab &rarr;</a>
+          <span class="card-meta">Web</span>
         </div>
       </div>
 
-      <div class="module">
-        <div class="module-strip" style="background:var(--amber);"></div>
-        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
-        <div class="module-head">
-          <div class="module-name">Signal Path</div>
-          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
-        </div>
-        <div class="module-kicker">Hardware rig mapper</div>
-        <p class="module-desc">An interactive wiring diagram for a real hardware studio - every device, every audio/MIDI/CV/power cable, plus a settings deep-dive per device. Built for practicing and running a live set without a laptop in sight.</p>
-        <div class="module-actions">
-          <a class="btn btn-primary" href="signal-path/index.html">Open Signal Path →</a>
-          <span class="module-status">Web · live</span>
+      <div class="card" style="--card-accent:var(--amber)">
+        <div class="card-head"><span class="card-name">Signal Path</span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-kicker">Hardware rig mapper</div>
+        <p class="card-desc">An interactive wiring diagram for a real hardware studio - every device, every audio/MIDI/CV/power cable, plus a settings deep-dive per device. Built for practicing and running a live set without a laptop in sight.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="signal-path/index.html">Open Signal Path &rarr;</a>
+          <span class="card-meta">Web</span>
         </div>
       </div>
 
-      <div class="module">
-        <div class="module-strip" style="background:var(--teal);"></div>
-        <div class="module-screws"><span></span><span></span><span></span><span></span></div>
-        <div class="module-head">
-          <div class="module-name">Rudiment</div>
-          <div class="module-led" style="background:var(--green);box-shadow:0 0 6px var(--green);"></div>
-        </div>
-        <div class="module-kicker">Drum rudiment trainer</div>
-        <p class="module-desc">A standalone rudiment trainer, built as a native game rather than a browser tool. Live on Steam now; the App Store release is currently in review.</p>
-        <div class="module-actions">
-          <a class="btn btn-primary" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">🎮 View on Steam →</a>
-          <a class="btn btn-disabled" title="App Store review in progress">📱 App Store - in review</a>
+      <div class="card" style="--card-accent:var(--coral)">
+        <div class="card-head"><span class="card-name">Rudiment</span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-kicker">Drum rudiment trainer</div>
+        <p class="card-desc">A standalone rudiment trainer, built as a native game rather than a browser tool. Live on Steam now; the App Store release is currently in review.</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">View on Steam &rarr;</a>
+          <a class="btn btn-disabled">App Store &middot; in review</a>
         </div>
       </div>
 
@@ -276,9 +284,9 @@
   </div>
 
   <footer>
-    <div class="foot-left">© 2026 THERMALSOCK LABS - MADE ON THE BENCH, NOT IN THE CLOUD</div>
+    <div class="foot-left">&copy; 2026 Thermalsock Labs &middot; made on the bench, not in the cloud</div>
     <div class="foot-right">
-      <a class="foot-link" href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+      <a class="foot-link" href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">Buy me a coffee</a>
       <a class="foot-link" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">Rudiment on Steam</a>
       <a class="foot-link" href="legal/privacy.html">Privacy Policy</a>
       <a class="foot-link" href="legal/disclaimer.html">Disclaimer</a>
@@ -347,9 +355,9 @@
       sweepX + 40 * DPR,
       0,
     );
-    grad.addColorStop(0, "rgba(255,180,84,0)");
-    grad.addColorStop(0.5, "rgba(255,180,84,0.18)");
-    grad.addColorStop(1, "rgba(255,180,84,0)");
+    grad.addColorStop(0, "rgba(223,96,53,0)");
+    grad.addColorStop(0.5, "rgba(223,96,53,0.20)");
+    grad.addColorStop(1, "rgba(223,96,53,0)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
   }
