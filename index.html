@@ -37,6 +37,7 @@
     --violet: #a78bfa;
     --blue:   var(--secondary);
     --coral:  var(--destructive);
+    --teal:   #3ecfcf;
 
     --sans: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --radius: 10px;
@@ -138,6 +139,22 @@
 
   .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   @media (max-width:760px){ .grid{ grid-template-columns:1fr; } }
+
+  .hero-section-head{ display:flex; align-items:center; gap:12px; margin:40px 0 16px 0; }
+  .hero-section-head h2{
+    font-size:12px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--text-faint); margin:0;
+  }
+  .hero-section-head .rule{ flex:1; height:1px; background:var(--border); }
+  .card.hero-card{
+    padding:26px 28px;
+    background:linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-raised) 100%);
+    border-color:var(--border-hi);
+    display:flex; align-items:center; gap:26px; flex-wrap:wrap;
+  }
+  .hero-card .hero-card-body{ flex:1; min-width:240px; }
+  .hero-card .card-desc{ max-width:520px; }
+  .hero-card .card-name{ font-size:19px; }
 
   .card{
     opacity:0; animation:cardIn 0.5s ease-out forwards;
@@ -250,7 +267,7 @@
       </div>
 
       <div class="card" style="--card-accent:var(--violet)">
-        <div class="card-head"><span class="card-name">Modulus Studio <span class="new-badge">New</span></span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-head"><span class="card-name">Modulus Studio</span><span class="status-pill"><span class="dot"></span>Live</span></div>
         <div class="card-kicker">LFO &amp; envelope modelling</div>
         <p class="card-desc">Dial in LFOs, envelopes, performance controls, and random sources exactly like your hardware synth, then watch them combine in real time against a destination - filter cutoff, pitch, amp, PWM, and more.</p>
         <div class="card-actions">
@@ -259,13 +276,13 @@
         </div>
       </div>
 
-      <div class="card" style="--card-accent:var(--coral)">
-        <div class="card-head"><span class="card-name">Rudiment</span><span class="status-pill"><span class="dot"></span>Live</span></div>
-        <div class="card-kicker">Drum rudiment trainer</div>
-        <p class="card-desc">A standalone rudiment trainer, built as a native game rather than a browser tool. Live on Steam now; the App Store release is currently in review.</p>
+      <div class="card" style="--card-accent:var(--teal)">
+        <div class="card-head"><span class="card-name">Loom <span class="new-badge">New</span></span><span class="status-pill"><span class="dot"></span>Live</span></div>
+        <div class="card-kicker">Modal chord &amp; drone generator</div>
+        <p class="card-desc">A harmonic idea engine for ambient, drone, and psybient music - modal scales, open/quartal/cluster voicings, and non-functional movement styles, with real audio playback so you can hear a progression before you patch it.</p>
         <div class="card-actions">
-          <a class="btn btn-primary" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">View on Steam &rarr;</a>
-          <a class="btn btn-disabled">App Store &middot; in review</a>
+          <a class="btn btn-primary" href="loom/index.html">Open Loom &rarr;</a>
+          <span class="card-meta">Web</span>
         </div>
       </div>
 
@@ -299,6 +316,21 @@
         </div>
       </div>
 
+    </div>
+
+    <div class="hero-section-head"><h2>Also From Thermalsock Labs</h2><span class="rule"></span></div>
+    <div class="grid">
+      <div class="card hero-card" style="--card-accent:var(--coral); grid-column:1 / -1;">
+        <div class="hero-card-body">
+          <div class="card-head"><span class="card-name">Rudiment</span><span class="status-pill"><span class="dot"></span>Live</span></div>
+          <div class="card-kicker">Drum rudiment trainer</div>
+          <p class="card-desc">A standalone rudiment trainer, built as a native game rather than a browser tool - not a web app like the rest of the bench, but cut from the same cloth. Live on Steam now; the App Store release is currently in review.</p>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener">View on Steam &rarr;</a>
+          <a class="btn btn-disabled">App Store &middot; in review</a>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -137,6 +137,11 @@
     color:var(--text-dim); display:flex; align-items:center; gap:8px;
   }
   .card h3 .swatch{ width:9px; height:9px; border-radius:3px; flex:none; }
+  .chip{
+    width:18px; height:18px; border-radius:6px; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .chip svg{ width:11px; height:11px; }
 
   .source-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
   .source-toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
@@ -311,38 +316,38 @@
     <div class="sidebar">
 
       <div class="card">
-        <h3><span class="swatch" style="background:var(--c-lfo1)"></span>LFO 1</h3>
+        <h3><span class="chip" style="background:rgba(167,139,250,0.15);color:var(--c-lfo1)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 1</h3>
         <div class="source-body" id="body-lfo1"></div>
       </div>
 
       <div class="card">
-        <h3><span class="swatch" style="background:var(--c-lfo2)"></span>LFO 2</h3>
+        <h3><span class="chip" style="background:rgba(95,168,255,0.15);color:var(--c-lfo2)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 2</h3>
         <div class="source-body" id="body-lfo2"></div>
       </div>
 
       <div class="card">
-        <h3><span class="swatch" style="background:var(--c-env)"></span>Envelope</h3>
+        <h3><span class="chip" style="background:rgba(95,214,138,0.15);color:var(--c-env)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 13 5 4 8 8 11 6 14 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Envelope</h3>
         <div class="source-body" id="body-env"></div>
       </div>
 
       <div class="card">
-        <h3><span class="swatch" style="background:var(--c-perf)"></span>Performance</h3>
+        <h3><span class="chip" style="background:rgba(232,163,61,0.15);color:var(--c-perf)" aria-hidden="true"><svg viewBox="0 0 16 16"><line x1="5" y1="2" x2="5" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="6" r="1.6" fill="currentColor"/><line x1="11" y1="2" x2="11" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="11" cy="10" r="1.6" fill="currentColor"/></svg></span>Performance</h3>
         <div class="source-body" id="body-perf"></div>
       </div>
 
       <div class="card">
-        <h3><span class="swatch" style="background:var(--c-rand)"></span>Random</h3>
+        <h3><span class="chip" style="background:rgba(255,126,182,0.15);color:var(--c-rand)" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="4.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="4.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="11.5" r="1.3" fill="currentColor"/></svg></span>Random</h3>
         <div class="source-body" id="body-rand"></div>
       </div>
 
       <div class="card">
-        <h3>Routing Matrix</h3>
+        <h3><span class="chip" style="background:rgba(255,255,255,0.08);color:var(--text-dim)" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="3" cy="3" r="1.3" fill="currentColor"/><circle cx="13" cy="3" r="1.3" fill="currentColor"/><circle cx="3" cy="13" r="1.3" fill="currentColor"/><circle cx="13" cy="13" r="1.3" fill="currentColor"/><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.1" opacity="0.7"/></svg></span>Routing Matrix</h3>
         <div id="routeRows"></div>
         <button class="add-route" id="addRoute">+ ADD ROUTING</button>
       </div>
 
       <div class="card">
-        <h3>Preset</h3>
+        <h3><span class="chip" style="background:rgba(255,255,255,0.08);color:var(--text-dim)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2v7m0 0-3-3m3 3 3-3M3 12.5h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Preset</h3>
         <div class="io-row">
           <button class="io-btn" id="exportBtn">EXPORT JSON</button>
           <button class="io-btn" id="importBtn">IMPORT JSON</button>

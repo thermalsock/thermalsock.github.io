@@ -137,7 +137,25 @@
   color: var(--text-dim);
   font-weight: 600;
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
+.chip {
+  width: 17px;
+  height: 17px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.chip svg { width: 10px; height: 10px; }
+.chip.amber { background: rgba(255, 180, 84, 0.15); color: var(--amber); }
+.chip.violet { background: rgba(167, 139, 250, 0.15); color: var(--violet); }
+.chip.teal { background: rgba(77, 232, 201, 0.15); color: var(--teal); }
+.chip.pink { background: rgba(255, 126, 182, 0.15); color: var(--pink); }
+.chip.blue { background: rgba(95, 168, 255, 0.15); color: var(--blue); }
 
 .synth-row.top .synth-section { flex: 1 1 140px; }
 
