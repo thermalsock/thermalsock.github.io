@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thermalsock Labs - Web Oscilloscope</title>
+  <title>Thermalsock Labs — Web Oscilloscope</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-  
+  <!-- Permission gate: shown until the user explicitly starts capture. -->
   <div id="gate" class="gate">
     <div class="gate-panel">
       <h1>Web Oscilloscope</h1>
@@ -18,7 +18,7 @@
       <p class="gate-copy">
         This is a real dual-trace oscilloscope running entirely in your browser.
         Plug an audio interface or microphone into your computer, then start capture
-        below - your browser will ask permission to use it. Nothing is recorded or
+        below — your browser will ask permission to use it. Nothing is recorded or
         sent anywhere; all analysis happens locally.
       </p>
 
@@ -34,21 +34,28 @@
     </div>
   </div>
 
-  
+  <!-- Main scope UI -->
   <div id="app" class="app" hidden>
     <header class="topbar">
       <a href="../index.html" class="brand-lockup">
         <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
           <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="#4dff9e"/>
+          <rect x="23" y="2" width="9" height="9" fill="#8B4A2B"/>
           <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#4dff9e">Oscilloscope</span>
+          <span class="brand-appname" style="color:#8B4A2B">Oscilloscope</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
+
+      <nav class="page-nav" aria-label="Thermalsock Labs apps">
+        <a class="page-nav-link active" href="../oscilloscope/index.html">Oscilloscope</a>
+        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
+        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
+      </nav>
+
       <div class="topbar-right">
         <span id="modePill" class="pill mode">Time Domain</span>
         <span class="pill live">
@@ -168,7 +175,7 @@
             <span class="chip blue" aria-hidden="true">
               <svg viewBox="0 0 16 16"><rect x="2" y="8" width="2.4" height="6" fill="currentColor"/><rect x="6.8" y="4" width="2.4" height="10" fill="currentColor"/><rect x="11.6" y="6.5" width="2.4" height="7.5" fill="currentColor"/></svg>
             </span>
-            Measurements - Ch A
+            Measurements — Ch A
           </h2>
           <dl>
             <dt>Vpp</dt><dd id="measVpp">--</dd>

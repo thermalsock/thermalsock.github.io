@@ -180,10 +180,52 @@ const dark = {
   buttonActiveBorder: "#4a8fe0"
 };
 
-export const themeVariants = { light, mid, dark };
-const THEME_ORDER = ["light", "mid", "dark"];
+const fieldNotes = {
+  ...semantics,
+  appBg:        "#EDE6D6",
+  panelBg:      "#E4DBC7",
+  panelBgAlt:   "#DED2B4",
+  gridBgA:      "#E4DBC7",
+  gridBgB:      "#DED2B4",
+  gridBgInactive: "#D8CBA8",
+  moduleBg:     "#E4DBC7",
+  fieldBg:      "#F3ECDD",
+  fieldBgActive: "#FBF6EC",
 
-export const theme = { ...light };
+  border:       "#C9BFA0",
+  borderStrong: "#8A7A57",
+  gridLineMinor: "rgba(43,38,32,0.06)",
+  gridLineMajor: "rgba(43,38,32,0.14)",
+  midLine:      "rgba(43,38,32,0.10)",
+  midLineDim:   "rgba(43,38,32,0.04)",
+
+  textPrimary:  "#2B2620",
+  textSecondary:"#5C5346",
+  textDim:      "#8A8070",
+  textOnAccent: "#FBF6EC",
+
+  accent:       "#8B4A2B",
+  accentDeep:   "#6b3a20",
+  accentBg:     "rgba(139, 74, 43, 0.16)",
+  accentBgSubtle: "rgba(139, 74, 43, 0.07)",
+
+  toggleOnBg:   "#33475C",
+  toggleOnText: "#FBF6EC",
+  toggleOffBg:  "#C9BFA0",
+  toggleOffText:"#5C5346",
+
+  playhead:     "#b8402a",
+
+  buttonBg:     "#DED2B4",
+  buttonBorder: "#C9BFA0",
+  buttonActiveBg: "rgba(51, 71, 92, 0.18)",
+  buttonActiveBorder: "#33475C"
+};
+
+export const themeVariants = { fieldNotes, light, mid, dark };
+const THEME_ORDER = ["fieldNotes", "light", "mid", "dark"];
+
+export const theme = { ...fieldNotes };
 
 export let currentThemeName = (() => {
   try {
@@ -192,7 +234,7 @@ export let currentThemeName = (() => {
   } catch (e) {
     // localStorage unavailable — fall back to default silently
   }
-  return "light";
+  return "fieldNotes";
 })();
 
 Object.assign(theme, themeVariants[currentThemeName]);

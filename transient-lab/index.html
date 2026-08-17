@@ -7,13 +7,12 @@
   <meta name="description" content="A MIDI synth training app -- scales, chords, and genre-based ear/hand training with real-time audio analysis.">
   <link rel="icon" href="data:,">
 
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
     html, body {
       margin: 0;
-      background: #c6c6c6;
+      background: #EDE6D6;
       height: 100%;
       overflow: hidden;
     }
@@ -34,16 +33,16 @@
       justify-content: center;
       gap: 12px;
       padding: 8px 16px;
-      background: #3a2f0a;
-      color: #f0d080;
-      font: 600 13px -apple-system, system-ui, sans-serif;
+      background: #DED2B4;
+      color: #6b3a20;
+      font: 600 13px 'Newsreader', -apple-system, system-ui, sans-serif;
       text-align: center;
     }
     #compat-banner button {
       flex: 0 0 auto;
       background: none;
-      border: 1px solid #f0d080;
-      color: #f0d080;
+      border: 1px solid #8B4A2B;
+      color: #6b3a20;
       border-radius: 3px;
       padding: 2px 8px;
       font: inherit;
@@ -72,6 +71,9 @@
       object-fit: contain;
     }
 
+    /* Support widget -- small, fixed corner, out of the way of the
+       app's own UI. Rudiment's store links are commented out below;
+       add them once those listings are live. */
     #support-widget {
       position: fixed;
       right: 14px;
@@ -87,29 +89,38 @@
     }
     #support-widget .store-link {
       display: block;
-      font: 600 12px -apple-system, system-ui, sans-serif;
-      background: #1c1f26;
-      color: #e8e6df;
-      border: 1px solid #343945;
+      font: 600 12px 'Newsreader', -apple-system, system-ui, sans-serif;
+      background: #E4DBC7;
+      color: #2B2620;
+      border: 1px solid #C9BFA0;
       border-radius: 6px;
       padding: 7px 12px;
       text-decoration: none;
       white-space: nowrap;
     }
-    #support-widget .store-link:hover { border-color: #e8a33d; }
+    #support-widget .store-link:hover { border-color: #8B4A2B; }
     #support-widget .store-link.pending {
-      color: #7a7d87;
+      color: #8A8070;
       cursor: default;
       pointer-events: none;
     }
 
+    /* Thin strip in normal document flow at the very top, above the
+       compat-banner -- same "push the canvas down, never overlay it"
+       technique as the banner below, so it can't collide with the
+       canvas-drawn TopBar controls (lesson title left, fullscreen/theme
+       buttons right). Always visible; this is the hub wayfinding link.
+       Matches the icon+lockup brand treatment used on the hub and every
+       other Thermalsock Labs app page -- this strip is site-shell, not
+       part of the app itself, so it stays in sync with that pattern. */
     #hub-strip {
       flex: 0 0 auto;
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 7px 14px;
-      background: #14151a;
+      background: #E4DBC7;
+      border-bottom: 1px solid #C9BFA0;
     }
     #hub-strip a {
       display: flex;
@@ -121,13 +132,13 @@
     #hub-strip .hs-mark { flex: none; display: block; }
     #hub-strip .hs-text { display: flex; flex-direction: column; line-height: 1.15; }
     #hub-strip .hs-appname {
-      font: 700 12.5px 'Hanken Grotesk', -apple-system, system-ui, sans-serif;
-      color: #e8a020;
-      letter-spacing: 0.01em;
+      font: 600 13px 'Fraunces', serif;
+      color: #8B4A2B;
+      letter-spacing: 0.005em;
     }
     #hub-strip .hs-sub {
-      font: 600 9.5px 'Hanken Grotesk', -apple-system, system-ui, sans-serif;
-      color: #7a7d87;
+      font: 500 9.5px 'IBM Plex Mono', monospace;
+      color: #6b6153;
       letter-spacing: 0.02em;
     }
   </style>
@@ -137,10 +148,10 @@
   <div id="hub-strip">
     <a href="../index.html">
       <svg class="hs-mark" width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-        <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-        <rect x="23" y="2" width="9" height="9" fill="#e8a020"/>
-        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+        <rect x="1" y="2" width="9" height="9" stroke="#8A7A57" stroke-width="1.4"/>
+        <rect x="12" y="2" width="9" height="9" stroke="#8A7A57" stroke-width="1.4"/>
+        <rect x="23" y="2" width="9" height="9" fill="#8B4A2B"/>
+        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#b8402a" stroke-width="1.6"/>
       </svg>
       <span class="hs-text">
         <span class="hs-appname">Transient Lab</span>
