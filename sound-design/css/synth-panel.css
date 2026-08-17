@@ -1,4 +1,13 @@
+/* synth-panel.css — extends the tokens defined in styles.css (chassis,
+   panel, hairline, accent, mono) with components specific to recreating an
+   instrument control panel: knobs, mini switches, section blocks, and the
+   patch-select strip.
 
+   Deliberately an original visual treatment (dark card sections, accent-
+   green pointers) rather than a pixel copy of Sequential's exact branding,
+   colors, or logo — this recreates the *functional control layout* of a
+   Take 5 for programming reference, not its trade dress.
+*/
 
 .synth-layout {
   flex: 1;
@@ -9,7 +18,7 @@
   padding: 16px 22px 30px 22px;
 }
 
-
+/* --- Sidebar: the full browsable library, always visible ------------------ */
 
 .sound-sidebar {
   width: 250px;
@@ -46,12 +55,12 @@
 }
 .sound-nav-item:hover { background: var(--panel-raised); color: var(--text); }
 .sound-nav-item.active {
-  background: rgba(77, 255, 158, 0.1);
+  background: rgba(139, 74, 43, 0.1);
   color: var(--accent);
   font-weight: 600;
 }
 
-
+/* --- Main content: controls + details, filling remaining space ------------ */
 
 .sound-main {
   flex: 1;
@@ -73,7 +82,7 @@
 }
 .synth-intro strong { color: var(--text); }
 
-
+/* --- Section blocks ----------------------------------------------------- */
 
 .synth-row {
   display: flex;
@@ -82,10 +91,17 @@
   align-items: flex-start;
 }
 
-
+/* Oscillators / Mixer / Filter / Envelopes / ADSR / Suggested Effects /
+   Modulation — 7 equal columns in one row, all the same height (grid rows
+   stretch by default), spanning the full width. Each section's own content
+   is then centered/distributed vertically within that shared height via the
+   rules below, rather than just sitting at the top of an oversized box. */
 .controls-row {
   display: grid;
-  
+  /* Proportional, not equal — Oscillators/Envelopes genuinely hold more
+     controls (2 rows of 4) than Mixer/Filter (a handful of knobs), so equal
+     columns left visible dead space around Mixer/Filter's smaller content
+     once it was centered inside a same-width box. Sized to content instead. */
   grid-template-columns: 1.3fr 0.85fr 0.75fr 1.3fr 1fr 1.1fr 0.9fr;
   gap: 12px;
   align-items: stretch;
@@ -104,7 +120,9 @@
   padding: 24px;
 }
 
-
+/* preserveAspectRatio="xMidYMid meet" on the SVG itself keeps the chart's
+   own proportions intact — this just stops the flex box from forcing it
+   wider/taller than the square viewBox wants to be. */
 .adsr-window {
   display: flex;
   flex-direction: column;
@@ -169,14 +187,22 @@
   justify-content: center;
 }
 
-
+/* Mixer/Filter each have a single row of knobs — center that row vertically
+   within the section now that all 7 sections share the same (taller) height.
+   Placed AFTER .synth-controls deliberately: same specificity, so source
+   order decides — this must come later to actually win the cascade. */
 .mixer-controls,
 .filter-controls {
   flex: 1;
   align-items: center;
 }
 
-
+/* --- Knob ----------------------------------------------------------------
+   Two layers: a tick-mark ring (CSS repeating-conic-gradient, masked into an
+   annulus so it surrounds the knob without filling it — mirrors the printed
+   scale ticks on a real synth panel) and the knob body itself (radial-
+   gradient for a metallic/plastic highlight, plus a white pointer with a
+   glowing tip). --angle is still the only thing that varies per instance. */
 
 .knob-wrap {
   display: flex;
@@ -216,21 +242,21 @@
   fill: url(#knobBodyGrad);
   stroke: var(--hairline-strong);
   stroke-width: 1;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 2px 3px rgba(43, 38, 32, 0.35));
 }
 .knob-pointer {
   transform-origin: 35px 35px;
   transform: rotate(var(--angle, -110deg));
 }
 .knob-pointer-line {
-  stroke: #ffffff;
-  stroke-width: 2.4;
+  stroke: var(--accent);
+  stroke-width: 2.6;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
+  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(43, 38, 32, 0.4));
 }
 .knob-pointer-dot {
-  fill: #ffffff;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.65));
+  fill: var(--accent);
+  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(43, 38, 32, 0.4));
 }
 
 .knob-label {
@@ -243,7 +269,7 @@
   line-height: 1.25;
 }
 
-
+/* --- Oscillator rows (matches reference: OSC1/OSC2 stacked rows, side label) --- */
 
 .osc-section { flex: 1 1 300px; }
 .osc-rows {
@@ -269,7 +295,7 @@
   padding: 4px 0;
 }
 
-
+/* Octave knob: small LED dots instead of a numbered ring, like a real octave selector */
 .knob-octave { overflow: visible; }
 .knob-led {
   fill: var(--panel);
@@ -277,11 +303,11 @@
   stroke-width: 0.8;
 }
 .knob-led.on {
-  fill: #ff5c5c;
-  filter: drop-shadow(0 0 2px rgba(255, 92, 92, 0.7));
+  fill: #C4402A;
+  filter: drop-shadow(0 0 2px rgba(196, 64, 42, 0.6));
 }
 
-
+/* Small square momentary-style buttons (Sync / FM / Env Routing) */
 .mini-btn-wrap {
   display: flex;
   flex-direction: column;
@@ -294,25 +320,25 @@
   width: 22px;
   height: 22px;
   border-radius: 5px;
-  background: linear-gradient(160deg, var(--panel-raised), #0a0c14);
+  background: linear-gradient(160deg, var(--panel-raised), var(--panel));
   border: 1px solid var(--hairline-strong);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 2px rgba(43, 38, 32, 0.25), inset 0 1px 1px rgba(255, 250, 240, 0.5);
 }
 .mini-btn.on {
   border-color: var(--accent-dim);
-  box-shadow: 0 0 6px var(--accent-dim), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 6px var(--accent-dim), inset 0 1px 1px rgba(255, 250, 240, 0.5);
 }
 
-
+/* --- Mixer: OSC1/SUB, FM button, OSC2/Noise columns, matching reference grouping --- */
 .mixer-col { display: flex; flex-direction: column; gap: 10px; }
 
-
+/* --- Filter: orange-ringed Cutoff as the visual centerpiece --- */
 .filter-side-knobs { display: flex; flex-direction: column; gap: 10px; }
-.filter-cutoff .knob-tick { stroke: #ff8c1a; stroke-width: 2; }
-.filter-cutoff .knob-num { fill: #ff8c1a; }
-.filter-cutoff .knob-ring-bg { stroke: #ff8c1a; stroke-width: 1.5; }
+.filter-cutoff .knob-tick { stroke: #C97A2E; stroke-width: 2; }
+.filter-cutoff .knob-num { fill: #C97A2E; }
+.filter-cutoff .knob-ring-bg { stroke: #C97A2E; stroke-width: 1.5; }
 
-
+/* --- Mini switch (kept for any remaining pill-style toggles) ---------------- */
 
 .switch-wrap {
   display: flex;
@@ -341,7 +367,7 @@
 }
 .switch-mini.on::after { background: var(--accent); left: 17px; }
 
-
+/* --- Small buttons (memory/seq/arp) --------------------------------------- */
 
 .synth-btn-row {
   display: flex;
@@ -362,7 +388,7 @@
 }
 .synth-btn.on { color: var(--accent); border-color: var(--accent-dim); }
 
-
+/* --- Mini display screen -------------------------------------------------- */
 
 .mini-display {
   background: #04140d;
@@ -392,7 +418,7 @@
   color: var(--text-dim);
 }
 
-
+/* --- Patch select strip ---------------------------------------------------- */
 
 .patch-strip {
   display: flex;
@@ -413,13 +439,13 @@
   align-items: center;
   justify-content: center;
 }
-.patch-btn.on { color: var(--accent); border-color: var(--accent-dim); background: rgba(77, 255, 158, 0.08); }
+.patch-btn.on { color: var(--accent); border-color: var(--accent-dim); background: rgba(139, 74, 43, 0.08); }
 
 @media (max-width: 900px) {
   .synth-row { flex-direction: column; }
 }
 
-
+/* --- Explanation area ------------------------------------------------------ */
 
 .explain-title {
   font-family: var(--sans);
@@ -437,7 +463,7 @@
 }
 .explain-copy strong { color: var(--text); }
 
-
+/* --- Sound example card ---------------------------------------------------- */
 
 .sound-example-header {
   display: flex;
@@ -479,7 +505,7 @@
 }
 .sound-settings-list strong { color: var(--accent); }
 
-
+/* --- Suggested Effects / Modulation windows -------------------------------- */
 
 .suggestion-window { justify-content: flex-start; }
 .suggestion-block + .suggestion-block { margin-top: 14px; }
@@ -506,7 +532,10 @@
   color: var(--text-dim);
 }
 
-
+/* --- ADSR chart (right column of the sound card) ---------------------------
+   Colored per-phase fill areas + outline stroke, modeled on a classic
+   labeled ADSR diagram — built dynamically per preset in soundDesign.js,
+   these classes just supply the styling. */
 .adsr-fill-attack { fill: var(--danger); fill-opacity: 0.75; }
 .adsr-fill-decay { fill: var(--amber); fill-opacity: 0.75; }
 .adsr-fill-sustain { fill: var(--teal); fill-opacity: 0.75; }

@@ -1,223 +1,170 @@
-import { PRESETS, CATEGORIES } from "./synthPresets.js";
+import { PRESETS, CATEGORIES } from './synthPresets.js';
+
 const LEVEL_ANGLE = { min: -115, low: -60, mid: 0, high: 60, max: 115 };
+
 const els = {
-  sidebar: document.getElementById("soundSidebar"),
-  title: document.getElementById("soundTitle"),
-  categoryTag: document.getElementById("soundCategoryTag"),
-  blurb: document.getElementById("soundBlurb"),
-  settingsList: document.getElementById("soundSettingsList"),
-  adsrChart: document.getElementById("adsrChart"),
-  suggDelayType: document.getElementById("suggDelayType"),
-  suggDelayText: document.getElementById("suggDelayText"),
-  suggReverbType: document.getElementById("suggReverbType"),
-  suggReverbText: document.getElementById("suggReverbText"),
-  suggModText: document.getElementById("suggModText"),
+  sidebar: document.getElementById('soundSidebar'),
+  title: document.getElementById('soundTitle'),
+  categoryTag: document.getElementById('soundCategoryTag'),
+  blurb: document.getElementById('soundBlurb'),
+  settingsList: document.getElementById('soundSettingsList'),
+  adsrChart: document.getElementById('adsrChart'),
+  suggDelayType: document.getElementById('suggDelayType'),
+  suggDelayText: document.getElementById('suggDelayText'),
+  suggReverbType: document.getElementById('suggReverbType'),
+  suggReverbText: document.getElementById('suggReverbText'),
+  suggModText: document.getElementById('suggModText'),
 };
+
+// Effects/modulation suggestions are deliberately category-level rather than
+// per-sound — the reference doc's own scope is "core synthesis only, no
+// effects," so these are an auxiliary layer on top, and how much delay/verb/
+// mod suits a sound tracks its category (pad vs. bass vs. bell) far more
+// than the specific sound within that category.
 const CATEGORY_EFFECTS = {
-  "Bread-and-Butter Analog": {
-    delayType: "Off / Very Subtle",
-    delayText:
-      "These are foundational tones meant to sit clean in a mix - skip delay on bass entirely; a faint slap is fine on pads/strings if you want extra width.",
-    reverbType: "Short-Medium Room/Plate",
-    reverbText:
-      "Just enough to add depth without smearing the attack. Keep it shorter and drier on bass than on pads.",
-    modText:
-      "Minimal on bass/brass. A slow, gentle LFO to filter cutoff or amplitude adds believable life to pads and strings without drawing attention to itself.",
+  'Bread-and-Butter Analog': {
+    delayType: 'Off / Very Subtle',
+    delayText: 'These are foundational tones meant to sit clean in a mix — skip delay on bass entirely; a faint slap is fine on pads/strings if you want extra width.',
+    reverbType: 'Short-Medium Room/Plate',
+    reverbText: 'Just enough to add depth without smearing the attack. Keep it shorter and drier on bass than on pads.',
+    modText: 'Minimal on bass/brass. A slow, gentle LFO to filter cutoff or amplitude adds believable life to pads and strings without drawing attention to itself.',
   },
-  "Leads & Solo Instruments": {
-    delayType: "Slap or Ping-Pong",
-    delayText:
-      "A short synced delay (1/8 or dotted 1/8) adds width and rhythmic interest without muddying single-note lines.",
-    reverbType: "Medium Plate",
-    reverbText:
-      "Enough to feel present in a mix without pushing the lead into the background.",
-    modText:
-      "Vibrato via mod wheel to pitch is classic for leads - light, performer-controlled rather than always-on. A touch of chorus can widen PWM/sync leads further.",
+  'Leads & Solo Instruments': {
+    delayType: 'Slap or Ping-Pong',
+    delayText: 'A short synced delay (1/8 or dotted 1/8) adds width and rhythmic interest without muddying single-note lines.',
+    reverbType: 'Medium Plate',
+    reverbText: 'Enough to feel present in a mix without pushing the lead into the background.',
+    modText: 'Vibrato via mod wheel to pitch is classic for leads — light, performer-controlled rather than always-on. A touch of chorus can widen PWM/sync leads further.',
   },
-  "Motion & Modulated": {
-    delayType: "Tempo-Synced (1/8 or Dotted 1/8)",
-    delayText:
-      "Since the patch is already about movement, a synced delay reinforces rather than fights the internal modulation - keep feedback moderate so it doesn’t turn to mush.",
-    reverbType: "Medium-Long Hall",
-    reverbText:
-      "These patches like room to breathe; a longer tail supports the evolving texture.",
-    modText:
-      "Modulation IS the point of this category - consider syncing the LFO rate to tempo so the motion feels intentional rather than arbitrary against the rest of a track.",
+  'Motion & Modulated': {
+    delayType: 'Tempo-Synced (1/8 or Dotted 1/8)',
+    delayText: 'Since the patch is already about movement, a synced delay reinforces rather than fights the internal modulation — keep feedback moderate so it doesn\u2019t turn to mush.',
+    reverbType: 'Medium-Long Hall',
+    reverbText: 'These patches like room to breathe; a longer tail supports the evolving texture.',
+    modText: 'Modulation IS the point of this category — consider syncing the LFO rate to tempo so the motion feels intentional rather than arbitrary against the rest of a track.',
   },
-  "Percussive & Plucked": {
-    delayType: "Off or Very Short Slap",
-    delayText:
-      "Keep transients sharp - a long delay smears the attack that makes these sounds work. A very short slap can add width without softening the hit.",
-    reverbType: "Short Room/Plate",
-    reverbText:
-      "Just enough to avoid sounding completely dry and clinical; too much washes out the percussive snap.",
-    modText:
-      "Generally none needed - the pitch/filter envelopes already provide the movement. Save modulation budget for sustained sounds instead.",
+  'Percussive & Plucked': {
+    delayType: 'Off or Very Short Slap',
+    delayText: 'Keep transients sharp — a long delay smears the attack that makes these sounds work. A very short slap can add width without softening the hit.',
+    reverbType: 'Short Room/Plate',
+    reverbText: 'Just enough to avoid sounding completely dry and clinical; too much washes out the percussive snap.',
+    modText: 'Generally none needed — the pitch/filter envelopes already provide the movement. Save modulation budget for sustained sounds instead.',
   },
-  "Drones & Atmospheric": {
-    delayType: "Long, Feedback-Heavy",
-    delayText:
-      "These patches reward a delay that becomes part of the texture itself - long time, higher feedback, possibly filtered in the feedback path.",
-    reverbType: "Huge Hall / Shimmer",
-    reverbText:
-      "Go big here - a cavernous, near-infinite tail is exactly what atmospheric material wants.",
-    modText:
-      "A slow LFO to filter cutoff (very low rate, moderate depth) keeps a static drone from feeling frozen without turning it into an obvious sweep.",
+  'Drones & Atmospheric': {
+    delayType: 'Long, Feedback-Heavy',
+    delayText: 'These patches reward a delay that becomes part of the texture itself — long time, higher feedback, possibly filtered in the feedback path.',
+    reverbType: 'Huge Hall / Shimmer',
+    reverbText: 'Go big here — a cavernous, near-infinite tail is exactly what atmospheric material wants.',
+    modText: 'A slow LFO to filter cutoff (very low rate, moderate depth) keeps a static drone from feeling frozen without turning it into an obvious sweep.',
   },
-  "Aggressive / Experimental": {
-    delayType: "Short + Driven, or Ring-Modulated Feedback",
-    delayText:
-      "A conventional clean delay often softens these patches’ edge - try a short delay with saturation in the feedback path, or skip it and let the raw modulation carry the sound.",
-    reverbType: "Short/Gritty Plate or None",
-    reverbText:
-      "Keep it tight and in-your-face; a long reverb tends to dilute exactly the aggression these patches are going for.",
-    modText:
-      "Audio-rate modulation is usually already baked into the patch itself here - additional slow modulation is rarely needed and can muddy the effect.",
+  'Aggressive / Experimental': {
+    delayType: 'Short + Driven, or Ring-Modulated Feedback',
+    delayText: 'A conventional clean delay often softens these patches\u2019 edge — try a short delay with saturation in the feedback path, or skip it and let the raw modulation carry the sound.',
+    reverbType: 'Short/Gritty Plate or None',
+    reverbText: 'Keep it tight and in-your-face; a long reverb tends to dilute exactly the aggression these patches are going for.',
+    modText: 'Audio-rate modulation is usually already baked into the patch itself here — additional slow modulation is rarely needed and can muddy the effect.',
   },
-  "Bell-Like / Metallic": {
-    delayType: "Tempo-Synced (1/8), Low Feedback",
-    delayText:
-      "A light synced echo adds shimmer and complements the inharmonic overtones without cluttering the attack.",
-    reverbType: "Long, Bright Plate/Hall",
-    reverbText:
-      "Bells want space to ring out - a longer, brighter tail sells the metallic character.",
-    modText:
-      "A slow, subtle LFO to amplitude (tremolo) can add a gentle shimmer, but keep it light - too much fights the bell’s natural decay.",
+  'Bell-Like / Metallic': {
+    delayType: 'Tempo-Synced (1/8), Low Feedback',
+    delayText: 'A light synced echo adds shimmer and complements the inharmonic overtones without cluttering the attack.',
+    reverbType: 'Long, Bright Plate/Hall',
+    reverbText: 'Bells want space to ring out — a longer, brighter tail sells the metallic character.',
+    modText: 'A slow, subtle LFO to amplitude (tremolo) can add a gentle shimmer, but keep it light — too much fights the bell\u2019s natural decay.',
   },
-  "Keyboard-Tracking Variants": {
-    delayType: "Depends on the Host Patch",
-    delayText:
-      "These are a filter-tracking technique layered onto another patch, not a standalone sound - inherit delay/reverb from whichever lead/pad/bass you’re applying this tracking behavior to.",
-    reverbType: "Depends on the Host Patch",
-    reverbText:
-      "Same as delay - match whatever the underlying sound calls for.",
-    modText:
-      "None specific to tracking itself; any modulation choices come from the base patch this technique is applied to.",
+  'Keyboard-Tracking Variants': {
+    delayType: 'Depends on the Host Patch',
+    delayText: 'These are a filter-tracking technique layered onto another patch, not a standalone sound — inherit delay/reverb from whichever lead/pad/bass you\u2019re applying this tracking behavior to.',
+    reverbType: 'Depends on the Host Patch',
+    reverbText: 'Same as delay \u2014 match whatever the underlying sound calls for.',
+    modText: 'None specific to tracking itself; any modulation choices come from the base patch this technique is applied to.',
   },
-  "Utility / Foundational": {
-    delayType: "Off",
-    delayText:
-      "These are building blocks meant to be combined into a full patch later - keep them completely dry so you can hear exactly what they’re contributing.",
-    reverbType: "Off / Minimal",
-    reverbText:
-      "Same reasoning as delay - add space later, once this element is combined with others, not now.",
-    modText:
-      "None - apply modulation after this element is layered into a complete patch, not while it’s still an isolated building block.",
+  'Utility / Foundational': {
+    delayType: 'Off',
+    delayText: 'These are building blocks meant to be combined into a full patch later — keep them completely dry so you can hear exactly what they\u2019re contributing.',
+    reverbType: 'Off / Minimal',
+    reverbText: 'Same reasoning as delay \u2014 add space later, once this element is combined with others, not now.',
+    modText: 'None \u2014 apply modulation after this element is layered into a complete patch, not while it\u2019s still an isolated building block.',
   },
 };
+
 const KNOB_IDS = {
-  filter: {
-    cutoff: "ptrFilterCutoff",
-    resonance: "ptrFilterResonance",
-    drive: "ptrFilterDrive",
-  },
-  filterEnv: {
-    attack: "ptrFEnvAttack",
-    decay: "ptrFEnvDecay",
-    sustain: "ptrFEnvSustain",
-    release: "ptrFEnvRelease",
-  },
-  ampEnv: {
-    attack: "ptrAEnvAttack",
-    decay: "ptrAEnvDecay",
-    sustain: "ptrAEnvSustain",
-    release: "ptrAEnvRelease",
-  },
-  osc1: {
-    shape: "ptrOsc1Shape",
-    octave: "ptrOsc1Octave",
-    pitch: "ptrOsc1Pitch",
-  },
-  osc2: {
-    shape: "ptrOsc2Shape",
-    octave: "ptrOsc2Octave",
-    pitch: "ptrOsc2Pitch",
-  },
-  mix: {
-    osc1: "ptrMixOsc1",
-    osc1Sub: "ptrMixOsc1Sub",
-    osc2: "ptrMixOsc2",
-    noise: "ptrMixNoise",
-  },
+  filter: { cutoff: 'ptrFilterCutoff', resonance: 'ptrFilterResonance', drive: 'ptrFilterDrive' },
+  filterEnv: { attack: 'ptrFEnvAttack', decay: 'ptrFEnvDecay', sustain: 'ptrFEnvSustain', release: 'ptrFEnvRelease' },
+  ampEnv: { attack: 'ptrAEnvAttack', decay: 'ptrAEnvDecay', sustain: 'ptrAEnvSustain', release: 'ptrAEnvRelease' },
+  osc1: { shape: 'ptrOsc1Shape', octave: 'ptrOsc1Octave', pitch: 'ptrOsc1Pitch' },
+  osc2: { shape: 'ptrOsc2Shape', octave: 'ptrOsc2Octave', pitch: 'ptrOsc2Pitch' },
+  mix: { osc1: 'ptrMixOsc1', osc1Sub: 'ptrMixOsc1Sub', osc2: 'ptrMixOsc2', noise: 'ptrMixNoise' },
 };
+
 function populateSidebar() {
-  els.sidebar.innerHTML = "";
+  els.sidebar.innerHTML = '';
   CATEGORIES.forEach((cat) => {
-    const group = document.createElement("div");
-    group.className = "sound-nav-group";
-    const heading = document.createElement("h4");
+    const group = document.createElement('div');
+    group.className = 'sound-nav-group';
+
+    const heading = document.createElement('h4');
     heading.textContent = cat;
     group.appendChild(heading);
+
     PRESETS.filter((p) => p.category === cat).forEach((p) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "sound-nav-item";
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sound-nav-item';
       btn.textContent = p.name;
       btn.dataset.name = p.name;
-      btn.addEventListener("click", () => selectPresetByName(p.name));
+      btn.addEventListener('click', () => selectPresetByName(p.name));
       group.appendChild(btn);
     });
+
     els.sidebar.appendChild(group);
   });
 }
+
+// --- Rich ADSR chart (right column of the sound card) ----------------------
+// Colored per-phase fill regions + a light outline stroke tracing the curve,
+// plus axis labels and key-press/release markers — modeled on a classic
+// labeled ADSR diagram. Square viewBox (320x320) with preserveAspectRatio
+// "xMidYMid meet" on the <svg> itself keeps it from ever being stretched,
+// regardless of the container's actual pixel dimensions.
+
 const ADSR_ATTACK_W = { min: 15, low: 35, mid: 55, high: 80, max: 110 };
 const ADSR_DECAY_W = { min: 15, low: 30, mid: 45, high: 65, max: 90 };
 const ADSR_RELEASE_W = { min: 15, low: 35, mid: 60, high: 90, max: 120 };
-const ADSR_SUSTAIN_FRAC = {
-  min: 0.08,
-  low: 0.32,
-  mid: 0.55,
-  high: 0.75,
-  max: 0.92,
-};
-const ADSR_SUSTAIN_HOLD_W = 40;
-const TIME_WORDS = {
-  min: "Instant",
-  low: "Fast",
-  mid: "Medium",
-  high: "Slow",
-  max: "V.Slow",
-};
-const LEVEL_WORDS = {
-  min: "V.Low",
-  low: "Low",
-  mid: "Mid",
-  high: "High",
-  max: "Max",
-};
+const ADSR_SUSTAIN_FRAC = { min: 0.08, low: 0.32, mid: 0.55, high: 0.75, max: 0.92 };
+const ADSR_SUSTAIN_HOLD_W = 40; // fixed — represents "however long the key is held"
+
+const TIME_WORDS = { min: 'Instant', low: 'Fast', mid: 'Medium', high: 'Slow', max: 'V.Slow' };
+const LEVEL_WORDS = { min: 'V.Low', low: 'Low', mid: 'Mid', high: 'High', max: 'Max' };
+
 function buildAdsrChart(env) {
-  const plotX0 = 55,
-    plotX1 = 305;
-  const plotY0 = 35,
-    plotY1 = 215;
+  const plotX0 = 55, plotX1 = 305;
+  const plotY0 = 35, plotY1 = 215; // Y0 = top (Max), Y1 = bottom (0)
   const availW = plotX1 - plotX0;
+
   const rawA = ADSR_ATTACK_W[env.attack];
   const rawD = ADSR_DECAY_W[env.decay];
   const rawR = ADSR_RELEASE_W[env.release];
   const rawTotal = rawA + rawD + ADSR_SUSTAIN_HOLD_W + rawR;
-  const scale = availW / rawTotal;
-  const aW = rawA * scale,
-    dW = rawD * scale,
-    sW = ADSR_SUSTAIN_HOLD_W * scale,
-    rW = rawR * scale;
+  const scale = availW / rawTotal; // always fill the plot width exactly, never overflow
+
+  const aW = rawA * scale, dW = rawD * scale, sW = ADSR_SUSTAIN_HOLD_W * scale, rW = rawR * scale;
   const x0 = plotX0;
-  const xPeak = x0 + aW,
-    yPeak = plotY0;
+  const xPeak = x0 + aW, yPeak = plotY0;
   const xSusStart = xPeak + dW;
   const ySus = plotY1 - ADSR_SUSTAIN_FRAC[env.sustain] * (plotY1 - plotY0);
   const xSusEnd = xSusStart + sW;
   const xEnd = xSusEnd + rW;
+
   const attackFill = `M${x0},${plotY1} L${xPeak},${yPeak} L${xPeak},${plotY1} Z`;
   const decayFill = `M${xPeak},${plotY1} L${xPeak},${yPeak} L${xSusStart},${ySus} L${xSusStart},${plotY1} Z`;
   const sustainFill = `M${xSusStart},${plotY1} L${xSusStart},${ySus} L${xSusEnd},${ySus} L${xSusEnd},${plotY1} Z`;
   const releaseFill = `M${xSusEnd},${plotY1} L${xSusEnd},${ySus} L${xEnd},${plotY1} Z`;
   const outline = `M${x0},${plotY1} L${xPeak},${yPeak} L${xSusStart},${ySus} L${xSusEnd},${ySus} L${xEnd},${plotY1}`;
-  const midA = (x0 + xPeak) / 2,
-    midD = (xPeak + xSusStart) / 2;
-  const midS = (xSusStart + xSusEnd) / 2,
-    midR = (xSusEnd + xEnd) / 2;
-  const labelY = plotY1 + 22,
-    subY = plotY1 + 36;
+
+  const midA = (x0 + xPeak) / 2, midD = (xPeak + xSusStart) / 2;
+  const midS = (xSusStart + xSusEnd) / 2, midR = (xSusEnd + xEnd) / 2;
+  const labelY = plotY1 + 22, subY = plotY1 + 36;
+
   return `
     <path class="adsr-fill-attack" d="${attackFill}" />
     <path class="adsr-fill-decay" d="${decayFill}" />
@@ -248,61 +195,72 @@ function buildAdsrChart(env) {
     <text class="adsr-marker-text" x="${xSusEnd}" y="${plotY0 - 14}" text-anchor="middle" fill="var(--danger)">Key released</text>
   `;
 }
+
 function setKnobAngle(id, level) {
   const el = document.getElementById(id);
-  if (el) el.style.setProperty("--angle", `${LEVEL_ANGLE[level]}deg`);
+  if (el) el.style.setProperty('--angle', `${LEVEL_ANGLE[level]}deg`);
 }
+
 function setButton(id, on) {
   const el = document.getElementById(id);
-  if (el) el.classList.toggle("on", !!on);
+  if (el) el.classList.toggle('on', !!on);
 }
+
 function applyPreset(preset) {
   els.title.textContent = preset.name;
   els.categoryTag.textContent = preset.category;
   els.blurb.textContent = preset.blurb;
   els.settingsList.innerHTML = `
-    <li><strong>Oscillators</strong> - ${preset.osc}</li>
-    <li><strong>Mixer</strong> - ${preset.mixer}</li>
-    <li><strong>Filter</strong> - ${preset.filterText}</li>
-    <li><strong>Filter Env</strong> - ${preset.filterEnvText}</li>
-    <li><strong>Amp Env</strong> - ${preset.ampEnvText}</li>
+    <li><strong>Oscillators</strong> \u2014 ${preset.osc}</li>
+    <li><strong>Mixer</strong> \u2014 ${preset.mixer}</li>
+    <li><strong>Filter</strong> \u2014 ${preset.filterText}</li>
+    <li><strong>Filter Env</strong> \u2014 ${preset.filterEnvText}</li>
+    <li><strong>Amp Env</strong> \u2014 ${preset.ampEnvText}</li>
   `;
+
   setKnobAngle(KNOB_IDS.filter.cutoff, preset.filter.cutoff);
   setKnobAngle(KNOB_IDS.filter.resonance, preset.filter.resonance);
   setKnobAngle(KNOB_IDS.filter.drive, preset.filter.drive);
-  Object.entries(KNOB_IDS.filterEnv).forEach(([key, id]) =>
-    setKnobAngle(id, preset.filterEnv[key]),
-  );
-  Object.entries(KNOB_IDS.ampEnv).forEach(([key, id]) =>
-    setKnobAngle(id, preset.ampEnv[key]),
-  );
+
+  Object.entries(KNOB_IDS.filterEnv).forEach(([key, id]) => setKnobAngle(id, preset.filterEnv[key]));
+  Object.entries(KNOB_IDS.ampEnv).forEach(([key, id]) => setKnobAngle(id, preset.ampEnv[key]));
+
   setKnobAngle(KNOB_IDS.osc1.shape, preset.osc1.shape);
   setKnobAngle(KNOB_IDS.osc1.octave, preset.osc1.octave);
   setKnobAngle(KNOB_IDS.osc1.pitch, preset.osc1.pitch);
-  setButton("btnSync", preset.osc1.sync);
+  setButton('btnSync', preset.osc1.sync);
+
   setKnobAngle(KNOB_IDS.osc2.shape, preset.osc2.shape);
   setKnobAngle(KNOB_IDS.osc2.octave, preset.osc2.octave);
   setKnobAngle(KNOB_IDS.osc2.pitch, preset.osc2.pitch);
-  setButton("btnOsc2Low", preset.osc2.low);
+  setButton('btnOsc2Low', preset.osc2.low);
+
   setKnobAngle(KNOB_IDS.mix.osc1, preset.mix.osc1);
   setKnobAngle(KNOB_IDS.mix.osc1Sub, preset.mix.osc1Sub);
-  setButton("btnFm", preset.mix.fm);
+  setButton('btnFm', preset.mix.fm);
   setKnobAngle(KNOB_IDS.mix.osc2, preset.mix.osc2);
   setKnobAngle(KNOB_IDS.mix.noise, preset.mix.noise);
+
   els.adsrChart.innerHTML = buildAdsrChart(preset.ampEnv);
+
   const fx = CATEGORY_EFFECTS[preset.category];
   els.suggDelayType.textContent = fx.delayType;
   els.suggDelayText.textContent = fx.delayText;
   els.suggReverbType.textContent = fx.reverbType;
   els.suggReverbText.textContent = fx.reverbText;
   els.suggModText.textContent = fx.modText;
-  els.sidebar.querySelectorAll(".sound-nav-item").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.name === preset.name);
+
+  els.sidebar.querySelectorAll('.sound-nav-item').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.name === preset.name);
   });
 }
+
 function selectPresetByName(name) {
   const preset = PRESETS.find((p) => p.name === name);
   if (preset) applyPreset(preset);
 }
+
 populateSidebar();
-selectPresetByName("Classic Analog Bass");
+
+// Start on Classic Analog Bass (matches the card's original static content).
+selectPresetByName('Classic Analog Bass');

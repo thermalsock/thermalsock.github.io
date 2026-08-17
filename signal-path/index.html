@@ -193,6 +193,11 @@
   #modalBody td{padding:7px 8px;border-bottom:1px solid var(--panel-edge);color:#5C5346;}
   #modalBody tr:last-child td{border-bottom:none;}
   #modalEmpty{color:var(--text-faint);font-style:italic;font-size:13px;}
+  #modalEditBtn{
+    margin-top:20px;background:var(--panel-hi);border:1px solid var(--panel-edge);border-radius:6px;
+    color:var(--text);font-family:var(--sans);font-size:12.5px;font-weight:600;padding:9px 16px;cursor:pointer;
+  }
+  #modalEditBtn:hover{border-color:var(--c-audio);color:var(--c-audio);}
   .info-icon-hint{position:absolute;pointer-events:none;}
 
   /* ---------- Add Device modal ---------- */
@@ -230,9 +235,11 @@
   .af-input:focus{outline:none;border-color:var(--c-audio);}
   .af-textarea{resize:vertical;min-height:44px;font-family:var(--sans);}
   select.af-input{cursor:pointer;}
+  .af-cascade{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .af-cascade select:disabled{opacity:0.45;cursor:default;}
 
   .af-port-row{
-    display:grid;grid-template-columns:1fr 110px 90px 30px;gap:6px;align-items:center;margin-bottom:6px;
+    display:grid;grid-template-columns:1fr 110px 90px 30px 18px;gap:6px;align-items:center;margin-bottom:6px;
   }
   .af-port-row .af-input{padding:6px 8px;font-size:12px;}
   .af-port-del{
@@ -240,6 +247,7 @@
     color:var(--text-faint);cursor:pointer;font-size:13px;line-height:1;
   }
   .af-port-del:hover{color:#b8402a;border-color:#b8402a;}
+  .af-port-warn{color:#9a6a1f;font-size:13px;text-align:center;cursor:help;}
   .af-addport{
     margin-top:2px;background:none;border:1px dashed var(--panel-edge);border-radius:6px;
     color:var(--text-faint);font-family:var(--sans);font-size:11px;padding:7px 10px;cursor:pointer;width:100%;
@@ -323,6 +331,7 @@
         <h2 id="modalTitle"></h2>
         <p id="modalRole"></p>
         <div id="modalBody"></div>
+        <button id="modalEditBtn">Edit Device</button>
       </div>
     </div>
   </div>
@@ -334,6 +343,23 @@
         <div id="addDeviceTag">ADD TO RIG</div>
         <h2 id="addDeviceHeading">Add a device</h2>
         <p id="addDeviceSub">Give it a name and a category — a sensible starting set of ports gets filled in below, and you can tweak, add, or remove any of them before saving. Wire it up afterward by editing its cables, or just leave it unpatched for now.</p>
+
+        <div class="af-row" id="afCatalogRow">
+          <label class="af-label">Start from the catalog <span class="af-optional">(or pick Custom to build one yourself)</span></label>
+          <div class="af-cascade">
+            <select id="afPickType" class="af-input">
+              <option value="">Type&hellip;</option>
+              <option value="synth">Synth</option>
+              <option value="drum-machine">Drum Machine</option>
+              <option value="pedal">Effects Pedal</option>
+              <option value="groovebox">Groovebox / Sampler</option>
+              <option value="controller">Controller / Sequencer</option>
+              <option value="custom">Custom &mdash; build my own</option>
+            </select>
+            <select id="afPickMaker" class="af-input" disabled><option value="">Maker&hellip;</option></select>
+            <select id="afPickModel" class="af-input" disabled><option value="">Model&hellip;</option></select>
+          </div>
+        </div>
 
         <div class="af-row">
           <label class="af-label">Name</label>
@@ -891,6 +917,22 @@ let dragTarget = null, dragOffset = {x:0,y:0};
 let panning = false, panStart=null, viewStart=null;
 let hovered = null; // {kind:'cable'|'port', ...}
 let visibleTypes = {audio:true, midi:true, cv:true, sync:true, power:false};
+let cableDrag = null; // {fromNode, fromPort, sx, sy, target: {node,port}|null} while dragging a new cable
+let selectedCable = null; // the CABLES entry currently selected for deletion (Backspace/Delete)
+
+/** Whether a cable can be drawn from fromPort to toPort: different ports,
+    matching signal type (an audio out can't plug into a MIDI in), and not
+    an exact duplicate of a cable that already exists. */
+function canConnect(fromNode, fromPort, toNode, toPort){
+  if(fromNode===toNode && fromPort===toPort) return {ok:false, reason:'Same port'};
+  if(fromPort.type !== toPort.type) return {ok:false, reason:`${fromPort.type.toUpperCase()} can't connect to ${toPort.type.toUpperCase()}`};
+  const dup = CABLES.some(([fn,fp,tn,tp])=>
+    (fn===fromNode.id && fp===fromPort.id && tn===toNode.id && tp===toPort.id) ||
+    (fn===toNode.id && fp===toPort.id && tn===fromNode.id && tp===fromPort.id)
+  );
+  if(dup) return {ok:false, reason:'Already connected'};
+  return {ok:true};
+}
 
 let nodeMap = {};
 let usedPorts = new Set();
@@ -952,6 +994,25 @@ function drawGrid(){
   }
 }
 
+/* Small per-manufacturer badge drawn next to each device's name -- a
+   generated monogram, not an actual brand logo/trademark (deliberately
+   avoiding any reproduction of real logos). Color and initials are both
+   derived deterministically from the maker string, so "Moog" always gets
+   the same badge everywhere without needing a lookup table, and it works
+   for any manufacturer name typed into a Custom device too. */
+function makerBadge(maker){
+  const clean = maker.trim();
+  const lettersOnly = clean.replace(/[^A-Za-z\s]/g, '').trim();
+  const words = lettersOnly.split(/\s+/).filter(Boolean);
+  const initials = words.length>=2
+    ? (words[0][0]+words[1][0]).toUpperCase()
+    : (words[0] || '').slice(0,2).toUpperCase();
+  let hash = 0;
+  for(let i=0;i<clean.length;i++) hash = (hash*31 + clean.charCodeAt(i)) >>> 0;
+  const hue = hash % 360;
+  return {initials, color:`hsl(${hue}, 34%, 40%)`};
+}
+
 function roundRect(x,y,w,h,r){
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -1005,12 +1066,39 @@ function drawNode(node){
     });
   }
 
+  // manufacturer badge -- small generated monogram, sized like the info
+  // icon below, sitting just left of the name text.
+  let nameX = p0.x+14*s;
+  if(node.maker && node.maker.trim() && s>0.32){
+    const badge = makerBadge(node.maker);
+    if(badge.initials){
+    const br = Math.min(9, Math.max(6, 6.5*s));
+    const bcx = p0.x+14*s+br;
+    const bcy = p0.y+16*s+br-1*s;
+    ctx.beginPath();
+    ctx.arc(bcx, bcy, br, 0, 7);
+    ctx.fillStyle = badge.color;
+    ctx.globalAlpha = nodeAlpha;
+    ctx.fill();
+    if(br>6.2){
+      ctx.font = `700 ${Math.max(6.5, br*0.85)}px ${FONT_SANS}`;
+      ctx.fillStyle = '#FBF6EC';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(badge.initials, bcx, bcy+0.5);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
+    nameX = bcx+br+6*s;
+    }
+  }
+
   // label
   ctx.fillStyle = '#2B2620';
   ctx.globalAlpha = nodeAlpha;
   ctx.font = `700 ${Math.max(9,13*s)}px ${FONT_SANS}`;
   ctx.textBaseline = 'top';
-  ctx.fillText(node.name, p0.x+14*s, p0.y+16*s);
+  ctx.fillText(node.name, nameX, p0.y+16*s);
 
   if(node.maker && s>0.45){
     ctx.fillStyle = '#6b6153';
@@ -1088,12 +1176,24 @@ function drawNode(node){
     const col = typeColor(port.type);
     const typeOn = visibleTypes[port.type];
 
+    // While dragging a new cable, ports of the same type as the source glow
+    // as valid drop targets; everything else dims so it's obvious at a
+    // glance where the cable *can* actually go.
+    const isDragSource = cableDrag && cableDrag.fromNode===node && cableDrag.fromPort===port;
+    const isDragTarget = cableDrag && cableDrag.target && cableDrag.target.node===node && cableDrag.target.port===port;
+    let dragEmphasis = 1, dragDim = false;
+    if(cableDrag && !isDragSource){
+      if(port.type === cableDrag.fromPort.type){ dragEmphasis = isDragTarget ? 1.7 : 1.3; }
+      else { dragDim = true; }
+    }
+
     ctx.beginPath();
-    ctx.arc(pp.x, pp.y, isHover? 6*Math.max(s,0.4) : 4.2*Math.max(s,0.4), 0, 7);
-    ctx.fillStyle = active ? col : '#8A8070';
-    ctx.globalAlpha = (typeOn ? (active ? 1 : 0.7) : 0.15)*nodeAlpha;
+    const baseR = isHover? 6*Math.max(s,0.4) : 4.2*Math.max(s,0.4);
+    ctx.arc(pp.x, pp.y, (isDragSource ? 6*Math.max(s,0.4) : baseR)*dragEmphasis, 0, 7);
+    ctx.fillStyle = (active || isDragSource) ? col : '#8A8070';
+    ctx.globalAlpha = (dragDim ? 0.12 : (typeOn ? (active ? 1 : 0.7) : 0.15))*nodeAlpha;
     ctx.fill();
-    if(isHover){ ctx.lineWidth=2; ctx.strokeStyle='#2B2620'; ctx.globalAlpha=nodeAlpha; ctx.stroke(); }
+    if(isHover || isDragSource || isDragTarget){ ctx.lineWidth=2; ctx.strokeStyle='#2B2620'; ctx.globalAlpha=nodeAlpha; ctx.stroke(); }
     ctx.globalAlpha = nodeAlpha;
 
     if(s>0.62){
@@ -1163,15 +1263,38 @@ function drawCable(cable, isHover){
   ctx.globalAlpha = 1;
 }
 
+function drawDragCable(){
+  if(!cableDrag) return;
+  const a = worldToScreen(portPos(cableDrag.fromNode, cableDrag.fromPort).x, portPos(cableDrag.fromNode, cableDrag.fromPort).y);
+  const t = cableDrag.target;
+  const b = t ? worldToScreen(portPos(t.node,t.port).x, portPos(t.node,t.port).y) : {x:cableDrag.sx, y:cableDrag.sy};
+  const [c1,c2] = bezierPoints(a,b,cableDrag.fromPort.side, t ? t.port.side : cableDrag.fromPort.side);
+
+  const valid = t ? canConnect(cableDrag.fromNode, cableDrag.fromPort, t.node, t.port) : {ok:true};
+  ctx.beginPath();
+  ctx.moveTo(a.x,a.y);
+  ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,b.x,b.y);
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = valid.ok ? typeColor(cableDrag.fromPort.type) : '#b8402a';
+  ctx.globalAlpha = 0.85;
+  ctx.setLineDash(valid.ok ? [] : [4,4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
 function draw(){
   drawGrid();
   // cables (non-hovered first)
   CABLES.forEach(c=>{
     const isHover = hovered && hovered.kind==='cable' && hovered.cable===c;
-    if(!isHover) drawCable(c,false);
+    const isSelected = selectedCable===c;
+    if(!isHover && !isSelected) drawCable(c,false);
   });
-  if(hovered && hovered.kind==='cable') drawCable(hovered.cable, true);
+  if(hovered && hovered.kind==='cable' && hovered.cable!==selectedCable) drawCable(hovered.cable, true);
+  if(selectedCable) drawCable(selectedCable, true);
   NODES.forEach(drawNode);
+  drawDragCable();
 
   document.getElementById('zoomlabel').textContent = `ZOOM ${Math.round(view.scale*100)}%`;
 }
@@ -1292,7 +1415,9 @@ const modalTitle = document.getElementById('modalTitle');
 const modalRole = document.getElementById('modalRole');
 const modalBody = document.getElementById('modalBody');
 
+let modalCurrentNode = null;
 function openDetails(node){
+  modalCurrentNode = node;
   modalAccent.style.background = CATS[node.cat].color;
   modalTag.textContent = (node.maker? node.maker+' — ' : '') + node.cat.toUpperCase();
   modalTitle.textContent = node.name;
@@ -1303,6 +1428,9 @@ function openDetails(node){
 function closeDetails(){
   modalOverlay.classList.remove('show');
 }
+document.getElementById('modalEditBtn').addEventListener('click', ()=>{
+  if(modalCurrentNode) openEditDevice(modalCurrentNode);
+});
 document.getElementById('modalClose').addEventListener('click', closeDetails);
 modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) closeDetails(); });
 window.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeDetails(); closeAddDevice(); } });
@@ -1321,6 +1449,15 @@ canvas.addEventListener('mousedown', (e)=>{
   const iconHit = iconAt(sx,sy);
   if(iconHit){
     openDetails(iconHit);
+    return;
+  }
+
+  const portHit = portAt(sx,sy);
+  if(portHit){
+    cableDrag = {fromNode:portHit.node, fromPort:portHit.port, sx, sy, target:null};
+    selectedCable = null;
+    tooltip.style.display = 'none';
+    draw();
     return;
   }
 
@@ -1343,6 +1480,23 @@ window.addEventListener('mousemove', (e)=>{
   const rect = canvas.getBoundingClientRect();
   const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
 
+  if(cableDrag){
+    cableDrag.sx = sx; cableDrag.sy = sy;
+    const hit = portAt(sx,sy);
+    cableDrag.target = (hit && !(hit.node===cableDrag.fromNode && hit.port===cableDrag.fromPort)) ? hit : null;
+    if(cableDrag.target){
+      const v = canConnect(cableDrag.fromNode, cableDrag.fromPort, cableDrag.target.node, cableDrag.target.port);
+      tooltip.style.display = 'block';
+      tooltip.style.left=(sx+16)+'px'; tooltip.style.top=(sy+12)+'px';
+      tooltip.innerHTML = v.ok
+        ? `<div class="t1">Connect</div>${cableDrag.fromNode.name} (${cableDrag.fromPort.label}) &rarr; ${cableDrag.target.node.name} (${cableDrag.target.port.label})`
+        : `<div class="t1" style="color:#b8402a">Can't connect</div>${v.reason}`;
+    } else {
+      tooltip.style.display = 'none';
+    }
+    draw();
+    return;
+  }
   if(dragTarget){
     const w = screenToWorld(sx,sy);
     dragTarget.x = w.x - dragOffset.x;
@@ -1387,7 +1541,7 @@ window.addEventListener('mousemove', (e)=>{
     const active = usedPorts.has(pHit.node.id+':'+pHit.port.id);
     tooltip.style.display='block';
     tooltip.style.left=(sx+16)+'px'; tooltip.style.top=(sy+12)+'px';
-    tooltip.innerHTML = `<div class="t1">${pHit.node.name} · ${pHit.port.type.toUpperCase()}</div>${pHit.port.label}${active?'':' <span style="color:#8A8070">(unused)</span>'}`;
+    tooltip.innerHTML = `<div class="t1">${pHit.node.name} · ${pHit.port.type.toUpperCase()}</div>${pHit.port.label}${active?'':' <span style="color:#8A8070">(unused)</span>'}<br><span style="color:#8A8070">drag to connect a cable</span>`;
     draw();
     return;
   }
@@ -1399,7 +1553,7 @@ window.addEventListener('mousemove', (e)=>{
     const fromPort=fromNode.ports.find(p=>p.id===fp), toPort=toNode.ports.find(p=>p.id===tp);
     tooltip.style.display='block';
     tooltip.style.left=(sx+16)+'px'; tooltip.style.top=(sy+12)+'px';
-    tooltip.innerHTML = `<div class="t1">${type.toUpperCase()} CABLE</div>${fromNode.name} (${fromPort.label}) &rarr; ${toNode.name} (${toPort.label})${note?'<br><span style="color:#6b6153">'+note+'</span>':''}`;
+    tooltip.innerHTML = `<div class="t1">${type.toUpperCase()} CABLE</div>${fromNode.name} (${fromPort.label}) &rarr; ${toNode.name} (${toPort.label})${note?'<br><span style="color:#6b6153">'+note+'</span>':''}<br><span style="color:#8A8070">click to select, Delete to remove</span>`;
     draw();
     return;
   }
@@ -1415,6 +1569,19 @@ window.addEventListener('mousemove', (e)=>{
 });
 
 window.addEventListener('mouseup', ()=>{
+  if(cableDrag){
+    if(cableDrag.target){
+      const v = canConnect(cableDrag.fromNode, cableDrag.fromPort, cableDrag.target.node, cableDrag.target.port);
+      if(v.ok){
+        CABLES.push([cableDrag.fromNode.id, cableDrag.fromPort.id, cableDrag.target.node.id, cableDrag.target.port.id, cableDrag.fromPort.type, '']);
+        rebuildIndexes();
+        refreshLegend();
+      }
+    }
+    cableDrag = null;
+    tooltip.style.display = 'none';
+    draw();
+  }
   dragTarget = null;
   panning = false;
   canvas.classList.remove('dragging-node');
@@ -1505,7 +1672,254 @@ document.getElementById('filein').addEventListener('change', (e)=>{
 /* ---------------------------------------------------------------------
    ADD / REMOVE DEVICE
    --------------------------------------------------------------------- */
+/* =========================================================================
+   DEVICE CATALOG — ~100 well-known synths across major manufacturers, each
+   with a maker and a real port set for the Add Device form's catalog
+   picker. Port counts/types are grounded in actual documentation for the
+   devices marked [checked] below (pulled from manufacturer manuals/spec
+   pages) and for everything else, applied consistently from the patterns
+   those checked devices establish for their category — this is a curated
+   reference set, not an individually re-verified spec sheet for all ~100,
+   so if something looks off for a specific unit, Edit Device fixes it in
+   two clicks.
+
+   Patterns confirmed from real docs before extrapolating:
+   - Vintage-voiced keyboard reissues (Minimoog Model D [checked], Prophet-5
+     Rev4 [checked]): MIDI IN/OUT/THRU + CV OUT + GATE + mono AUDIO OUT.
+   - Behringer Eurorack-format semi-modular (Model D [checked], Neutron
+     [checked], and by extension Poly D/Pro-1/K-2/Cat/Odyssey/2600/Crave/
+     Wasp): MIDI IN (+THRU on most, no MIDI OUT — these don't generate note
+     data) + USB, extensive CV/GATE IN+OUT, AUDIO IN+OUT.
+   - Original-era drum machines (TR-808 [checked]: SYNC only, no MIDI at
+     all; TR-909 [checked]: MIDI IN/OUT + SYNC) vs. their modern Behringer
+     remakes (RD-8/RD-9/TD-3), which add MIDI IN/OUT/THRU + USB on top of
+     the same SYNC port, following the same "vintage sound, modern I/O"
+     pattern confirmed on Model D/Neutron/Poly D.
+   - Modern digital/DSP polysynths and workstations: MIDI IN/OUT/THRU + USB
+     + stereo AUDIO OUT, no CV (this class generally dropped CV entirely).
+   ========================================================================= */
+
+const P = {
+  midiIn:  {label:'MIDI IN', type:'midi', side:'top'},
+  midiOut: {label:'MIDI OUT', type:'midi', side:'top'},
+  midiThru:{label:'MIDI THRU', type:'midi', side:'top'},
+  cvOut:   {label:'CV OUT', type:'cv', side:'right'},
+  cvIn:    {label:'CV IN', type:'cv', side:'left'},
+  gateOut: {label:'GATE OUT', type:'cv', side:'right'},
+  gateIn:  {label:'GATE IN', type:'cv', side:'left'},
+  sync:    {label:'SYNC', type:'sync', side:'right'},
+  audioOut:{label:'AUDIO OUT', type:'audio', side:'bottom'},
+  audioOutL:{label:'AUDIO OUT L', type:'audio', side:'bottom'},
+  audioOutR:{label:'AUDIO OUT R', type:'audio', side:'bottom'},
+  audioIn: {label:'AUDIO IN', type:'audio', side:'left'},
+  pwr:     {label:'PWR', type:'power', side:'bottom'},
+};
+function ports(...list){ return list.map(p=>({...p})); }
+
+// Classic-voiced keyboard reissue: MIDI I/O + CV/Gate + mono audio out.
+const PF_REISSUE_MONO = () => ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.audioOut,P.pwr);
+const PF_REISSUE_POLY = () => ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateIn,P.audioOut,P.pwr);
+// Behringer-style semi-modular Eurorack format: no MIDI OUT (nothing to
+// generate note data with), full CV patch bay, audio in for external processing.
+const PF_SEMI_MODULAR = () => ports(P.midiIn,P.midiThru,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioIn,P.audioOut,P.pwr);
+// Modern compact analog mono/poly: standard MIDI trio + basic CV/gate out, stereo audio.
+const PF_MODERN_COMPACT = () => ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.audioOutL,P.audioOutR,P.pwr);
+// Modern digital poly/workstation: full MIDI, no CV, stereo audio out (+in on workstations).
+const PF_MODERN_POLY = () => ports(P.midiIn,P.midiOut,P.midiThru,P.audioOutL,P.audioOutR,P.pwr);
+const PF_WORKSTATION = () => ports(P.midiIn,P.midiOut,P.midiThru,P.audioIn,P.audioOutL,P.audioOutR,P.pwr);
+// Original-era drum machines: DIN Sync, no MIDI at all (TR-808 pattern).
+const PF_DRUM_VINTAGE_NOMIDI = () => ports(P.sync,P.audioOutL,P.audioOutR,P.pwr);
+// Original-era drum machines with MIDI added (TR-909 pattern).
+const PF_DRUM_VINTAGE_MIDI = () => ports(P.midiIn,P.midiOut,P.sync,P.audioOutL,P.audioOutR,P.pwr);
+// Modern remakes of the above: vintage sync kept, full modern MIDI added.
+const PF_DRUM_MODERN = () => ports(P.midiIn,P.midiOut,P.midiThru,P.sync,P.audioOutL,P.audioOutR,P.pwr);
+// Groovebox / sampler-sequencer hybrids (Elektron-style): full MIDI, audio in for sampling, CV out for external gear.
+const PF_GROOVEBOX = () => ports(P.midiIn,P.midiOut,P.midiThru,P.audioIn,P.audioOutL,P.audioOutR,P.cvOut,P.pwr);
+
+const DEVICE_CATALOG = [
+  // ---- Moog ----
+  {name:'Minimoog Model D', maker:'Moog', cat:'synth', ports:PF_REISSUE_MONO()}, // [checked]
+  {name:'Moog Sub 37', maker:'Moog', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Moog Subsequent 37', maker:'Moog', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Moog Sub Phatty', maker:'Moog', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Moog One', maker:'Moog', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Moog Voyager', maker:'Moog', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Moog Grandmother', maker:'Moog', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Moog Matriarch', maker:'Moog', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Moog Mother-32', maker:'Moog', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Moog DFAM', maker:'Moog', cat:'synth', ports:ports(P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'Moog Subharmonicon', maker:'Moog', cat:'synth', ports:ports(P.midiIn,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'Moog Minitaur', maker:'Moog', cat:'synth', ports:ports(P.midiIn,P.midiThru,P.cvIn,P.gateIn,P.audioOut,P.pwr)},
+  {name:'Moog Werkstatt-01', maker:'Moog', cat:'synth', ports:ports(P.cvIn,P.cvOut,P.audioOut,P.pwr)},
+
+  // ---- Sequential / Dave Smith Instruments ----
+  {name:'Prophet-5 (Rev4)', maker:'Sequential', cat:'synth', ports:PF_REISSUE_POLY()}, // [checked]
+  {name:'Prophet-10 (Rev4)', maker:'Sequential', cat:'synth', ports:PF_REISSUE_POLY()},
+  {name:'Prophet-6', maker:'Sequential', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'OB-6', maker:'Sequential', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Trigon-6', maker:'Sequential', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Take 5', maker:'Sequential', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Pro 3', maker:'Sequential', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioIn,P.audioOut,P.pwr)},
+  {name:'Prophet X', maker:'Sequential', cat:'synth', ports:PF_WORKSTATION()},
+  {name:'Evolver (Desktop)', maker:'Sequential', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.gateIn,P.audioIn,P.audioOut,P.pwr)},
+  {name:'Prophet Rev2', maker:'Sequential', cat:'synth', ports:PF_MODERN_POLY()},
+
+  // ---- Roland ----
+  {name:'Jupiter-8', maker:'Roland', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Jupiter-X', maker:'Roland', cat:'synth', ports:PF_WORKSTATION()},
+  {name:'Juno-106', maker:'Roland', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Juno-60', maker:'Roland', cat:'synth', ports:ports(P.midiIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'SH-101', maker:'Roland', cat:'synth', ports:ports(P.cvOut,P.gateOut,P.audioOut,P.pwr)},
+  {name:'TB-303', maker:'Roland', cat:'synth', ports:PF_DRUM_VINTAGE_NOMIDI()},
+  {name:'TR-808', maker:'Roland', cat:'synth', ports:PF_DRUM_VINTAGE_NOMIDI()}, // [checked]
+  {name:'TR-909', maker:'Roland', cat:'synth', ports:PF_DRUM_VINTAGE_MIDI()}, // [checked]
+  {name:'System-8', maker:'Roland', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.cvOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'SE-02', maker:'Roland', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'JD-Xi', maker:'Roland', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Promars', maker:'Roland', cat:'synth', ports:ports(P.midiIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'TR-8S', maker:'Roland', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'MC-707', maker:'Roland', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'Fantom-8', maker:'Roland', cat:'synth', ports:PF_WORKSTATION()},
+
+  // ---- Korg ----
+  {name:'MS-20 mini', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioIn,P.audioOut,P.pwr)},
+  {name:'MS-20 FS', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioIn,P.audioOut,P.pwr)},
+  {name:'ARP Odyssey (Korg reissue)', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'Minilogue', maker:'Korg', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Minilogue XD', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.gateIn,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Prologue', maker:'Korg', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Monologue', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.sync,P.audioOut,P.pwr)},
+  {name:'Wavestate', maker:'Korg', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Modwave', maker:'Korg', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Volca Keys', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.sync,P.audioOut,P.pwr)},
+  {name:'Volca Bass', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.sync,P.audioOut,P.pwr)},
+  {name:'Volca FM', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.sync,P.audioOut,P.pwr)},
+  {name:'Volca Drum', maker:'Korg', cat:'synth', ports:ports(P.midiIn,P.sync,P.audioOut,P.pwr)},
+  {name:'Kronos', maker:'Korg', cat:'synth', ports:PF_WORKSTATION()},
+
+  // ---- Behringer ----
+  {name:'Model D', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()}, // [checked]
+  {name:'Neutron', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()}, // [checked]
+  {name:'Poly D', maker:'Behringer', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.audioOut,P.pwr)}, // [checked]
+  {name:'Pro-1', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'K-2', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Cat', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Wasp Deluxe', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Crave', maker:'Behringer', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'2600', maker:'Behringer', cat:'synth', ports:ports(P.midiIn,P.midiThru,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Odyssey', maker:'Behringer', cat:'synth', ports:ports(P.midiIn,P.midiThru,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'UB-Xa', maker:'Behringer', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.cvOut,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'DeepMind 12', maker:'Behringer', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'DeepMind 6', maker:'Behringer', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'MS-1 (SH-101 style)', maker:'Behringer', cat:'synth', ports:ports(P.midiIn,P.midiThru,P.cvOut,P.gateOut,P.audioOut,P.pwr)},
+  {name:'Pro VS Mini', maker:'Behringer', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'TD-3', maker:'Behringer', cat:'synth', ports:PF_DRUM_MODERN()},
+  {name:'RD-8', maker:'Behringer', cat:'synth', ports:PF_DRUM_MODERN()},
+  {name:'RD-9', maker:'Behringer', cat:'synth', ports:PF_DRUM_MODERN()},
+
+  // ---- Arturia ----
+  {name:'MicroFreak', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.cvOut,P.gateOut,P.audioOut,P.pwr)},
+  {name:'MiniBrute 2', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'MiniBrute 2S', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOut,P.pwr)},
+  {name:'MatrixBrute', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvIn,P.cvOut,P.gateIn,P.gateOut,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'PolyBrute', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'KeyStep Pro', maker:'Arturia', cat:'controller', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.sync,P.pwr)},
+
+  // ---- Novation ----
+  {name:'Bass Station II', maker:'Novation', cat:'synth', ports:PF_MODERN_COMPACT()},
+  {name:'Peak', maker:'Novation', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Summit', maker:'Novation', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Circuit', maker:'Novation', cat:'sampler', ports:ports(P.midiIn,P.midiOut,P.audioOutL,P.audioOutR,P.pwr)},
+
+  // ---- Elektron ----
+  {name:'Digitone', maker:'Elektron', cat:'synth', ports:PF_GROOVEBOX()},
+  {name:'Digitakt', maker:'Elektron', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'Analog Four MKII', maker:'Elektron', cat:'synth', ports:PF_GROOVEBOX()},
+  {name:'Analog Rytm MKII', maker:'Elektron', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'Syntakt', maker:'Elektron', cat:'synth', ports:PF_GROOVEBOX()},
+  {name:'Model:Cycles', maker:'Elektron', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.audioOutL,P.audioOutR,P.pwr)},
+
+  // ---- Yamaha ----
+  {name:'CS-80', maker:'Yamaha', cat:'synth', ports:ports(P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Reface CS', maker:'Yamaha', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Montage M', maker:'Yamaha', cat:'synth', ports:PF_WORKSTATION()},
+  {name:'MODX8', maker:'Yamaha', cat:'synth', ports:PF_WORKSTATION()},
+
+  // ---- Others ----
+  {name:'Nord Lead A1', maker:'Nord', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Nord Stage 4', maker:'Nord', cat:'synth', ports:PF_WORKSTATION()},
+  {name:'Waldorf Blofeld', maker:'Waldorf', cat:'synth', ports:PF_MODERN_POLY()},
+  {name:'Waldorf Iridium', maker:'Waldorf', cat:'synth', ports:PF_WORKSTATION()},
+  {name:'Waldorf Streichfett', maker:'Waldorf', cat:'synth', ports:ports(P.midiIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Oberheim OB-X8', maker:'Oberheim', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Hydrasynth Deluxe', maker:'ASM (Ashun Sound Machines)', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Cre8audio East Beast', maker:'Cre8audio', cat:'synth', ports:PF_SEMI_MODULAR()},
+  {name:'Akai MPC One', maker:'Akai', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'Akai MPC Live II', maker:'Akai', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'Teenage Engineering OP-1 Field', maker:'Teenage Engineering', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Polyend Tracker', maker:'Polyend', cat:'sampler', ports:PF_GROOVEBOX()},
+  {name:'Dreadbox Typhon', maker:'Dreadbox', cat:'synth', ports:ports(P.midiIn,P.cvOut,P.gateOut,P.audioOut,P.pwr)},
+  {name:'IK Multimedia UNO Synth Pro', maker:'IK Multimedia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.cvOut,P.gateOut,P.audioOut,P.pwr)},
+
+  // ---- More drum machines ----
+  {name:'TR-707', maker:'Roland', cat:'synth', ports:PF_DRUM_VINTAGE_MIDI()},
+  {name:'TR-606', maker:'Roland', cat:'synth', ports:PF_DRUM_VINTAGE_NOMIDI()},
+  {name:'TR-6S', maker:'Roland', cat:'synth', ports:PF_DRUM_MODERN()},
+  {name:'CR-78', maker:'Roland', cat:'synth', ports:ports(P.sync,P.audioOut,P.pwr)},
+  {name:'RD-6', maker:'Behringer', cat:'synth', ports:PF_DRUM_MODERN()},
+  {name:'DrumBrute', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.cvOut,P.gateOut,P.sync,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'DrumBrute Impact', maker:'Arturia', cat:'synth', ports:ports(P.midiIn,P.midiOut,P.midiThru,P.sync,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'LinnDrum', maker:'Linn Electronics', cat:'synth', ports:ports(P.sync,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'DRM1 MKIII', maker:'Vermona', cat:'synth', ports:ports(P.midiIn,P.midiThru,P.audioOutL,P.audioOutR,P.pwr)},
+
+  // ---- Effects pedals ----
+  // Mono-in/stereo-out + MIDI in/out is the well-established pattern for
+  // high-end "boutique" delay/reverb/modulation pedals (confirmed against
+  // Strymon's own support docs and Eventide's H9/H90 manuals); simpler
+  // pedals stay mono in/out with no MIDI, matching how most stomp-format
+  // effects actually work.
+  {name:'BigSky', maker:'Strymon', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)}, // [checked]
+  {name:'TimeLine', maker:'Strymon', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Mobius', maker:'Strymon', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Iridium', maker:'Strymon', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'El Capistan', maker:'Strymon', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'H9 Max', maker:'Eventide', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)}, // [checked]
+  {name:'H90', maker:'Eventide', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)}, // [checked]
+  {name:'DD-8 Digital Delay', maker:'Boss', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOut,P.pwr)},
+  {name:'RE-2 Space Echo', maker:'Boss', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'CE-2W Chorus', maker:'Boss', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Mood MKII', maker:'Chase Bliss Audio', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiThru,P.audioIn,P.audioOut,P.pwr)},
+  {name:'Blooper', maker:'Chase Bliss Audio', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiThru,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Reverb', maker:'Empress Effects', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Echosystem', maker:'Empress Effects', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.midiOut,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Sl\u00f6', maker:'Walrus Audio', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Mako D1', maker:'Walrus Audio', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Mercury7', maker:'Meris', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Enzo', maker:'Meris', cat:'fx', type:'pedal', ports:ports(P.midiIn,P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Afterneath', maker:'EarthQuaker Devices', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOut,P.pwr)},
+  {name:'Avalanche Run', maker:'EarthQuaker Devices', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOutL,P.audioOutR,P.pwr)},
+  {name:'Ditto Looper', maker:'TC Electronic', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOut,P.pwr)},
+  {name:'Carbon Copy', maker:'MXR', cat:'fx', type:'pedal', ports:ports(P.audioIn,P.audioOut,P.pwr)},
+];
+
+// Browsing taxonomy for the Add Device catalog picker (type/maker/model
+// cascade) -- separate from `cat`, which stays the diagram's own node
+// category (icon color etc). Entries added above already set `type`
+// explicitly where it isn't a plain synth; everything else is classified
+// here so every existing entry doesn't need touching individually.
+const DRUM_MACHINE_NAMES = new Set(['TB-303','TR-808','TR-909','TD-3','RD-8','RD-9','TR-707','TR-606','TR-6S','CR-78','RD-6','DrumBrute','DrumBrute Impact','LinnDrum','DRM1 MKIII']);
+DEVICE_CATALOG.forEach(d=>{
+  if(d.type) return;
+  if(DRUM_MACHINE_NAMES.has(d.name)) d.type = 'drum-machine';
+  else if(d.cat==='sampler') d.type = 'groovebox';
+  else if(d.cat==='controller') d.type = 'controller';
+  else if(d.cat==='fx') d.type = 'pedal';
+  else d.type = 'synth';
+});
+DEVICE_CATALOG.sort((a,b)=> (a.maker+a.name).localeCompare(b.maker+b.name));
+
 const PORT_TEMPLATES = {
+
   synth: [
     {label:'MIDI IN', type:'midi', side:'top'},
     {label:'AUDIO OUT L', type:'audio', side:'right'},
@@ -1550,11 +1964,15 @@ const afName = document.getElementById('afName');
 const afMaker = document.getElementById('afMaker');
 const afCategory = document.getElementById('afCategory');
 const afRole = document.getElementById('afRole');
+const addDeviceTag = document.getElementById('addDeviceTag');
+const addDeviceHeading = document.getElementById('addDeviceHeading');
+const afSave = document.getElementById('afSave');
 let stagingCount = 0;
 
-function afRenderPortRow(port){
+function afRenderPortRow(port, originalId){
   const row = document.createElement('div');
   row.className = 'af-port-row';
+  row.dataset.originalId = originalId || '';
 
   const labelInput = document.createElement('input');
   labelInput.className = 'af-input af-port-label';
@@ -1583,10 +2001,24 @@ function afRenderPortRow(port){
   const delBtn = document.createElement('button');
   delBtn.className = 'af-port-del';
   delBtn.type = 'button';
-  delBtn.textContent = '✕';
+  delBtn.textContent = '\u2715';
+  delBtn.title = (editingNode && originalId && usedPorts.has(editingNode.id+':'+originalId))
+    ? 'This port has a cable connected \u2014 removing it also removes that cable'
+    : 'Remove this port';
   delBtn.addEventListener('click', ()=> row.remove());
 
   row.append(labelInput, typeSel, sideSel, delBtn);
+
+  // A small warning dot on rows for ports that currently have a live cable,
+  // so removing/renaming one during an edit isn't a surprise.
+  if(editingNode && originalId && usedPorts.has(editingNode.id+':'+originalId)){
+    const warn = document.createElement('span');
+    warn.className = 'af-port-warn';
+    warn.title = 'This port has a cable connected';
+    warn.textContent = '\u26a0';
+    row.appendChild(warn);
+  }
+
   afPortsEl.appendChild(row);
 }
 
@@ -1595,7 +2027,74 @@ function afLoadTemplate(cat){
   (PORT_TEMPLATES[cat] || []).forEach(p=>afRenderPortRow({...p}));
 }
 
+const afCatalogRow = document.getElementById('afCatalogRow');
+const afPickType = document.getElementById('afPickType');
+const afPickMaker = document.getElementById('afPickMaker');
+const afPickModel = document.getElementById('afPickModel');
+
+
+function resetPicker(){
+  afPickType.value = '';
+  afPickMaker.innerHTML = '<option value="">Maker&hellip;</option>';
+  afPickMaker.disabled = true;
+  afPickModel.innerHTML = '<option value="">Model&hellip;</option>';
+  afPickModel.disabled = true;
+}
+
+afPickType.addEventListener('change', ()=>{
+  const type = afPickType.value;
+  afPickModel.innerHTML = '<option value="">Model&hellip;</option>';
+  afPickModel.disabled = true;
+
+  if(!type){
+    afPickMaker.innerHTML = '<option value="">Maker&hellip;</option>';
+    afPickMaker.disabled = true;
+    return;
+  }
+  if(type==='custom'){
+    afPickMaker.innerHTML = '<option value="">Maker&hellip;</option>';
+    afPickMaker.disabled = true;
+    // Custom: clear the form to a blank slate so the user builds it themselves.
+    afName.value = '';
+    afMaker.value = '';
+    afRole.value = '';
+    afCategory.value = 'synth';
+    afPortsEl.innerHTML = '';
+    return;
+  }
+  const makers = [...new Set(DEVICE_CATALOG.filter(d=>d.type===type).map(d=>d.maker))].sort();
+  afPickMaker.innerHTML = '<option value="">Maker&hellip;</option>' + makers.map(m=>`<option value="${m}">${m}</option>`).join('');
+  afPickMaker.disabled = false;
+});
+
+afPickMaker.addEventListener('change', ()=>{
+  const type = afPickType.value, maker = afPickMaker.value;
+  if(!maker){ afPickModel.innerHTML = '<option value="">Model&hellip;</option>'; afPickModel.disabled = true; return; }
+  const models = DEVICE_CATALOG.filter(d=>d.type===type && d.maker===maker).sort((a,b)=>a.name.localeCompare(b.name));
+  afPickModel.innerHTML = '<option value="">Model&hellip;</option>' + models.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
+  afPickModel.disabled = false;
+});
+
+afPickModel.addEventListener('change', ()=>{
+  const type = afPickType.value, maker = afPickMaker.value, name = afPickModel.value;
+  const entry = DEVICE_CATALOG.find(d=>d.type===type && d.maker===maker && d.name===name);
+  if(!entry) return;
+  afName.value = entry.name;
+  afMaker.value = entry.maker;
+  afCategory.value = entry.cat;
+  afPortsEl.innerHTML = '';
+  entry.ports.forEach(p=>afRenderPortRow({...p}));
+});
+
+let editingNode = null; // the NODE being edited, or null when adding a new one
+
 function openAddDevice(){
+  editingNode = null;
+  addDeviceTag.textContent = 'ADD TO RIG';
+  addDeviceHeading.textContent = 'Add a device';
+  afSave.textContent = 'Add to Rig';
+  afCatalogRow.hidden = false;
+  resetPicker();
   afName.value = '';
   afMaker.value = '';
   afRole.value = '';
@@ -1604,14 +2103,34 @@ function openAddDevice(){
   addDeviceOverlay.classList.add('show');
   setTimeout(()=>afName.focus(), 50);
 }
+
+function openEditDevice(node){
+  editingNode = node;
+  addDeviceTag.textContent = 'EDIT DEVICE';
+  addDeviceHeading.textContent = `Edit ${node.name}`;
+  afSave.textContent = 'Save Changes';
+  resetPicker();
+  afCatalogRow.hidden = true; // editing an existing device -- the catalog picker would just clobber it
+  afName.value = node.name;
+  afMaker.value = node.maker || '';
+  afRole.value = node.role || '';
+  afCategory.value = node.cat;
+  afPortsEl.innerHTML = '';
+  node.ports.forEach(p=>afRenderPortRow({...p}, p.id));
+  addDeviceOverlay.classList.add('show');
+  closeDetails();
+  setTimeout(()=>afName.focus(), 50);
+}
+
 function closeAddDevice(){
   addDeviceOverlay.classList.remove('show');
+  editingNode = null;
 }
 document.getElementById('btnAddDevice').addEventListener('click', openAddDevice);
 document.getElementById('addDeviceClose').addEventListener('click', closeAddDevice);
 document.getElementById('afCancel').addEventListener('click', closeAddDevice);
 addDeviceOverlay.addEventListener('click',(e)=>{ if(e.target===addDeviceOverlay) closeAddDevice(); });
-afCategory.addEventListener('change', ()=>afLoadTemplate(afCategory.value));
+afCategory.addEventListener('change', ()=>{ if(!editingNode) afLoadTemplate(afCategory.value); });
 document.getElementById('afAddPort').addEventListener('click', ()=>{
   afRenderPortRow({label:'PORT', type:'audio', side:'right'});
 });
@@ -1623,18 +2142,50 @@ function slugify(name){
   return id;
 }
 
-document.getElementById('afSave').addEventListener('click', ()=>{
+afSave.addEventListener('click', ()=>{
   const name = afName.value.trim();
   if(!name){ afName.focus(); afName.style.borderColor='#b8402a'; return; }
   afName.style.borderColor = '';
 
   const rows = [...afPortsEl.querySelectorAll('.af-port-row')];
-  const ports = rows.map((row,i)=>({
-    id: 'p'+i+'_'+row.querySelector('.af-port-label').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'),
-    label: row.querySelector('.af-port-label').value.trim() || 'PORT',
-    type: row.querySelector('.af-port-type').value,
-    side: row.querySelector('.af-port-side').value,
-  }));
+  const ports = rows.map((row,i)=>{
+    const originalId = row.dataset.originalId;
+    return {
+      // Keep an existing port's id stable across an edit (even if its label
+      // changes) so cables referencing it don't silently break; only
+      // brand-new rows get a freshly generated id.
+      id: originalId || ('p'+i+'_'+row.querySelector('.af-port-label').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_')+'_'+Date.now().toString(36).slice(-4)),
+      label: row.querySelector('.af-port-label').value.trim() || 'PORT',
+      type: row.querySelector('.af-port-type').value,
+      side: row.querySelector('.af-port-side').value,
+    };
+  });
+
+  if(editingNode){
+    const keptIds = new Set(ports.map(p=>p.id));
+    const removedIds = editingNode.ports.map(p=>p.id).filter(id=>!keptIds.has(id));
+    const affectedCables = removedIds.length
+      ? CABLES.filter(([fn,fp,tn,tp])=> (fn===editingNode.id && removedIds.includes(fp)) || (tn===editingNode.id && removedIds.includes(tp)))
+      : [];
+    if(affectedCables.length){
+      const ok = confirm(`Removing ${removedIds.length} port${removedIds.length===1?'':'s'} also removes ${affectedCables.length} connected cable${affectedCables.length===1?'':'s'}. Continue?`);
+      if(!ok) return;
+    }
+    editingNode.name = name;
+    editingNode.maker = afMaker.value.trim();
+    editingNode.cat = afCategory.value;
+    editingNode.role = afRole.value.trim() || editingNode.role;
+    editingNode.ports = ports;
+    for(let i=CABLES.length-1;i>=0;i--){
+      const [fn,fp,tn,tp] = CABLES[i];
+      if((fn===editingNode.id && removedIds.includes(fp)) || (tn===editingNode.id && removedIds.includes(tp))) CABLES.splice(i,1);
+    }
+    rebuildIndexes();
+    refreshLegend();
+    closeAddDevice();
+    draw();
+    return;
+  }
 
   const id = slugify(name);
   // Staging position: stack new devices below the Power Strip, offset a bit
@@ -1661,11 +2212,34 @@ document.getElementById('afSave').addEventListener('click', ()=>{
   draw();
 });
 
-/* click empty space closes info panel */
+/* click a cable to select it (Delete/Backspace removes it); click empty
+   space to deselect. Node clicks are left alone -- dragTarget already
+   handles those via mousedown/mouseup. */
 canvas.addEventListener('click',(e)=>{
-  const w = screenToWorld(e.offsetX,e.offsetY);
+  const sx = e.offsetX, sy = e.offsetY;
+  const cHit = cableAt(sx,sy);
+  if(cHit){
+    selectedCable = cHit;
+    draw();
+    return;
+  }
+  const w = screenToWorld(sx,sy);
   if(!nodeAt(w.x,w.y) && !dragTarget){
-    // keep last info panel open; comment out to auto-close
+    if(selectedCable){ selectedCable = null; draw(); }
+  }
+});
+
+window.addEventListener('keydown', (e)=>{
+  if((e.key==='Delete' || e.key==='Backspace') && selectedCable){
+    // Don't hijack Backspace while the user is typing in the Add Device form.
+    const tag = document.activeElement && document.activeElement.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+    const idx = CABLES.indexOf(selectedCable);
+    if(idx!==-1) CABLES.splice(idx,1);
+    selectedCable = null;
+    rebuildIndexes();
+    refreshLegend();
+    draw();
   }
 });
 
