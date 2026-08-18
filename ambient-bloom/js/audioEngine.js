@@ -51,8 +51,9 @@ export class AudioEngine {
     this.sourceNode = this.audioCtx.createMediaStreamSource(this.stream);
 
     const trackSettings = this.stream.getAudioTracks()[0]?.getSettings?.() || {};
-    console.log('[oscilloscope] Track settings:', trackSettings);
-    console.log('[oscilloscope] Track label:', this.stream.getAudioTracks()[0]?.label);
+    const trackLabel = this.stream.getAudioTracks()[0]?.label || '';
+    console.log('[ambient-bloom] Track settings:', trackSettings);
+    console.log('[ambient-bloom] Track label:', trackLabel);
     this.channelCount = trackSettings.channelCount || 2;
 
     this.splitter = this.audioCtx.createChannelSplitter(2);
@@ -86,6 +87,7 @@ export class AudioEngine {
     return {
       sampleRate: this.sampleRate,
       channelCount: this.analysers.length,
+      deviceLabel: trackLabel,
     };
   }
 

@@ -1,4 +1,5 @@
 .stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,7 +10,17 @@
   overflow: hidden;
 }
 
+#bgCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
 .book-wrap {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,6 +34,8 @@
 }
 
 .book-caption {
+  position: relative;
+  z-index: 1;
   font-family: var(--mono);
   font-size: 11.5px;
   letter-spacing: 0.04em;
@@ -34,3 +47,4 @@
 .book-caption .sep { color: var(--text-faint, var(--hairline-strong)); }
 
 .pill { margin-right: 4px; }
+.pill-warn { color: var(--danger, #b8402a); border-color: var(--danger, #b8402a); }

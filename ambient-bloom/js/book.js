@@ -51,6 +51,28 @@ export class PageLayout {
     for (let i = 0; i < this.lineCount; i++) ys.push(this.marginTop + i * this.lineHeight);
     return ys;
   }
+
+  /** Jumps to the start of the next line (abandoning any remaining slots
+   * on the current line) — used for paragraph/header breaks that shouldn't
+   * continue mid-line. Returns false if the page is already full. */
+  newLine() {
+    if (this.isFull) return false;
+    this.col = 0;
+    this.line++;
+    return !this.isFull;
+  }
+
+  /** Advances the cursor by n slots without drawing anything, without
+   * wrapping mid-word logic -- used for indents. */
+  indent(n) {
+    for (let i = 0; i < n && !this.isFull; i++) this.nextSlot();
+  }
+
+  /** Pixel y-coordinate for a given line index (for placing illustrations
+   * relative to the text grid). */
+  lineY(lineIndex) {
+    return this.marginTop + lineIndex * this.lineHeight;
+  }
 }
 
 /**
@@ -106,6 +128,49 @@ export class Book {
     const page = this.activePage;
     page.nextSlot();
     return { turnedPage: this.isSpreadFull };
+  }
+
+  /** Jumps the active page to the start of its next line — for
+   * paragraph/header breaks. Returns { turnedPage }. */
+  newLine() {
+    if (this.isSpreadFull) return null;
+    const page = this.activePage;
+    page.newLine();
+    return { turnedPage: this.isSpreadFull };
+  }
+
+  /** Advances the active page's cursor by n slots without drawing --
+   * for paragraph indents. */
+  indent(n) {
+    if (this.isSpreadFull) return;
+    this.activePage.indent(n);
+  }
+
+  /** The pixel y-coordinate of the active page's current line. */
+  get currentLineY() {
+    return this.activePage.lineY(this.activePage.line);
+  }
+
+  /** The active page's side ('left'|'right') and remaining line count --
+   * used to decide whether there's room left for a header block before
+   * forcing a page turn instead. */
+  get activeSide() {
+    return this.activePage === this.left ? 'left' : 'right';
+  }
+  get linesRemaining() {
+    return this.activePage.lineCount - this.activePage.line;
+  }
+
+  /** Ends the current spread early (e.g. for a deliberate "new chapter"
+   * page break partway down, rather than filling every remaining slot) --
+   * marks both pages full so isSpreadFull/placeGlyph behave exactly as if
+   * they'd filled naturally. Caller still needs to trigger the page-turn
+   * animation and call startNewSpread(), same as a natural fill. */
+  forceEndSpread() {
+    this.left.line = this.left.lineCount;
+    this.left.col = 0;
+    this.right.line = this.right.lineCount;
+    this.right.col = 0;
   }
 
   startNewSpread() {

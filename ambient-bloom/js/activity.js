@@ -34,7 +34,7 @@ export class ActivityDetector {
   constructor({
     fastMs = 18,
     slowMs = 900,
-    onsetFloor = 0.008,   // ignore near-silence entirely (room noise, mic hiss)
+    onsetFloor = 0.0009,   // ignore true silence/hiss only — real mic input runs much quieter than a hot line-level test tone, so this needs to be low
     refractoryMs = 55,    // minimum gap between onsets, avoids re-triggering on one note's ringing
     onsetRateMs = 1400,   // decay time constant for the onset-rate accumulator (the main pace driver)
     onsetsPerSecForFull = 6, // roughly this many onsets/sec saturates pace at 1.0
