@@ -3,6 +3,7 @@ import { TriggerEngine, TriggerMode } from './triggerEngine.js';
 import { Renderer } from './renderer.js';
 import { themes, defaultThemeId } from './themes.js';
 import { measureVpp, measureRms, measureFrequency, formatHz, formatMs, computeChroma, NOTE_NAMES, findSpectralPeaks, freqToNote, tagHarmonics, computeHarmonicBalance } from './measurements.js';
+import { MATH_OPS, computeMathChannel, computeMagnitudeSpectrumDb } from './mathChannels.js';
 
 const els = {
   gate: document.getElementById('gate'),
@@ -37,6 +38,19 @@ const els = {
   heroValueNum: document.getElementById('heroValueNum'),
   heroUnit: document.getElementById('heroUnit'),
   heroSub: document.getElementById('heroSub'),
+  overlayBlendToggle: document.getElementById('overlayBlendToggle'),
+  msModeToggle: document.getElementById('msModeToggle'),
+  mathOpSelect: document.getElementById('mathOpSelect'),
+  spectrumSourceSelect: document.getElementById('spectrumSourceSelect'),
+  chBDelay: document.getElementById('chBDelay'),
+  chBDelayReadout: document.getElementById('chBDelayReadout'),
+  corrReadout: document.getElementById('corrReadout'),
+  corrFill: document.getElementById('corrFill'),
+  corrNeedle: document.getElementById('corrNeedle'),
+  widthReadout: document.getElementById('widthReadout'),
+  widthFill: document.getElementById('widthFill'),
+  phaseReadout: document.getElementById('phaseReadout'),
+  phaseNeedle: document.getElementById('phaseNeedle'),
 };
 
 const MODE_LABELS = {
@@ -57,14 +71,26 @@ const audioEngine = new AudioEngine({ fftSize: 4096 });
 const triggerEngine = new TriggerEngine();
 const renderer = new Renderer(els.canvas);
 
+// Input gain defaults noticeably above unity — most interfaces/mics feeding
+// this need real amplification before the trace is a usable size on
+// screen, and leaving it at 1x just meant everyone had to discover the
+// gain slider before the scope was actually readable.
+const DEFAULT_GAIN = 2.5;
+
 let displayMode = 'time';
-let showChannelB = true;
+let showChannelB = true; // "channel B" here really means "Trace 2", whatever mathOp currently resolves it to
 let showCursors = false;
+let overlayBlend = false;
+let msMode = false;
+let mathOp = 'chB';
+let spectrumSource = 'chA';
+let chBDelaySamples = 0;
 let lastFrameA = null; // held frame for NORMAL/SINGLE modes
 let lastFrameB = null;
 let rafId = null;
 const chromaSmooth = new Float32Array(12); // exponential smoothing so bars don't flicker frame to frame
 let balanceSmooth = { oddRatio: 0.5, thdPercent: 0 }; // exponential smoothing for the balance meter
+const stereoMeterSmooth = { correlation: 0, widthPercent: 0, phaseAngleDeg: 0 };
 
 // Cursor state: null until first shown, then persists across toggles/mode switches.
 const cursors = { vA: null, vB: null, hA: null, hB: null };
@@ -88,6 +114,29 @@ populateThemes();
 
 els.themeSelect.addEventListener('change', () => {
   renderer.setTheme(themes[els.themeSelect.value]);
+});
+
+// --- Math channel setup ---------------------------------------------------
+
+function populateMathOps() {
+  els.mathOpSelect.innerHTML = '';
+  MATH_OPS.forEach((op) => {
+    const opt = document.createElement('option');
+    opt.value = op.id;
+    opt.textContent = op.label;
+    els.mathOpSelect.appendChild(opt);
+  });
+  els.mathOpSelect.value = mathOp;
+}
+populateMathOps();
+
+els.mathOpSelect.addEventListener('change', () => { mathOp = els.mathOpSelect.value; });
+els.spectrumSourceSelect.addEventListener('change', () => { spectrumSource = els.spectrumSourceSelect.value; });
+els.overlayBlendToggle.addEventListener('change', () => { overlayBlend = els.overlayBlendToggle.checked; });
+els.msModeToggle.addEventListener('change', () => { msMode = els.msModeToggle.checked; });
+els.chBDelay.addEventListener('input', () => {
+  chBDelaySamples = parseInt(els.chBDelay.value, 10);
+  els.chBDelayReadout.textContent = `${chBDelaySamples >= 0 ? '+' : ''}${chBDelaySamples} smp`;
 });
 
 // --- Device enumeration ---------------------------------------------------
@@ -140,6 +189,7 @@ els.startBtn.addEventListener('click', async () => {
     console.log('[oscilloscope] Calling getUserMedia, deviceId =', deviceId || '(default)');
     const { channelCount } = await audioEngine.start(deviceId);
     console.log('[oscilloscope] Capture started:', { channelCount, sampleRate: audioEngine.sampleRate });
+    audioEngine.setGain(DEFAULT_GAIN);
     els.chBToggle.disabled = channelCount < 2;
     if (channelCount < 2) {
       els.chBToggle.checked = false;
@@ -306,16 +356,64 @@ function updatePeakFrequency(freqDataA) {
     els.measPeakFreq.textContent = '--';
     return;
   }
+  const binHz = audioEngine.sampleRate / audioEngine.fftSize;
+  updatePeakFrequencyFromSpectrum(freqDataA, binHz);
+}
+
+/** Same peak-picking logic as updatePeakFrequency, but for a spectrum that
+ * didn't come from an AnalyserNode (e.g. a manually-computed math-trace
+ * FFT), where the bin spacing has to be passed in explicitly. */
+function updatePeakFrequencyFromSpectrum(freqData, binHz) {
+  if (!freqData) { els.measPeakFreq.textContent = '--'; return; }
   let peakIdx = 0;
   let peakDb = -Infinity;
-  for (let i = 0; i < freqDataA.length; i++) {
-    if (freqDataA[i] > peakDb) {
-      peakDb = freqDataA[i];
+  for (let i = 0; i < freqData.length; i++) {
+    if (freqData[i] > peakDb) {
+      peakDb = freqData[i];
       peakIdx = i;
     }
   }
-  const binHz = audioEngine.sampleRate / audioEngine.fftSize;
   els.measPeakFreq.textContent = formatHz(peakIdx * binHz);
+}
+
+/**
+ * Drives the always-on Correlation / Stereo Width / Phase Angle meters.
+ * Smooths values slightly so they read as a meter rather than jittering
+ * sample-to-sample, and gracefully blanks out when there's no second
+ * channel to compare against.
+ */
+function updateStereoMeters(metrics) {
+  if (!metrics || metrics.correlation == null) {
+    els.corrReadout.textContent = '--';
+    els.widthReadout.textContent = '--';
+    els.phaseReadout.textContent = '--';
+    els.corrFill.style.width = '0%';
+    els.corrFill.style.left = '50%';
+    els.corrNeedle.style.left = '50%';
+    els.widthFill.style.width = '0%';
+    els.phaseNeedle.style.transform = 'rotate(0deg)';
+    return;
+  }
+
+  stereoMeterSmooth.correlation += (metrics.correlation - stereoMeterSmooth.correlation) * 0.25;
+  stereoMeterSmooth.widthPercent += (metrics.widthPercent - stereoMeterSmooth.widthPercent) * 0.25;
+  stereoMeterSmooth.phaseAngleDeg += (metrics.phaseAngleDeg - stereoMeterSmooth.phaseAngleDeg) * 0.25;
+
+  const corr = stereoMeterSmooth.correlation;
+  els.corrReadout.textContent = corr.toFixed(2);
+  // Bar grows from the center tick toward + or - depending on sign.
+  const corrPct = Math.abs(corr) * 50;
+  els.corrFill.style.width = `${corrPct}%`;
+  els.corrFill.style.left = corr >= 0 ? '50%' : `${50 - corrPct}%`;
+  els.corrNeedle.style.left = `${50 + corr * 50}%`;
+
+  const width = Math.max(0, Math.min(100, stereoMeterSmooth.widthPercent));
+  els.widthReadout.textContent = `${width.toFixed(0)}%`;
+  els.widthFill.style.width = `${width}%`;
+
+  const phase = stereoMeterSmooth.phaseAngleDeg;
+  els.phaseReadout.textContent = `${phase >= 0 ? '+' : ''}${phase.toFixed(0)}\u00b0`;
+  els.phaseNeedle.style.transform = `rotate(${phase}deg)`;
 }
 
 function updateCursorReadout() {
@@ -346,21 +444,50 @@ function frame() {
   const bufA = buffers[0];
   const bufB = buffers[1];
 
-  // Trigger always runs on channel A. Channel B is sliced at the exact same
-  // sample index so both traces stay time-aligned relative to the trigger
-  // point, the way a real 2-channel scope triggers off one input.
+  // Trigger always runs on channel A. Channel B is sliced at the same
+  // sample index (offset by the manual Ch B delay, for phase-alignment
+  // correction against cable/ADC skew) so both traces stay time-aligned
+  // relative to the trigger point, the way a real 2-channel scope triggers
+  // off one input.
   const resultA = triggerEngine.process(bufA, WINDOW_SIZE);
   if (resultA.data) {
     lastFrameA = resultA.data;
     if (bufB && resultA.index >= 0) {
-      const end = Math.min(resultA.index + WINDOW_SIZE, bufB.length);
-      lastFrameB = bufB.slice(resultA.index, end);
+      const start = Math.max(0, Math.min(bufB.length - 1, resultA.index + chBDelaySamples));
+      const end = Math.min(start + WINDOW_SIZE, bufB.length);
+      lastFrameB = bufB.slice(start, end);
+    }
+  }
+
+  // Continuous stereo metrics (correlation / width / phase angle) — run
+  // every frame regardless of display mode, straight off the live analyser
+  // buffers rather than the trigger-held frames, so the meters track in
+  // real time even while the trace itself is held on a stable trigger.
+  let stereoMetrics = null;
+  if (bufA && bufB) {
+    stereoMetrics = AudioEngine.computeStereoMetrics(bufA, bufB);
+    updateStereoMeters(stereoMetrics);
+  } else {
+    updateStereoMeters(null);
+  }
+
+  // Resolve Trace 2: either the raw channel B slice, or a math/processing
+  // result derived from A (and B, where relevant). Mid/Side mode overrides
+  // this entirely — both traces become Mid and Side rather than A and
+  // whatever the Trace 2 source dropdown says.
+  let trace1 = lastFrameA;
+  let trace2 = null;
+  if (lastFrameA && showChannelB) {
+    if (msMode) {
+      trace1 = computeMathChannel(lastFrameA, lastFrameB, 'mid');
+      trace2 = computeMathChannel(lastFrameA, lastFrameB, 'side');
+    } else {
+      trace2 = computeMathChannel(lastFrameA, lastFrameB, mathOp);
     }
   }
 
   if (displayMode === 'time') {
-    const framesToShow = [lastFrameA, showChannelB ? lastFrameB : null];
-    renderer.drawTimeDomain(framesToShow);
+    renderer.drawTimeDomain([trace1, trace2], { overlayBlend });
     renderer.drawTriggerLevel(triggerEngine.level);
     if (showCursors && cursors.vA != null) {
       renderer.drawCursors(cursors);
@@ -368,7 +495,7 @@ function frame() {
     els.measPeakFreq.textContent = '--';
     const freqResult = lastFrameA ? measureFrequency(lastFrameA, audioEngine.sampleRate) : null;
     updateHeroCard({
-      label: 'Frequency',
+      label: msMode ? 'Frequency (Mid)' : 'Frequency',
       value: freqResult ? freqResult.frequencyHz.toFixed(1) : '--',
       unit: freqResult ? 'Hz' : '',
       sub: freqResult ? `Period ${formatMs(freqResult.periodMs)}` : '',
@@ -376,7 +503,7 @@ function frame() {
   } else if (displayMode === 'xy') {
     // XY mode needs same-length, time-aligned A/B slices — already guaranteed
     // since both were cut from the same trigger index above.
-    renderer.drawXY(lastFrameA, lastFrameB);
+    renderer.drawXY(lastFrameA, lastFrameB, { stereoMetrics });
     els.measPeakFreq.textContent = '--';
     const freqResult = lastFrameA ? measureFrequency(lastFrameA, audioEngine.sampleRate) : null;
     updateHeroCard({
@@ -387,15 +514,30 @@ function frame() {
     });
   } else if (displayMode === 'spectrum') {
     // Spectrum free-runs continuously; edge triggering isn't meaningful here.
-    const freqBuffers = audioEngine.getFrequencyData();
-    renderer.drawSpectrum(freqBuffers[0], {
-      sampleRate: audioEngine.sampleRate,
-      fftSize: audioEngine.fftSize,
-      minDb: audioEngine.minDecibels,
-      maxDb: audioEngine.maxDecibels,
-    });
-    updatePeakFrequency(freqBuffers[0]);
-    updateHeroCard({ label: 'Peak (FFT)', value: els.measPeakFreq.textContent, unit: '', sub: 'Dominant frequency bin' });
+    // Channel A's spectrum comes straight from the real AnalyserNode; a math
+    // trace doesn't exist anywhere in the WebAudio graph, so that path runs
+    // a real FFT (mathChannels.js) on the trigger-held Trace 2 buffer instead.
+    if (spectrumSource === 'math' && trace2) {
+      const spectrum = computeMagnitudeSpectrumDb(trace2);
+      renderer.drawSpectrum(spectrum, {
+        sampleRate: audioEngine.sampleRate,
+        fftSize: WINDOW_SIZE,
+        minDb: audioEngine.minDecibels,
+        maxDb: audioEngine.maxDecibels,
+      });
+      updatePeakFrequencyFromSpectrum(spectrum, audioEngine.sampleRate / WINDOW_SIZE);
+      updateHeroCard({ label: 'Peak (Math FFT)', value: els.measPeakFreq.textContent, unit: '', sub: `Source: ${MATH_OPS.find((o) => o.id === mathOp)?.label || 'Trace 2'}` });
+    } else {
+      const freqBuffers = audioEngine.getFrequencyData();
+      renderer.drawSpectrum(freqBuffers[0], {
+        sampleRate: audioEngine.sampleRate,
+        fftSize: audioEngine.fftSize,
+        minDb: audioEngine.minDecibels,
+        maxDb: audioEngine.maxDecibels,
+      });
+      updatePeakFrequency(freqBuffers[0]);
+      updateHeroCard({ label: 'Peak (FFT)', value: els.measPeakFreq.textContent, unit: '', sub: 'Dominant frequency bin' });
+    }
   } else if (displayMode === 'spectrogram') {
     const freqBuffers = audioEngine.getFrequencyData();
     renderer.drawSpectrogramColumn(freqBuffers[0], {

@@ -119,6 +119,53 @@ export class AudioEngine {
     return { maxDiff, correlation, likelyIdentical: maxDiff < 0.0005 };
   }
 
+  /**
+   * Continuous stereo/correlation metrics — the same underlying math as
+   * compareChannels() (Pearson correlation) plus mid/side energy and the
+   * Lissajous ellipse's principal-axis angle, meant to be called every
+   * render frame rather than once at startup. This is what actually drives
+   * the always-on Correlation / Width / Phase meters, not just a one-shot
+   * console diagnostic.
+   *   correlation: -1..+1 (-1 = fully out of phase, 0 = uncorrelated,
+   *     +1 = identical/mono-compatible)
+   *   widthPercent: 0 (mono, channels identical) .. 100+ (wide/divergent),
+   *     computed as 100 * sideRms / (midRms + sideRms)
+   *   phaseAngleDeg: tilt of the Lissajous figure's principal axis, -90..+90,
+   *     0deg = the two channels move together (mono-like diagonal), +-90deg =
+   *     in quadrature
+   */
+  static computeStereoMetrics(a, b) {
+    const n = Math.min(a.length, b.length);
+    if (n === 0) return null;
+    let sumA = 0, sumB = 0, sumAB = 0, sumA2 = 0, sumB2 = 0, sumMid2 = 0, sumSide2 = 0;
+    for (let i = 0; i < n; i++) {
+      const av = a[i], bv = b[i];
+      sumA += av; sumB += bv;
+      sumAB += av * bv;
+      sumA2 += av * av; sumB2 += bv * bv;
+      const mid = (av + bv) * 0.5, side = (av - bv) * 0.5;
+      sumMid2 += mid * mid;
+      sumSide2 += side * side;
+    }
+    const meanA = sumA / n, meanB = sumB / n;
+    const cov = sumAB / n - meanA * meanB;
+    const stdA = Math.sqrt(Math.max(0, sumA2 / n - meanA * meanA));
+    const stdB = Math.sqrt(Math.max(0, sumB2 / n - meanB * meanB));
+    const correlation = stdA > 1e-9 && stdB > 1e-9 ? Math.max(-1, Math.min(1, cov / (stdA * stdB))) : null;
+
+    const midRms = Math.sqrt(sumMid2 / n);
+    const sideRms = Math.sqrt(sumSide2 / n);
+    const widthPercent = (midRms + sideRms) > 1e-9 ? (100 * sideRms) / (midRms + sideRms) : 0;
+
+    // Principal axis of the (a,b) scatter via the 2x2 covariance matrix --
+    // this is literally the tilt of the Lissajous ellipse, i.e. the phase
+    // rotation visualizer's needle angle.
+    const varA = stdA * stdA, varB = stdB * stdB;
+    const phaseAngleDeg = (0.5 * Math.atan2(2 * cov, varA - varB)) * (180 / Math.PI);
+
+    return { correlation, widthPercent, phaseAngleDeg, midRms, sideRms };
+  }
+
   /** Set input gain (applied to the actual signal, before trigger/measurement/draw). */
   setGain(value) {
     this.gainNodes.forEach((g) => {

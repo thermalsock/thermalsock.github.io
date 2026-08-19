@@ -189,8 +189,13 @@ export class Renderer {
   /**
    * Draw one frame in time-domain (dual trace) mode.
    * `channelBuffers` = array of Float32Array (already trigger-aligned & windowed).
+   * `overlayBlend`: when true, every trace after the first is drawn with
+   * reduced opacity and an additive blend instead of a flat opaque line —
+   * makes A/B differences read as visual "ghosting" where the traces
+   * diverge, rather than just two solid overlapping lines competing for
+   * the same pixels.
    */
-  drawTimeDomain(channelBuffers, { verticalScale = 1 } = {}) {
+  drawTimeDomain(channelBuffers, { verticalScale = 1, overlayBlend = false } = {}) {
     const { persistCtx, width, height, theme } = this;
     this._fadePersistence();
 
@@ -211,7 +216,15 @@ export class Renderer {
         const y = midY - buf[i] * ampScale;
         points.push([x, y]);
       }
-      this._strokeTrace(persistCtx, points, color, theme.glow);
+      if (overlayBlend && chIdx > 0) {
+        persistCtx.save();
+        persistCtx.globalAlpha = 0.55;
+        persistCtx.globalCompositeOperation = 'lighter';
+        this._strokeTrace(persistCtx, points, color, theme.glow);
+        persistCtx.restore();
+      } else {
+        this._strokeTrace(persistCtx, points, color, theme.glow);
+      }
     });
 
     this._composite();
@@ -594,9 +607,18 @@ export class Renderer {
     ctx.restore();
   }
 
-  /** XY / Lissajous mode: channel A on X axis, channel B on Y axis. */
-  drawXY(chA, chB, { scale = 1 } = {}) {
-    const { persistCtx, width, height, theme } = this;
+  /**
+   * XY / Lissajous mode: channel A on X axis, channel B on Y axis. Also
+   * draws the "phase rotation visualizer" — a line through the principal
+   * axis of the point cloud, which is exactly the tilt a goniometer's
+   * ellipse shows: 45 deg (top-right to bottom-left) for two identical
+   * in-phase signals, -45 deg for fully out-of-phase, vertical/horizontal
+   * for pure quadrature. `stereoMetrics` is the same object
+   * AudioEngine.computeStereoMetrics() returns, computed once per frame and
+   * passed in rather than recomputed here.
+   */
+  drawXY(chA, chB, { scale = 1, stereoMetrics = null } = {}) {
+    const { persistCtx, ctx, width, height, theme } = this;
     this._fadePersistence();
 
     if (!chA || !chB) {
@@ -616,6 +638,34 @@ export class Renderer {
     // XY traces are usually drawn as a scatter/line without connecting first-to-last.
     this._strokeTrace(persistCtx, points, theme.traceColors[0], theme.glow);
     this._composite();
+
+    if (stereoMetrics && stereoMetrics.correlation != null) {
+      const angleRad = (stereoMetrics.phaseAngleDeg * Math.PI) / 180;
+      // Screen Y is flipped relative to the math convention used when
+      // computing the angle (channel B plotted as cy - value), so mirror
+      // the line's Y component to match what's actually on screen.
+      const dx = Math.cos(angleRad) * ampScale * 0.95;
+      const dy = -Math.sin(angleRad) * ampScale * 0.95;
+
+      ctx.save();
+      ctx.strokeStyle = theme.cursorColor;
+      ctx.globalAlpha = 0.8;
+      ctx.setLineDash([2, 4]);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(cx - dx, cy - dy);
+      ctx.lineTo(cx + dx, cy + dy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = theme.textColor;
+      ctx.font = '12px ui-monospace, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`Phase angle: ${stereoMetrics.phaseAngleDeg.toFixed(1)}\u00b0`, 8, 8);
+      ctx.fillText(`Correlation: ${stereoMetrics.correlation.toFixed(2)}`, 8, 24);
+      ctx.restore();
+    }
   }
 
   _composite() {

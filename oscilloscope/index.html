@@ -54,6 +54,8 @@
         <a class="page-nav-link active" href="../oscilloscope/index.html">Oscilloscope</a>
         <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
         <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
+        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
+        <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
       </nav>
 
       <div class="topbar-right">
@@ -66,8 +68,113 @@
     </header>
 
     <main class="stage">
-      <div class="scope-wrap" id="scopeWrap">
-        <canvas id="scopeCanvas"></canvas>
+      <div class="stage-left">
+        <div class="scope-wrap" id="scopeWrap">
+          <canvas id="scopeCanvas"></canvas>
+        </div>
+
+        <div class="bottom-row">
+          <section class="card panel-group">
+            <h2>
+              <span class="chip teal" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 2 10 2-5h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              Math Channel
+            </h2>
+            <div class="row">
+              <label for="mathOpSelect">Trace 2 source</label>
+              <select id="mathOpSelect"></select>
+            </div>
+            <div class="row">
+              <label for="spectrumSourceSelect">Spectrum src</label>
+              <select id="spectrumSourceSelect">
+                <option value="chA">Channel A</option>
+                <option value="math">Trace 2 (Math)</option>
+              </select>
+            </div>
+            <div class="row">
+              <label for="chBDelay">Ch B delay</label>
+              <input type="range" id="chBDelay" min="-100" max="100" step="1" value="0" />
+            </div>
+            <div class="row">
+              <label>&nbsp;</label>
+              <span id="chBDelayReadout" class="status-value">0 smp</span>
+            </div>
+            <div class="row">
+              <label for="overlayBlendToggle">Overlay blend</label>
+              <input type="checkbox" id="overlayBlendToggle" />
+            </div>
+            <div class="row">
+              <label for="msModeToggle">Mid/Side mode</label>
+              <input type="checkbox" id="msModeToggle" />
+            </div>
+          </section>
+
+          <section class="card panel-group readout" id="stereoAnalysisCard">
+            <h2>
+              <span class="chip violet" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1"/></svg>
+              </span>
+              Stereo Analysis
+            </h2>
+            <div class="meter-row">
+              <div class="meter-label-row"><span>Correlation</span><span id="corrReadout">--</span></div>
+              <div class="meter-track">
+                <div class="meter-center-tick"></div>
+                <div class="meter-fill" id="corrFill"></div>
+                <div class="meter-needle" id="corrNeedle"></div>
+              </div>
+              <div class="meter-scale"><span>-1</span><span>0</span><span>+1</span></div>
+            </div>
+            <div class="meter-row">
+              <div class="meter-label-row"><span>Stereo width</span><span id="widthReadout">--</span></div>
+              <div class="meter-track">
+                <div class="meter-fill width" id="widthFill"></div>
+              </div>
+              <div class="meter-scale"><span>Mono</span><span>Wide</span></div>
+            </div>
+            <div class="meter-row">
+              <div class="meter-label-row"><span>Phase angle</span><span id="phaseReadout">--</span></div>
+              <div class="phase-dial">
+                <div class="phase-dial-needle" id="phaseNeedle"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card panel-group readout">
+            <h2>
+              <span class="chip pink" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M8 1v3.5M8 11.5V15M1 8h3.5M11.5 8H15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+              </span>
+              Cursors
+            </h2>
+            <div class="row">
+              <label for="cursorsToggle">Show cursors</label>
+              <input type="checkbox" id="cursorsToggle" />
+            </div>
+            <dl>
+              <dt>&Delta;T</dt><dd id="cursorDeltaT">--</dd>
+              <dt>Freq (1/&Delta;T)</dt><dd id="cursorFreq">--</dd>
+              <dt>&Delta;V</dt><dd id="cursorDeltaV">--</dd>
+            </dl>
+          </section>
+
+          <section class="card panel-group readout">
+            <h2>
+              <span class="chip blue" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><rect x="2" y="8" width="2.4" height="6" fill="currentColor"/><rect x="6.8" y="4" width="2.4" height="10" fill="currentColor"/><rect x="11.6" y="6.5" width="2.4" height="7.5" fill="currentColor"/></svg>
+              </span>
+              Measurements — Ch A
+            </h2>
+            <dl>
+              <dt>Vpp</dt><dd id="measVpp">--</dd>
+              <dt>RMS</dt><dd id="measRms">--</dd>
+              <dt>Frequency</dt><dd id="measFreq">--</dd>
+              <dt>Period</dt><dd id="measPeriod">--</dd>
+              <dt>Peak (FFT)</dt><dd id="measPeakFreq">--</dd>
+            </dl>
+          </section>
+        </div>
       </div>
 
       <aside class="panel">
@@ -101,7 +208,7 @@
             <select id="themeSelect"></select>
           </div>
           <div class="row">
-            <label for="chBToggle">Channel B</label>
+            <label for="chBToggle">Channel B / Trace 2</label>
             <input type="checkbox" id="chBToggle" checked />
           </div>
         </section>
@@ -148,42 +255,8 @@
           </h2>
           <div class="row">
             <label for="vScale">Gain (input amp)</label>
-            <input type="range" id="vScale" min="0.2" max="10" step="0.1" value="1" />
+            <input type="range" id="vScale" min="0.2" max="12" step="0.1" value="2.5" />
           </div>
-        </section>
-
-        <section class="card panel-group readout">
-          <h2>
-            <span class="chip pink" aria-hidden="true">
-              <svg viewBox="0 0 16 16"><path d="M8 1v3.5M8 11.5V15M1 8h3.5M11.5 8H15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
-            </span>
-            Cursors
-          </h2>
-          <div class="row">
-            <label for="cursorsToggle">Show cursors</label>
-            <input type="checkbox" id="cursorsToggle" />
-          </div>
-          <dl>
-            <dt>&Delta;T</dt><dd id="cursorDeltaT">--</dd>
-            <dt>Freq (1/&Delta;T)</dt><dd id="cursorFreq">--</dd>
-            <dt>&Delta;V</dt><dd id="cursorDeltaV">--</dd>
-          </dl>
-        </section>
-
-        <section class="card panel-group readout">
-          <h2>
-            <span class="chip blue" aria-hidden="true">
-              <svg viewBox="0 0 16 16"><rect x="2" y="8" width="2.4" height="6" fill="currentColor"/><rect x="6.8" y="4" width="2.4" height="10" fill="currentColor"/><rect x="11.6" y="6.5" width="2.4" height="7.5" fill="currentColor"/></svg>
-            </span>
-            Measurements — Ch A
-          </h2>
-          <dl>
-            <dt>Vpp</dt><dd id="measVpp">--</dd>
-            <dt>RMS</dt><dd id="measRms">--</dd>
-            <dt>Frequency</dt><dd id="measFreq">--</dd>
-            <dt>Period</dt><dd id="measPeriod">--</dd>
-            <dt>Peak (FFT)</dt><dd id="measPeakFreq">--</dd>
-          </dl>
         </section>
       </aside>
     </main>

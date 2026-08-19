@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thermalsock Labs — Spectral Mutation Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Permission gate -->
+  <div id="gate" class="gate">
+    <div class="gate-panel">
+      <h1>Spectral Mutation Lab</h1>
+      <p class="gate-sub">Thermalsock Labs</p>
+      <p class="gate-copy">
+        A real-time FFT-based spectral processor that runs entirely in your
+        browser. Splits your input into 2048 frequency bins, mutates them —
+        freeze, morph, shift, reverse, smear, scatter — and recombines them
+        into a new sound. Plug in your studio's audio interface, then start
+        the engine below. Nothing is recorded or sent anywhere; all
+        processing happens locally in an AudioWorklet.
+      </p>
+
+      <label class="field">
+        <span>Audio input</span>
+        <select id="deviceSelect">
+          <option value="">Default input</option>
+        </select>
+      </label>
+
+      <button id="startBtn" class="btn-primary">Start engine</button>
+      <p id="gateError" class="gate-error" hidden></p>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <a href="../index.html" class="brand-lockup">
+        <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="6" cy="6.5" r="3.6" fill="none" stroke="#6b7280" stroke-width="1.4"/>
+          <circle cx="16" cy="6.5" r="3.6" fill="#8B4A2B"/>
+          <circle cx="26" cy="6.5" r="3.6" fill="none" stroke="#6b7280" stroke-width="1.4"/>
+          <line x1="30" y1="6.5" x2="39" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname" style="color:#8B4A2B">Spectral Mutation Lab</span>
+          <span class="brand-sub">Thermalsock Labs</span>
+        </span>
+      </a>
+
+      <nav class="page-nav" aria-label="Thermalsock Labs apps">
+        <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
+        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
+        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
+        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
+        <a class="page-nav-link active" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
+      </nav>
+
+      <div class="topbar-right">
+        <span id="freezeAToggle" class="pill toggle">
+          <span class="status-dot"></span>
+          <span>Freeze A</span>
+        </span>
+        <span id="freezeBToggle" class="pill toggle">
+          <span class="status-dot"></span>
+          <span>Freeze B</span>
+        </span>
+        <span class="pill live">
+          <span id="statusDot" class="status-dot live"></span>
+          <span id="statusText">Running</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="visual-column">
+
+        <div class="visual-area">
+          <div class="canvas-wrap" id="spectrogramWrap">
+            <span class="canvas-label">Spectrogram · 2048 bins · freeze / morph / shift / reverse / smear / scatter</span>
+            <canvas id="spectrogramCanvas"></canvas>
+          </div>
+        </div>
+
+        <section class="card panel-group controls-card">
+          <h2>
+            <span class="chip amber" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 2 10 2-5h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Spectral Engine
+          </h2>
+
+          <div class="rack-panel">
+            <div class="rack-section">
+              <div class="rack-section-header">Freeze</div>
+              <div class="knob-row">
+                <div id="knobFreezeMix"></div>
+                <div id="knobMorphAB"></div>
+              </div>
+              <div class="rack-divider-label">Mix · A/B morph</div>
+              <div class="rack-toggle-row" style="margin-top:8px;">
+                <span class="rack-pill toggle-chip" data-toggle="freezeA">Capture A</span>
+                <span class="rack-pill toggle-chip" data-toggle="freezeB">Capture B</span>
+              </div>
+              <button id="clearFreezeBtn" class="rack-pill" style="margin-top:6px;">Clear freeze</button>
+            </div>
+
+            <div class="rack-section">
+              <div class="rack-section-header">Shift</div>
+              <div class="knob-row">
+                <div id="knobShiftSemi"></div>
+              </div>
+              <div class="rack-divider-label">Bin-resample pitch</div>
+            </div>
+
+            <div class="rack-section">
+              <div class="rack-section-header">Reverse</div>
+              <div class="knob-row">
+                <div id="knobReverseAmt"></div>
+              </div>
+              <div class="rack-divider-label">Spectral mirror</div>
+            </div>
+
+            <div class="rack-section">
+              <div class="rack-section-header">Smear</div>
+              <div class="knob-row">
+                <div id="knobSmearAmt"></div>
+              </div>
+              <div class="rack-divider-label">Temporal + freq blur</div>
+            </div>
+
+            <div class="rack-section">
+              <div class="rack-section-header">Scatter</div>
+              <div class="knob-row">
+                <div id="knobScatterAmt"></div>
+              </div>
+              <div class="rack-divider-label">Bin shuffle chaos</div>
+            </div>
+          </div>
+
+          <div class="rack-toggle-row">
+            <span class="rack-pill toggle-chip on" data-toggle="limiter">Limiter</span>
+            <span class="rack-pill toggle-chip on" data-toggle="monoInput" title="Sums L+R on the way in — fixes a source that's only present on one input channel">Mono input</span>
+          </div>
+        </section>
+
+        <section class="card panel-group performance-card">
+          <h2>
+            <span class="chip violet" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M2 13 6 5l3 6 2-4 3 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            Performance Controls
+          </h2>
+
+          <div class="rack-panel">
+            <div class="rack-section" style="min-width:170px;">
+              <div class="rack-section-header neutral">XY Pad</div>
+              <div class="xy-pad-wrap">
+                <div class="xy-pad" id="xyPad"><div class="xy-pad-dot" id="xyPadDot"></div></div>
+                <div class="xy-axis-selects">
+                  <select id="xyAxisX" class="rack-select" style="margin-bottom:0;"></select>
+                  <select id="xyAxisY" class="rack-select" style="margin-bottom:0;"></select>
+                </div>
+              </div>
+            </div>
+
+            <div class="rack-section">
+              <div class="rack-section-header">Mix</div>
+              <div class="knob-row">
+                <div id="knobDryWet"></div>
+                <div id="knobOutputGain"></div>
+                <div id="knobInputGain"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="footer-strip">
+          <span>CPU <b id="footerCpu">--</b></span>
+          <span>Worklet <b id="footerWorklet">--</b></span>
+          <span>FFT <b>2048 / hop 512</b></span>
+          <span>Sample rate <b id="footerSampleRate">--</b></span>
+          <span style="margin-left:auto;">Spectral Mutation Lab <b>v1.0.0</b></span>
+        </div>
+      </div>
+
+      <aside class="panel">
+
+        <section class="card panel-group">
+          <h2>
+            <span class="chip pink" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><rect x="2" y="5" width="12" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 5V3.5M11 5V3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </span>
+            MIDI Panel
+          </h2>
+          <ul class="midi-device-list" id="midiDeviceList">
+            <li>No devices connected</li>
+          </ul>
+          <div class="row">
+            <label for="noteTriggersFreeze">Note-on captures Freeze A</label>
+            <input type="checkbox" id="noteTriggersFreeze" checked />
+          </div>
+          <div class="row">
+            <label for="modWheelTargetSelect">Mod wheel →</label>
+            <select id="modWheelTargetSelect"></select>
+          </div>
+          <div class="row">
+            <label for="aftertouchTargetSelect">Aftertouch →</label>
+            <select id="aftertouchTargetSelect"></select>
+          </div>
+        </section>
+
+        <section class="card panel-group">
+          <h2>
+            <span class="chip blue" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M8 1.5 14 5v6l-6 3.5L2 11V5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            </span>
+            Presets
+          </h2>
+          <div class="row">
+            <label for="presetCategory">Category</label>
+            <select id="presetCategory"></select>
+          </div>
+          <div class="row">
+            <label for="presetSelect">Load</label>
+            <select id="presetSelect"></select>
+          </div>
+          <div class="preset-row">
+            <input type="text" id="presetNameInput" placeholder="Preset name" />
+            <button id="savePresetBtn" class="btn-small">Save</button>
+          </div>
+          <div class="preset-row">
+            <button id="exportPresetBtn" class="btn-small" style="flex:1;">Export JSON</button>
+            <button id="exportBankBtn" class="btn-small" style="flex:1;">Export bank</button>
+          </div>
+          <div class="preset-row">
+            <label class="btn-small" style="flex:1; text-align:center; cursor:pointer;">
+              Import JSON
+              <input type="file" id="importPresetInput" accept="application/json" hidden />
+            </label>
+            <button id="deletePresetBtn" class="btn-small danger" style="flex:1;">Delete</button>
+          </div>
+          <div class="snapshot-bank" id="snapshotBank"></div>
+        </section>
+
+      </aside>
+    </main>
+  </div>
+
+  <div id="supportWidget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
+    </a>
+  </div>
+  <div id="legalBar">
+    <span>© 2026 Thermalsock Labs</span>
+    <a href="../legal/privacy.html">Privacy</a>
+    <a href="../legal/disclaimer.html">Disclaimer</a>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
