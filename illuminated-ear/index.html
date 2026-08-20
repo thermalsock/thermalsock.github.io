@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thermalsock Labs — The Illuminated Ear</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Permission gate -->
+  <div id="gate" class="gate">
+    <div class="gate-panel">
+      <h1>The Illuminated Ear</h1>
+      <p class="gate-sub">Thermalsock Labs</p>
+      <p class="gate-copy">
+        An ear-training game in the same invented manuscript hand as
+        Ambient Bloom. The page plays you a short line of glyphs — heard,
+        not read — and you play it back on a MIDI keyboard, your
+        instrument, or your voice. Match it, and the page illuminates;
+        miss a note, and a scribe's correction mark shows you where.
+        Nothing is recorded or sent anywhere; all listening happens
+        locally in your browser.
+      </p>
+      <p class="gate-copy" style="margin-top:-14px; font-size:12.5px;">
+        Headphones recommended — like the rest of the site, echo
+        cancellation is left off so it doesn't distort a real instrument's
+        signal, which also means your speakers can bleed back into an open
+        mic during playback.
+      </p>
+
+      <label class="field">
+        <span>Audio input</span>
+        <select id="deviceSelect">
+          <option value="">Default input</option>
+        </select>
+      </label>
+      <p class="gate-copy" id="midiGateStatus" style="margin-top:-8px; font-size:12px;">Checking for a MIDI keyboard…</p>
+
+      <button id="startBtn" class="btn-primary">Start</button>
+      <p id="gateError" class="gate-error" hidden></p>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <a href="../index.html" class="brand-lockup">
+        <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="6" cy="6.5" r="3.6" fill="none" stroke="#6b7280" stroke-width="1.4"/>
+          <circle cx="16" cy="6.5" r="3.6" fill="#8B4A2B"/>
+          <circle cx="26" cy="6.5" r="3.6" fill="none" stroke="#6b7280" stroke-width="1.4"/>
+          <line x1="30" y1="6.5" x2="39" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname" style="color:#8B4A2B">The Illuminated Ear</span>
+          <span class="brand-sub">Thermalsock Labs</span>
+        </span>
+      </a>
+
+      <nav class="page-nav" aria-label="Thermalsock Labs apps">
+        <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
+        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
+        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
+        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
+        <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
+        <a class="page-nav-link" href="../loom/index.html">Loom</a>
+        <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
+        <a class="page-nav-link active" href="../illuminated-ear/index.html">Illuminated Ear</a>
+      </nav>
+
+      <div class="topbar-right">
+        <span class="pill" id="levelPill">Lv.1 Basic Hearing</span>
+        <span class="pill" id="scorePill">Score 0</span>
+        <span class="pill" id="streakPill">Streak 0</span>
+        <span class="pill live">
+          <span id="statusDot" class="status-dot live"></span>
+          <span id="statusText">Listening</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="main-column">
+
+        <!-- Tuning screen: shown before a session, or when re-tuning -->
+        <section class="card tune-card" id="tuneCard">
+          <h2>Tune Up</h2>
+          <p class="tune-copy" id="tuneCopy">Play or sing a single sustained note — whatever's comfortable for your instrument or voice. Everything that follows is relative to it, so there's no wrong note to start on.</p>
+          <div class="tune-readout">
+            <div class="tune-note" id="tuneNote">—</div>
+            <div class="tune-hint" id="tuneHint">Waiting for a steady note…</div>
+            <div class="tune-progress"><div class="tune-progress-fill" id="tuneProgressFill"></div></div>
+          </div>
+        </section>
+
+        <!-- Main game view: shown once tuned -->
+        <section class="card page-card" id="gameCard" hidden>
+          <div class="page-wrap">
+            <canvas id="pageCanvas"></canvas>
+            <div class="page-label" id="phaseLabel">Listen…</div>
+          </div>
+
+          <div class="feedback-banner" id="feedbackBanner" hidden></div>
+
+          <div class="game-controls">
+            <button class="io-btn" id="replayBtn">Replay sequence</button>
+            <button class="io-btn" id="retuneBtn">Retune</button>
+            <span class="tonic-readout">Tonic: <strong id="tonicReadout">—</strong></span>
+            <span class="pill" id="midiStatusPill" style="margin-left:auto;">MIDI: —</span>
+          </div>
+        </section>
+
+      </div>
+
+      <aside class="panel">
+        <section class="card panel-group">
+          <h3>Scale</h3>
+          <select id="scaleSelect"></select>
+          <p class="mode-desc" id="scaleDesc"></p>
+        </section>
+
+        <section class="card panel-group">
+          <h3>This session</h3>
+          <dl class="stats-list">
+            <dt>Rounds played</dt><dd id="statRounds">0</dd>
+            <dt>Current length</dt><dd id="statLength">1 note</dd>
+            <dt>Best streak</dt><dd id="statBestStreak">0</dd>
+            <dt>All-time best</dt><dd id="statAllTimeBest">0</dd>
+          </dl>
+        </section>
+
+        <section class="card panel-group">
+          <h3>Perceptual Upgrades</h3>
+          <div class="xp-row">
+            <span id="xpLabel">120 XP to Level 2</span>
+          </div>
+          <div class="xp-bar"><div class="xp-bar-fill" id="xpBarFill"></div></div>
+          <div class="vision-toggle-row" id="visionToggleRow" hidden>
+            <label><input type="checkbox" id="pitchVisionCb" checked /> Pitch Vision</label>
+            <label id="intervalVisionLabel" hidden><input type="checkbox" id="intervalVisionCb" checked /> Interval Vision</label>
+          </div>
+          <p class="mode-desc">Correct notes earn XP toward new hint types shown just before each note plays — a wrong note still keeps whatever XP you'd already earned that round. Levels 4-6 (triad, melody, and rhythm vision) aren't built yet.</p>
+        </section>
+
+        <section class="card panel-group">
+          <h3>How it's scored</h3>
+          <p class="mode-desc">Each round plays a short sequence of notes, then goes quiet — play it back on your instrument, voice, or MIDI keyboard. A correct sequence lights up the page and the next round is one note longer. A wrong note ends the round early and shows you which one broke the chain; the next round backs off by one note rather than resetting to the start.</p>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="supportWidget">
+    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+      <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
+    </a>
+  </div>
+  <div id="legalBar">
+    <span>© 2026 Thermalsock Labs</span>
+    <a href="../legal/privacy.html">Privacy</a>
+    <a href="../legal/disclaimer.html">Disclaimer</a>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

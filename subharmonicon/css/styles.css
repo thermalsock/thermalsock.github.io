@@ -227,6 +227,7 @@ select {
 .page-nav {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
   background: rgba(43, 38, 32, 0.04);
   border: 1px solid var(--hairline);
   border-radius: 999px;

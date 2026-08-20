@@ -121,15 +121,30 @@
   }
   .trace-caption .shape-name{ color:var(--rust); }
 
-  /* ---------- Instruments (patchbay module grid) ---------- */
-  .section{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:20px 44px 100px 44px; }
+  /* ---------- Instruments (categorised grid) ---------- */
+  .section{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:20px 44px 60px 44px; }
   .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px; gap:20px; flex-wrap:wrap; }
   .section-head h2{
     font-family:var(--serif-display); font-weight:600; font-size:26px; margin:0;
   }
   .section-head .count{ font-family:var(--mono); font-size:12px; color:var(--ink-faint); }
 
-  .carousel{ position:relative; }
+  .cat-section{ margin-bottom:38px; }
+  .cat-head{
+    display:flex; align-items:center; gap:14px; margin-bottom:16px;
+  }
+  .cat-head h3{
+    font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--ink-faint); margin:0; white-space:nowrap;
+  }
+  .cat-head .rule{ flex:1; height:1px; background:rgba(43,38,32,0.16); }
+
+  .module-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+    gap:18px;
+  }
+
   .featured-section{ margin-top:44px; }
   .featured-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:16px; }
   .featured-head h2{ font-family:var(--serif-display); font-weight:600; font-size:20px; margin:0; }
@@ -158,46 +173,13 @@
   .featured-card p{ font-family:var(--serif-body); font-size:13.5px; color:var(--ink-soft); margin:0; max-width:560px; line-height:1.6; }
   .featured-cta{ flex-shrink:0; }
 
-  .rack{
-    display:flex; gap:18px; overflow-x:auto; padding:6px 6px 22px 6px; scroll-snap-type:x mandatory;
-    scrollbar-width:none;
-    mask-image:linear-gradient(to right, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-    -webkit-mask-image:linear-gradient(to right, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-  }
-  .rack::-webkit-scrollbar{ display:none; }
-
-  .carousel-btn{
-    position:absolute; top:78px; z-index:4;
-    width:40px; height:40px; border-radius:50%;
-    background:var(--paper); border:1.4px solid var(--ink);
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-    transition:background 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease), opacity 0.25s ease;
-  }
-  .carousel-btn:hover{ background:var(--rust); border-color:var(--rust); }
-  .carousel-btn:hover svg{ stroke:var(--paper); }
-  .carousel-btn:active{ transform:scale(0.92); }
-  .carousel-btn svg{ stroke:var(--ink); transition:stroke 0.25s var(--ease); }
-  .carousel-btn.prev{ left:-20px; }
-  .carousel-btn.next{ right:-20px; }
-  .carousel-btn[disabled]{ opacity:0.25; cursor:default; }
-  .carousel-btn[disabled]:hover{ background:var(--paper); border-color:var(--ink); }
-  .carousel-btn[disabled]:hover svg{ stroke:var(--ink); }
-
-  .carousel-dots{ display:flex; gap:7px; justify-content:center; margin-top:2px; }
-  .carousel-dot{
-    width:6px; height:6px; border-radius:999px; background:rgba(43,38,32,0.25); border:none; padding:0; cursor:pointer;
-    transition:width 0.3s var(--ease), background 0.3s var(--ease);
-  }
-  .carousel-dot.active{ width:20px; background:var(--rust); }
-
-  @media (max-width:760px){ .carousel-btn{ display:none; } }
-
   .module{
-    scroll-snap-align:start; flex:0 0 268px;
     background:var(--paper-deep); border:1px solid rgba(43,38,32,0.18); border-radius:var(--radius);
     padding:20px 20px 18px 20px; position:relative;
     display:block; color:inherit; text-decoration:none; cursor:pointer;
     box-shadow:0 1px 2px rgba(43,38,32,0.06), 0 1px 1px rgba(43,38,32,0.04);
+    transition:transform 0.4s var(--ease), border-color 0.3s var(--ease), box-shadow 0.4s var(--ease);
+  }
     transition:transform 0.4s var(--ease), border-color 0.3s var(--ease), box-shadow 0.4s var(--ease);
   }
   .module:nth-child(odd):hover{ transform:translateY(-6px) rotate(-0.4deg); }
@@ -293,56 +275,17 @@
 <div class="section" id="instruments">
   <div class="section-head reveal">
     <h2>Currently in the studio</h2>
-    <span class="count">8 instruments &middot; 1 game &middot; 1 still in dev</span>
+    <span class="count">8 instruments &middot; 1 game &middot; 1 utility</span>
   </div>
-  <div class="carousel">
-    <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3l-5 5 5 5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <button class="carousel-btn next" id="carouselNext" aria-label="Next">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <div class="rack" id="rack">
+
+  <div class="cat-section">
+    <div class="cat-head"><h3>Live Processing</h3><span class="rule"></span></div>
+    <div class="module-grid">
     <a href="oscilloscope/index.html" class="module reveal">
       <div class="module-jack"></div>
       <h3>Web Oscilloscope</h3>
       <div class="kicker">Real-time signal</div>
       <p>A dual-trace oscilloscope in your browser.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="subharmonicon/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Subharmonicon</h3>
-      <div class="kicker">Ratio tuning aid</div>
-      <p>Play a note and get the sub-oscillator settings for the chord you want.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="modulus-studio/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Modulus Studio</h3>
-      <div class="kicker">LFO &amp; envelope modelling</div>
-      <p>Shape LFOs and envelopes exactly like the hardware.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="loom/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Loom</h3>
-      <div class="kicker">Modal chord &amp; drone engine</div>
-      <p>A harmonic sketchpad for ambient and drone work.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="transient-lab/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Transient Lab</h3>
-      <div class="kicker">Ear &amp; hand training</div>
-      <p>Scales, chords, and genre lessons judged live against your MIDI keyboard.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="signal-path/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Signal Path</h3>
-      <div class="kicker">Hardware rig mapper</div>
-      <p>Every cable in the studio, mapped out.</p>
       <span class="tag">Web</span>
     </a>
     <a href="granulator/index.html" class="module reveal">
@@ -361,7 +304,73 @@
     </a>
     </div>
   </div>
-  <div class="carousel-dots" id="carouselDots"></div>
+
+  <div class="cat-section">
+    <div class="cat-head"><h3>Composition &amp; Theory</h3><span class="rule"></span></div>
+    <div class="module-grid">
+    <a href="loom/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Loom</h3>
+      <div class="kicker">Modal chord &amp; drone engine</div>
+      <p>A harmonic sketchpad for ambient and drone work.</p>
+      <span class="tag">Web</span>
+    </a>
+    <a href="subharmonicon/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Subharmonicon</h3>
+      <div class="kicker">Ratio tuning aid</div>
+      <p>Play a note and get the sub-oscillator settings for the chord you want.</p>
+      <span class="tag">Web</span>
+    </a>
+    <a href="modulus-studio/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Modulus Studio</h3>
+      <div class="kicker">LFO &amp; envelope modelling</div>
+      <p>Shape LFOs and envelopes exactly like the hardware.</p>
+      <span class="tag">Web</span>
+    </a>
+    </div>
+  </div>
+
+  <div class="cat-section">
+    <div class="cat-head"><h3>Training &amp; Games</h3><span class="rule"></span></div>
+    <div class="module-grid">
+    <a href="illuminated-ear/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>The Illuminated Ear</h3>
+      <div class="kicker">Ear-training game</div>
+      <p>The manuscript plays you a short line of glyphs, heard not read — play it back to illuminate the page. Miss a note and a scribe's correction mark shows you where.</p>
+      <span class="tag">Web</span>
+    </a>
+    <a href="transient-lab/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Transient Lab</h3>
+      <div class="kicker">Ear &amp; hand training</div>
+      <p>Scales, chords, and genre lessons judged live against your MIDI keyboard.</p>
+      <span class="tag">Web</span>
+    </a>
+    </div>
+  </div>
+
+  <div class="cat-section">
+    <div class="cat-head"><h3>Studio</h3><span class="rule"></span></div>
+    <div class="module-grid">
+    <a href="ambient-bloom/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Ambient Bloom</h3>
+      <div class="kicker">Audio-reactive illuminated manuscript</div>
+      <p>An invented Voynich-style script that inks itself onto the page as you play — pitch, dynamics, and timbre all shape the hand.</p>
+      <span class="tag">Web</span>
+    </a>
+    <a href="signal-path/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Signal Path</h3>
+      <div class="kicker">Hardware rig mapper</div>
+      <p>Every cable in the studio, mapped out.</p>
+      <span class="tag">Web</span>
+    </a>
+    </div>
+  </div>
 
   <div class="featured-section reveal">
     <div class="featured-head"><h2>Also from the studio</h2><span class="rule"></span></div>
@@ -371,18 +380,6 @@
         <div class="featured-head-row"><h3>Rudiment</h3><span class="featured-badge">Steam</span></div>
         <div class="featured-kicker">Finger drumming trainer</div>
         <p>Real rudiments, singles, doubles, paradiddles, built for pads instead of sticks. A native app, not a browser tool.</p>
-      </div>
-    </a>
-  </div>
-
-  <div class="featured-section reveal">
-    <div class="featured-head"><h2>Still in dev</h2><span class="rule"></span></div>
-    <a href="ambient-bloom/index.html" class="featured-card">
-      <div class="module-jack"></div>
-      <div class="featured-body">
-        <div class="featured-head-row"><h3>Ambient Bloom</h3><span class="featured-badge">In Development</span></div>
-        <div class="featured-kicker">A notebook that writes itself</div>
-        <p>An open book that fills with wedge-stroke marks and ink blots as you play — fast passages fill the page quickly, slow pads fill it gradually.</p>
       </div>
     </a>
   </div>
@@ -525,61 +522,6 @@
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-})();
-
-// ---------------- Instrument carousel ----------------
-(function(){
-  var rack = document.getElementById('rack');
-  var prevBtn = document.getElementById('carouselPrev');
-  var nextBtn = document.getElementById('carouselNext');
-  var dotsWrap = document.getElementById('carouselDots');
-  if (!rack) return;
-
-  var cards = Array.prototype.slice.call(rack.querySelectorAll('.module'));
-  var dots = cards.map(function(_, i){
-    var b = document.createElement('button');
-    b.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-    b.setAttribute('aria-label', 'Go to card ' + (i + 1));
-    b.addEventListener('click', function(){
-      cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-    });
-    dotsWrap.appendChild(b);
-    return b;
-  });
-
-  function cardStep(){
-    if (cards.length < 2) return cards[0] ? cards[0].offsetWidth : 0;
-    return cards[1].offsetLeft - cards[0].offsetLeft;
-  }
-
-  prevBtn.addEventListener('click', function(){
-    rack.scrollBy({ left: -cardStep(), behavior: 'smooth' });
-  });
-  nextBtn.addEventListener('click', function(){
-    rack.scrollBy({ left: cardStep(), behavior: 'smooth' });
-  });
-
-  var ticking = false;
-  function updateState(){
-    var maxScroll = rack.scrollWidth - rack.clientWidth;
-    prevBtn.disabled = rack.scrollLeft <= 4;
-    nextBtn.disabled = rack.scrollLeft >= maxScroll - 4;
-
-    var nearest = 0, best = Infinity;
-    cards.forEach(function(card, i){
-      var dist = Math.abs(card.offsetLeft - rack.scrollLeft);
-      if (dist < best){ best = dist; nearest = i; }
-    });
-    dots.forEach(function(d, i){ d.classList.toggle('active', i === nearest); });
-    ticking = false;
-  }
-  rack.addEventListener('scroll', function(){
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(updateState);
-  }, { passive: true });
-  window.addEventListener('resize', updateState);
-  updateState();
 })();
 </script>
 </body>

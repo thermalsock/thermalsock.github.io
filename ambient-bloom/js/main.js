@@ -2,8 +2,10 @@ import { AudioEngine } from './audioEngine.js';
 import { detectPitch, levelDb } from './pitchDetect.js';
 import { ActivityDetector } from './activity.js';
 import { Book } from './book.js';
-import { drawGlyph, drawBlot, GLYPH_ADVANCE } from './glyphs.js';
+import { drawGlyph, drawBlot, drawSparkle, GLYPH_ADVANCE } from './glyphs.js';
 import { drawWeirdFlower, drawRosette, drawFlowerSilhouette, drawRosetteSilhouette } from './illustrations.js';
+import { bandEnergies, spectralCentroid, zeroCrossingRate } from './spectral.js';
+import { powerCurve, expCurve, mapRange } from './curve.js';
 
 const els = {
   gate: document.getElementById('gate'),
@@ -260,20 +262,50 @@ function freqToPitchClass(freq) {
  * mic capsules at different distances) that it's not a safe assumption --
  * this can only ever match or beat reading a single fixed channel, never
  * do worse, since it always picks whichever channel actually has signal
- * rather than blending in a channel that might partially cancel it. */
+ * rather than blending in a channel that might partially cancel it.
+ * Returns the channel index too, so the matching frequency-domain buffer
+ * can be read for spectral analysis. */
 function pickLouderChannel(timeData) {
-  if (timeData.length === 1) return timeData[0];
+  if (timeData.length === 1) return { buf: timeData[0], index: 0 };
   let sumA = 0, sumB = 0;
   const a = timeData[0], b = timeData[1];
   for (let i = 0; i < a.length; i++) { sumA += a[i] * a[i]; sumB += b[i] * b[i]; }
-  return sumB > sumA ? b : a;
+  return sumB > sumA ? { buf: b, index: 1 } : { buf: a, index: 0 };
+}
+
+/** Which of the three bands has the largest *share* of energy (not an
+ * absolute threshold — those bands cover very different bandwidths and
+ * absolute dB-derived magnitudes vary a lot with source material, so a
+ * fixed floor would need real-world calibration this environment can't
+ * do; a relative-share comparison is meaningful regardless of overall
+ * level). Drives the "low band -> large organic shapes, mid -> medium
+ * marks, high -> tiny sparkles" split. */
+function dominantBand(bands) {
+  const total = bands.low + bands.mid + bands.high + 1e-6;
+  const shareLow = bands.low / total, shareMid = bands.mid / total, shareHigh = bands.high / total;
+  if (shareHigh >= shareLow && shareHigh >= shareMid) return 'high';
+  if (shareLow >= shareMid) return 'low';
+  return 'mid';
 }
 
 /** Places one glyph (with an optional preceding space if there's been a
  * pause), handling the page-turn transition if it fills the spread.
  * Blots are probabilistic, not a hard cutoff — even a modest mark has a
- * baseline chance of one, so the page never goes long without any. */
-function writeGlyph(pitchClass, strength, nowMs) {
+ * baseline chance of one, so the page never goes long without any.
+ *
+ * `features`, when present, is {bands, centroidHz, zcr} from spectral.js —
+ * this is what actually varies mark size/style/jitter by the audio's
+ * spectral character rather than pitch-class + a jitter counter alone:
+ *   low band dominant  -> larger, more "organic" glyph (bigger sizeMult)
+ *   high band dominant -> a tiny sparkle mark instead of a full glyph
+ *   mid band (default) -> baseline-sized glyph
+ *   spectral centroid   -> biases which of the 8 stroke variants for this
+ *                          pitch class gets drawn (brighter material skews
+ *                          toward later/more angular variants)
+ *   zero-crossing rate  -> scales per-stroke jitter (noisier signal =
+ *                          more irregular placement/wobble)
+ */
+function writeGlyph(pitchClass, strength, nowMs, features) {
   if (nowMs - lastMarkAtMs > PAUSE_THRESHOLD_MS && lastMarkAtMs > 0) {
     const skip = book.skipSlot();
     if (skip && skip.turnedPage) triggerPageTurn(nowMs);
@@ -283,9 +315,29 @@ function writeGlyph(pitchClass, strength, nowMs) {
   if (!placed) return;
   const target = pageState[placed.side];
   jitterCounter++;
-  drawGlyph(target.ctx, placed.x, placed.y, pitchClass, strength, INK, jitterCounter * 97);
+
+  const bands = features?.bands || { low: 0.34, mid: 0.34, high: 0.32 };
+  const band = dominantBand(bands);
+  const jitterAmount = 0.55 + (features?.zcr ?? 0) * 1.7;
+  const centroidVariant = features?.centroidHz != null
+    ? Math.floor(mapRange(Math.log2(features.centroidHz / 110), 0, 7, 0, 7.999))
+    : null;
+
+  if (band === 'high') {
+    // High band dominant -> tiny sparkle instead of a full manuscript
+    // glyph: a bright, thin transient (cymbal, breath noise, fret
+    // squeak) reads as too heavy if drawn with the same weight as a note.
+    const size = 2.6 + strength * 4.5;
+    drawSparkle(target.ctx, placed.x + GLYPH_ADVANCE * 0.32, placed.y - 2, size, INK, 0.5 + strength * 0.4, jitterCounter * 61 + 3);
+  } else {
+    const sizeMult = band === 'low'
+      ? 1.25 + strength * 1.35   // low band -> large organic shapes
+      : 0.82 + strength * 0.55;  // mid band (default) -> medium marks
+    drawGlyph(target.ctx, placed.x, placed.y, pitchClass, strength, INK, jitterCounter * 97, sizeMult, 0, jitterAmount, centroidVariant);
+  }
+
   if (Math.random() < BLOT_BASE_CHANCE + strength * BLOT_STRENGTH_BONUS) {
-    drawBlot(target.ctx, placed.x + (Math.random() - 0.5) * 12, placed.y + 6 + Math.random() * 5, Math.max(strength, 0.3), INK, jitterCounter * 53 + 7);
+    drawBlot(target.ctx, placed.x + (Math.random() - 0.5) * 12, placed.y + 6 + Math.random() * 5, Math.max(strength, 0.3), INK, jitterCounter * 53 + 7, jitterAmount);
   }
   totalGlyphs++;
   lastMarkAtMs = nowMs;
@@ -317,10 +369,10 @@ function randInt(min, max) { return min + Math.floor(Math.random() * (max - min 
 
 /** The real entry point for placing a mark -- decides whether this beat is
  * just another glyph in the current paragraph, or a structural break. */
-function writeMark(pitchClass, strength, nowMs) {
+function writeMark(pitchClass, strength, nowMs, features) {
   marksUntilBreak--;
   if (marksUntilBreak > 0) {
-    writeGlyph(pitchClass, strength, nowMs);
+    writeGlyph(pitchClass, strength, nowMs, features);
     return;
   }
   marksUntilBreak = randInt(PARAGRAPH_MIN, PARAGRAPH_MAX);
@@ -541,18 +593,35 @@ function frame(now) {
     const timeData = audioEngine.getTimeDomainData();
     // Pick whichever channel is louder this frame -- robust to a signal on
     // either channel, without the phase-cancellation risk of averaging them.
-    const buf = pickLouderChannel(timeData);
-    const { onset, strength, activityLevel } = activity.update(buf, dtMs);
+    const { buf, index: chIdx } = pickLouderChannel(timeData);
+    const { onset, strength: rawStrength, activityLevel } = activity.update(buf, dtMs);
+
+    // The reactivity curve: every visual consumer downstream reads this
+    // curved value, not the raw linear one — quiet stays quiet longer,
+    // loud disproportionately bigger, instead of a flat ruler from 0 to 1.
+    const strength = powerCurve(rawStrength, 0.65);
+
+    // Spectral features -- computed every frame (cheap: a few hundred bin
+    // reads), not just on onset, since band-driven size/style should also
+    // apply to the ambient trickle marks, not only hard transients.
+    const freqBuf = audioEngine.getFrequencyData()[chIdx];
+    const bands = bandEnergies(freqBuf, audioEngine.sampleRate, audioEngine.minDecibels, audioEngine.maxDecibels);
+    const centroidHz = spectralCentroid(freqBuf, audioEngine.sampleRate, audioEngine.minDecibels, audioEngine.maxDecibels);
+    const zcr = zeroCrossingRate(buf);
+    const features = { bands, centroidHz, zcr };
 
     if (onset) {
       const pitchResult = detectPitch(buf, audioEngine.sampleRate, { minHz: 60, maxHz: 1400 });
       const basePitchClass = pitchResult ? freqToPitchClass(pitchResult.freq) : (trickleCounter = (trickleCounter + 5) % 12);
-      // A strong hit writes more than one mark in a little burst — a
-      // single quiet note is one small stroke, a hard hit is an emphatic
-      // little cluster, like a word landing hard on the page.
-      const burstCount = 1 + Math.floor(strength * 2.2);
+      // Burst events: a separate, steeper curve from the general
+      // reactivity one above -- a merely-loud onset and a genuinely hard
+      // one should look meaningfully different in how many marks land at
+      // once, not just proportionally different. A single quiet note is
+      // one small stroke; a hard hit is an emphatic little cluster, like
+      // a word landing hard on the page.
+      const burstCount = 1 + Math.floor(expCurve(rawStrength, 2.5) * 3.5);
       for (let i = 0; i < burstCount; i++) {
-        writeMark((basePitchClass + i) % 12, strength, now);
+        writeMark((basePitchClass + i) % 12, strength, now, features);
       }
     }
 
@@ -564,7 +633,7 @@ function frame(now) {
     while (trickleAccum >= 1) {
       trickleAccum -= 1;
       trickleCounter = (trickleCounter + 5) % 12;
-      writeMark(trickleCounter, 0.25 + activityLevel * 0.4, now);
+      writeMark(trickleCounter, 0.25 + activityLevel * 0.4, now, features);
     }
 
     const db = levelDb(buf);
