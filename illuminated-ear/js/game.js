@@ -1,240 +1,188 @@
 // game.js
-// The state machine for one game session. Deliberately has no rendering or
-// audio-output code in it — main.js owns the canvas and the synth voice
-// used for playback; this file just tracks what round we're in, what the
-// target sequence is, and whether what the player just played matches it.
-// That split is what makes the note-matching logic testable in isolation
-// (see the accompanying test harness) without needing a real AudioContext.
+// The game-mode state machine — now structured by lesson, testing the exact
+// same skills the training mode teaches rather than a disconnected
+// sequence-recall mechanic. Each game round draws from a specific lesson's
+// tryConfig (the same exercise types: higher_lower, identify_interval,
+// identify_degree), but in a faster, streak-based, XP-earning format.
 //
-// Two independent ways of confirming "the player just played this note"
-// feed the same scoring path (scoreOffset): the mic/pitch-detection route
-// (processRecallFrame, driven by onset+PitchLock, run every audio frame)
-// and the MIDI route (processMidiNoteOn, driven by exact note-on events —
-// no ambiguity to resolve, so it scores immediately). Neither one
-// duplicates the actual matching/round-ending/scoring rules.
+// Two ways to play:
+//  - Pick a specific lesson to drill (only completed lessons available)
+//  - "Mixed" mode that randomly draws from all completed lessons
 
-import { PitchLock } from './pitchDetect.js';
-import { generateSequence, freqToRelativeOffset } from './sequence.js';
+import { STAGES, intervalBySemitones, SCALE_DEGREES } from './curriculum.js';
+import { getCompletedLessonIds } from './progress.js';
 
-export const PHASE = {
-  IDLE: 'idle',           // no round in progress (tuning screen, or between rounds)
-  LISTENING: 'listening',  // sequence is being played back / written
-  RECALLING: 'recalling',  // waiting for the player to play it back
-  ROUND_OVER: 'round_over', // brief result display before the next round starts
-};
+const XP_PER_CORRECT = 10;
+const XP_STREAK_BONUS = 3;  // multiplied by current streak length
+const ROUND_SIZE = 10;       // questions per game round
 
-const MIN_LENGTH = 1; // start every session on a single note — the constructor sets sequenceLength to this, so the very first round is genuinely one note, not three
-const MAX_LENGTH = 8;
-const NOTE_TIMEOUT_MS = 4500; // how long the player has to produce each note before the round auto-fails
+function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return min + Math.floor(Math.random() * (max - min + 1)); }
 
-// XP / leveling — "Incorrect answers end the round but grant partial XP
-// toward upgrades": XP is awarded per note actually matched, whether or
-// not the round as a whole succeeded, so a round that dies on note 3 of 5
-// still counts for something rather than being wasted effort.
-const XP_PER_CORRECT_NOTE = 12;
-const XP_ROUND_COMPLETE_BONUS = 20;
-export const LEVELS = [
-  { level: 1, name: 'Basic Hearing', xpRequired: 0, unlocks: [] },
-  { level: 2, name: 'Partial Vision', xpRequired: 120, unlocks: ['pitch'] },
-  { level: 3, name: 'Full Vision', xpRequired: 360, unlocks: ['pitch', 'interval'] },
-];
+// --- Question generation (reuses the exact same logic as lessonEngine's
+// Try exercises, deliberately — what you're tested on IS what you trained) ---
 
-export class Game {
-  constructor(scale) {
-    this.scale = scale;
-    this.tonicFreq = null;
-    this.phase = PHASE.IDLE;
-    this.sequence = [];
-    this.responses = []; // {offset, correct} per note the player has played this round
-    this.expectedIndex = 0;
-    this.sequenceLength = MIN_LENGTH;
-    this.score = 0;
+function generateQuestion(config) {
+  if (config.type === 'higher_lower') {
+    const base = randInt(0, 7);
+    const gap = randInt(config.gapRange[0], config.gapRange[1]);
+    const ascending = Math.random() < 0.5;
+    if (Math.random() < 0.1) {
+      return { type: 'higher_lower', a: base, b: base, correct: 'same', choices: ['higher', 'lower', 'same'], prompt: 'Is the second tone higher, lower, or the same?' };
+    }
+    const second = ascending ? base + gap : base - gap;
+    return { type: 'higher_lower', a: base, b: second, correct: ascending ? 'higher' : 'lower', choices: ['higher', 'lower', 'same'], prompt: 'Is the second tone higher, lower, or the same?' };
+  }
+
+  if (config.type === 'identify_interval') {
+    const semitones = randomFrom(config.intervals);
+    const iv = intervalBySemitones(semitones);
+    const ascending = Math.random() < 0.5;
+    const a = 0, b = ascending ? semitones : -semitones;
+    const choices = config.intervals.map(s => intervalBySemitones(s).name);
+    const choiceSemitones = config.intervals.slice(); // parallel array: choiceSemitones[i] is the semitone value for choices[i]
+    return { type: 'identify_interval', a, b, semitones, correct: iv.name, choices, choiceSemitones, prompt: 'What interval is this?', explanation: iv.character };
+  }
+
+  if (config.type === 'identify_degree') {
+    const offset = randomFrom(config.degrees);
+    const degrees = SCALE_DEGREES[config.scale || 'major'];
+    const degInfo = degrees.find(d => d.offset === offset) || { degree: '?', name: 'Unknown' };
+    const choices = config.degrees.map(o => {
+      const d = degrees.find(dd => dd.offset === o);
+      return d ? `${d.degree} — ${d.name}` : `? — offset ${o}`;
+    });
+    const correct = `${degInfo.degree} — ${degInfo.name}`;
+    const choiceOffsets = config.degrees.slice(); // parallel array: choiceOffsets[i] is the semitone offset for choices[i]
+    return { type: 'identify_degree', offset, correct, choices, choiceOffsets, prompt: 'Which scale degree? (First note is the tonic.)', explanation: degInfo.character };
+  }
+  return null;
+}
+
+// --- Lesson lookup ---
+
+function getAllLessons() {
+  return STAGES.flatMap(s => s.lessons);
+}
+
+function getLessonById(id) {
+  return getAllLessons().find(l => l.id === id) || null;
+}
+
+export function getAvailableGameLessons() {
+  const completed = getCompletedLessonIds();
+  return getAllLessons().filter(l => completed.includes(l.id));
+}
+
+export function getStageName(lessonId) {
+  for (const s of STAGES) {
+    if (s.lessons.some(l => l.id === lessonId)) return s.name;
+  }
+  return '';
+}
+
+// --- Game session ---
+
+export class GameSession {
+  constructor() {
+    this.lessonId = null;    // null = mixed mode
+    this.lessonName = '';
+    this.questions = [];
+    this.currentIndex = 0;
+    this.correct = 0;
     this.streak = 0;
     this.bestStreak = 0;
-    this.roundsPlayed = 0;
-    this.noteDeadlineMs = null;
-    this.xp = 0;
-
-    this._onsetWaiting = true; // recall-phase sub-state: waiting for a fresh onset vs. tracking a held note
-    this.pitchLock = new PitchLock();
+    this.xpEarned = 0;
+    this.totalQuestions = ROUND_SIZE;
+    this.isActive = false;
+    this.currentQuestion = null;
+    this.answered = false;
   }
 
-  setTonic(freq) {
-    this.tonicFreq = freq;
-  }
+  /** Start a round for a specific lesson, or mixed (null). */
+  start(lessonId) {
+    const available = getAvailableGameLessons();
+    if (available.length === 0) return false;
 
-  setScale(scale) {
-    this.scale = scale;
-  }
+    this.lessonId = lessonId;
+    this.currentIndex = 0;
+    this.correct = 0;
+    this.streak = 0;
+    this.bestStreak = 0;
+    this.xpEarned = 0;
+    this.answered = false;
+    this.isActive = true;
 
-  /** Current level info, derived from XP rather than stored directly —
-   * there's only ever one source of truth (xp), so a level readout can
-   * never drift out of sync with what XP actually says it should be. */
-  get levelInfo() {
-    let current = LEVELS[0];
-    for (const l of LEVELS) {
-      if (this.xp >= l.xpRequired) current = l;
-    }
-    return current;
-  }
-
-  get nextLevelInfo() {
-    const idx = LEVELS.indexOf(this.levelInfo);
-    return LEVELS[idx + 1] || null;
-  }
-
-  /** Which vision hints are currently unlocked, e.g. {pitch: true, interval: false}. */
-  get visionUnlocked() {
-    const unlocked = {};
-    for (const key of this.levelInfo.unlocks) unlocked[key] = true;
-    return unlocked;
-  }
-
-  /** Starts a new round: generates a sequence and moves to LISTENING.
-   * The caller (main.js) is responsible for actually scheduling audio/
-   * glyph playback for the sequence — this just records what the target
-   * is and what phase we're in. */
-  startRound() {
-    this.sequence = generateSequence(this.scale, this.sequenceLength);
-    this.responses = [];
-    this.expectedIndex = 0;
-    this.phase = PHASE.LISTENING;
-    this._onsetWaiting = true;
-    this.pitchLock.reset();
-    return this.sequence;
-  }
-
-  /** Called once listen-phase playback has finished. */
-  beginRecall(nowMs) {
-    this.phase = PHASE.RECALLING;
-    this._onsetWaiting = true;
-    this.pitchLock.reset();
-    this.noteDeadlineMs = nowMs + NOTE_TIMEOUT_MS;
-  }
-
-  /**
-   * Feeds one audio frame's analysis into the recall-phase note matcher.
-   * @param {boolean} onset - did activity.js detect a fresh onset this frame?
-   * @param {{freq:number,confidence:number}|null} pitchResult - detectPitch() output this frame, or null
-   * @param {number} nowMs
-   * @returns {{noteScored: boolean, correct: boolean, offset: number, roundOver: boolean, success: boolean} | null}
-   *   null if nothing happened this frame (still waiting), otherwise a
-   *   result describing what just got scored and whether the round ended.
-   */
-  processRecallFrame(onset, pitchResult, nowMs) {
-    if (this.phase !== PHASE.RECALLING || this.tonicFreq == null) return null;
-
-    if (this.noteDeadlineMs != null && nowMs > this.noteDeadlineMs) {
-      return this._endRound(false, nowMs);
-    }
-
-    if (this._onsetWaiting) {
-      if (onset) {
-        this._onsetWaiting = false;
-        this.pitchLock.reset();
+    if (lessonId) {
+      const lesson = getLessonById(lessonId);
+      this.lessonName = lesson ? lesson.name : '';
+      this.totalQuestions = ROUND_SIZE;
+      // Pre-generate all questions from this lesson's config
+      this.questions = [];
+      for (let i = 0; i < this.totalQuestions; i++) {
+        this.questions.push(generateQuestion(lesson.tryConfig));
       }
-      return null;
+    } else {
+      this.lessonName = 'Mixed — all completed lessons';
+      this.totalQuestions = ROUND_SIZE;
+      this.questions = [];
+      for (let i = 0; i < this.totalQuestions; i++) {
+        const lesson = randomFrom(available);
+        this.questions.push(generateQuestion(lesson.tryConfig));
+      }
     }
 
-    // Tracking a held note, waiting for PitchLock to confirm a stable reading.
-    const locked = this.pitchLock.update(pitchResult ? pitchResult.freq : null);
-    if (locked == null) return null;
-
-    this._onsetWaiting = true;
-    this.pitchLock.reset();
-    const offset = freqToRelativeOffset(locked, this.tonicFreq);
-    return this.scoreOffset(offset, nowMs);
+    this.currentQuestion = this.questions[0];
+    return true;
   }
 
-  /**
-   * MIDI equivalent of processRecallFrame — a note-on event is already an
-   * exact, unambiguous "the player just played this note," so it scores
-   * immediately rather than needing onset-detection + pitch-lock-stability
-   * to first confirm what happened (there's nothing to disambiguate: MIDI
-   * hands us the exact note number directly).
-   * @param {number} midiNoteNumber 0-127
-   */
-  processMidiNoteOn(midiNoteNumber, nowMs) {
-    if (this.phase !== PHASE.RECALLING || this.tonicFreq == null) return null;
-    if (this.noteDeadlineMs != null && nowMs > this.noteDeadlineMs) {
-      return this._endRound(false, nowMs);
-    }
-    const freq = 440 * Math.pow(2, (midiNoteNumber - 69) / 12);
-    const offset = freqToRelativeOffset(freq, this.tonicFreq);
-    return this.scoreOffset(offset, nowMs);
-  }
+  /** Score the player's answer for the current question.
+   * Returns { correct, xpGained, explanation, roundOver, summary } */
+  answer(choice) {
+    if (!this.isActive || this.answered) return null;
+    this.answered = true;
 
-  /** Shared by both input pathways above: scores one confirmed note
-   * offset against the current expected sequence position, advances or
-   * ends the round, and resets the per-note deadline either way. */
-  scoreOffset(offset, nowMs) {
-    const expected = this.sequence[this.expectedIndex];
-    const correct = offset === expected;
-    this.responses.push({ offset, correct });
-    this.noteDeadlineMs = nowMs + NOTE_TIMEOUT_MS;
+    const q = this.currentQuestion;
+    const isCorrect = choice === q.correct;
 
-    if (correct) this.xp += XP_PER_CORRECT_NOTE;
-
-    if (!correct) {
-      const result = this._endRound(false, nowMs);
-      return { noteScored: true, correct: false, offset, expected, ...result };
-    }
-
-    this.expectedIndex++;
-    if (this.expectedIndex >= this.sequence.length) {
-      const result = this._endRound(true, nowMs);
-      return { noteScored: true, correct: true, offset, expected, ...result };
-    }
-
-    return { noteScored: true, correct: true, offset, expected, roundOver: false, success: null };
-  }
-
-  _endRound(success, nowMs) {
-    this.phase = PHASE.ROUND_OVER;
-    this.roundsPlayed++;
-    if (success) {
-      const notesThisRound = this.sequence.length;
-      this.score += notesThisRound * 10 + this.streak * 5;
-      this.xp += XP_ROUND_COMPLETE_BONUS;
+    let xpGained = 0;
+    if (isCorrect) {
+      this.correct++;
       this.streak++;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
-      // Adaptive difficulty: grow every successful round, capped.
-      this.sequenceLength = Math.min(MAX_LENGTH, this.sequenceLength + 1);
+      xpGained = XP_PER_CORRECT + this.streak * XP_STREAK_BONUS;
+      this.xpEarned += xpGained;
     } else {
       this.streak = 0;
-      // Step back by 1 rather than resetting all the way to MIN_LENGTH —
-      // one mistake shouldn't erase several rounds of earned progress.
-      // (XP for whatever notes WERE matched this round was already
-      // awarded per-note in scoreOffset, so a failed round still nets
-      // some XP — that's the "partial XP toward upgrades" behavior.)
-      this.sequenceLength = Math.max(MIN_LENGTH, this.sequenceLength - 1);
     }
-    return { roundOver: true, success };
+
+    const roundOver = this.currentIndex >= this.totalQuestions - 1;
+
+    return {
+      correct: isCorrect,
+      xpGained,
+      correctAnswer: q.correct,
+      explanation: isCorrect ? null : (q.explanation || null),
+      roundOver,
+      summary: roundOver ? {
+        correct: this.correct,
+        total: this.totalQuestions,
+        pct: Math.round(100 * this.correct / this.totalQuestions),
+        bestStreak: this.bestStreak,
+        xpEarned: this.xpEarned,
+      } : null,
+    };
   }
 
-  /** Replays the current round's sequence from the start — resets recall
-   * progress (expectedIndex/responses) too, since the visual page also
-   * gets rewritten from scratch when replaying. Letting those silently
-   * diverge would mean a correctly-replayed first note gets checked
-   * against whatever sequence position the player had already reached
-   * before asking to replay, which would wrongly reject it. */
-  restartListen() {
-    this.responses = [];
-    this.expectedIndex = 0;
-    this.phase = PHASE.LISTENING;
-    this._onsetWaiting = true;
-    this.pitchLock.reset();
-  }
-
-  reset() {
-    this.phase = PHASE.IDLE;
-    this.sequence = [];
-    this.responses = [];
-    this.expectedIndex = 0;
-    this.sequenceLength = MIN_LENGTH;
-    this.score = 0;
-    this.streak = 0;
-    this.roundsPlayed = 0;
-    this.xp = 0;
+  /** Advance to the next question. Returns false if the round is over. */
+  next() {
+    this.currentIndex++;
+    this.answered = false;
+    if (this.currentIndex >= this.totalQuestions) {
+      this.isActive = false;
+      return false;
+    }
+    this.currentQuestion = this.questions[this.currentIndex];
+    return true;
   }
 }

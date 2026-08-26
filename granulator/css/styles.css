@@ -1,3 +1,5 @@
+/* Header, brand lockup and status-pill rules live in
+   ../shared/chrome.css — do not redefine them here. */
 /* Design tokens ---------------------------------------------------------
    Shared Thermalsock Labs house style: kraft-paper chassis, ink text, one
    rust accent thread through every interactive/live element. Matches the
@@ -185,23 +187,7 @@ input[type="text"], input[type="number"] {
 
 .app { height: 100%; display: flex; flex-direction: column; }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  row-gap: 10px;
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--hairline);
-  background: linear-gradient(180deg, rgba(43, 38, 32, 0.03), transparent);
-}
 
-.brand-lockup { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-.brand-mark { flex: none; display: block; }
-.brand-lockup-text { display: flex; flex-direction: column; line-height: 1.2; }
-.brand-appname { font-family: var(--serif-display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
-.brand-sub { font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.02em; }
-.brand-lockup:hover .brand-appname { filter: brightness(1.15); }
 
 .page-nav {
   display: flex;
@@ -224,7 +210,6 @@ input[type="text"], input[type="number"] {
 .page-nav-link:hover { color: var(--text); }
 .page-nav-link.active { color: var(--accent-fg); background: var(--accent); font-weight: 600; }
 
-.topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .pill {
   display: inline-flex;
@@ -822,3 +807,113 @@ button.rack-pill { font-family: var(--sans); }
 }
 #legalBar a { color: var(--text-dim); text-decoration: none; }
 #legalBar a:hover { color: var(--accent); }
+
+/* --- Action pills, record button, collapsible panels ----------------------
+   Load Sample and Randomise were styled as `pill toggle`, identical to
+   Freeze — but they're momentary actions, not latching states. Actions and
+   toggles now read differently. */
+
+.pill.action {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.pill.action:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.pill.action:disabled { opacity: 0.4; cursor: default; }
+
+.pill.record {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.pill.record .rec-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-faint);
+  transition: background .2s;
+}
+.pill.record:hover { color: var(--text); border-color: var(--danger, #b8402a); }
+.pill.record[aria-pressed="true"] {
+  color: var(--danger, #b8402a);
+  border-color: var(--danger, #b8402a);
+  background: rgba(184, 64, 42, 0.10);
+}
+.pill.record[aria-pressed="true"] .rec-dot {
+  background: var(--danger, #b8402a);
+  animation: ts-rec-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ts-rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  .pill.record[aria-pressed="true"] .rec-dot { animation: none; }
+}
+
+/* Collapsible secondary panels. Four large stacked sections with no way to
+   fold the ones you aren't using made the rack a long scroll. */
+.card.collapsible > h2 { position: relative; padding-right: 30px; }
+.panel-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 22px; height: 22px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.panel-toggle::before {
+  content: '';
+  position: absolute;
+  left: 6px; top: 8px;
+  width: 8px; height: 8px;
+  border-right: 1.6px solid var(--text-faint);
+  border-bottom: 1.6px solid var(--text-faint);
+  transform: rotate(45deg);
+  transition: transform .22s, border-color .2s;
+}
+.panel-toggle:hover::before { border-color: var(--accent); }
+.panel-toggle[aria-expanded="false"]::before { transform: rotate(-45deg); }
+.card.collapsible[data-collapsed="true"] > *:not(h2) { display: none; }
+
+/* Footer stats: the two you watch while playing vs the four that never move. */
+.footer-strip .stat-live { color: var(--text); }
+.footer-strip .stat-live b { color: var(--accent); font-weight: 600; }
+.footer-strip .stat-static { color: var(--text-faint); font-size: 0.92em; }
+.footer-strip .stat-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--hairline);
+  margin: 0 4px;
+}
+
+/* --- Layout utilities ----------------------------------------------------
+   These replace the inline style="flex:1" / style="margin-bottom:0" attributes
+   that were doing layout work scattered through the markup, so spacing is
+   defined in one place and can't drift panel to panel. */
+.grow { flex: 1; }
+.flush { margin-bottom: 0; }
+.full { width: 100%; }
+.spaced { margin-top: 6px; }
+.wide-select { min-width: 170px; }
+.row-tight { margin-top: 10px; gap: 6px; }
+.push-right { margin-left: auto; }
+.centered { text-align: center; }
+.clickable { cursor: pointer; }

@@ -1,0 +1,95 @@
+/* Ambient Bloom — the live visual.
+ *
+ * This is a darkened-room app, not a notebook: the canvas is full-bleed and
+ * the chrome sits on top of it. The rest of the site's paper palette applies
+ * to the chrome only.
+ */
+
+.app { display: flex; flex-direction: column; height: 100vh; min-height: 0; }
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #0a0c14;
+}
+
+#sceneCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Live readout. Proves the visual is listening — every value here is
+   something the picture is currently being driven by. */
+.hud {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 3;
+  background: rgba(10, 12, 20, 0.55);
+  border: 1px solid rgba(230, 226, 214, 0.16);
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgba(232, 228, 216, 0.72);
+  pointer-events: none;
+  backdrop-filter: blur(3px);
+}
+.hud[hidden] { display: none; }
+.hud-row { display: flex; justify-content: space-between; gap: 16px; line-height: 1.7; }
+.hud-row span { text-transform: uppercase; font-size: 9px; color: rgba(232, 228, 216, 0.45); }
+.hud-row i { font-style: normal; color: rgba(240, 200, 140, 0.9); }
+
+/* Controls */
+.gain-control {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-faint, #8A8070);
+}
+.gain-control input[type="range"] { width: 84px; }
+.gain-readout { min-width: 30px; color: var(--ink-soft, #5C5346); font-variant-numeric: tabular-nums; }
+
+.pill.action {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--ink-soft, #5C5346);
+  background: transparent;
+  border: 1px solid var(--hairline, rgba(43,38,32,0.14));
+  border-radius: 999px;
+  padding: 6px 12px; cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.pill.action:hover { color: var(--ink, #2B2620); border-color: var(--app-accent, #8B4A2B); }
+.pill.action[aria-pressed="true"] {
+  color: var(--app-accent, #8B4A2B);
+  border-color: var(--app-accent, #8B4A2B);
+  background: rgba(139, 74, 43, 0.10);
+}
+
+/* Fullscreen: the visual is the whole point, so everything else goes. */
+body:fullscreen .topbar,
+body:fullscreen #legalBar,
+body:fullscreen #supportWidget,
+:fullscreen .topbar,
+:fullscreen #legalBar,
+:fullscreen #supportWidget { display: none; }
+
+@media (max-width: 760px) {
+  .hud { left: 10px; bottom: 10px; font-size: 9px; padding: 8px 10px; }
+}
+
+.hud-row.hud-sep {
+  margin-top: 5px; padding-top: 5px;
+  border-top: 1px solid rgba(230, 226, 214, 0.14);
+}
+.time-scrub { display: inline-flex; align-items: center; gap: 6px; }
+.time-scrub .pill.action { padding: 5px 9px; }
+.time-label {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-faint, #8A8070); min-width: 64px; text-align: center;
+}

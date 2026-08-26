@@ -577,3 +577,145 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* --- Audition controls, search, interactive knobs -------------------------
+   Everything about these knobs signalled "grab me" — tick rings, numbered
+   scales, a pointer, a metallic body — and nothing happened when you tried.
+   They're draggable now, so the affordance is honest. */
+
+.knob-svg { cursor: grab; touch-action: none; }
+.knob-svg:active { cursor: grabbing; }
+.knob-wrap.is-dragging .knob-svg { cursor: grabbing; }
+.knob-wrap.is-dragging .knob-label { color: var(--accent); }
+.knob-svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
+
+/* Live numeric readout while dragging, so a drag has a value not just a feel */
+.knob-wrap { position: relative; }
+.knob-readout {
+  position: absolute;
+  top: -6px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--paper, #EDE6D6);
+  padding: 1px 5px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.knob-wrap.is-dragging .knob-readout { opacity: 1; }
+
+/* "Edited" badge — once you turn something, the panel no longer matches the
+   documented preset, and it should say so rather than quietly diverge. */
+.edited-badge {
+  display: none;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 3px 9px;
+  margin-left: 10px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.edited-badge.show { display: inline-block; }
+
+.pill.action {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 11px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+}
+.pill.action:hover { color: var(--text); border-color: var(--accent); }
+
+.pill.audition {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-fg, #FDF8EF);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 7px 15px;
+  cursor: pointer;
+  transition: filter .2s;
+}
+.pill.audition:hover { filter: brightness(1.08); }
+.pill.audition[aria-pressed="true"] .aud-icon { animation: sd-pulse 1s ease-in-out infinite; }
+@keyframes sd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) {
+  .pill.audition[aria-pressed="true"] .aud-icon { animation: none; }
+}
+
+.note-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.note-picker select {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 11px;
+  color: var(--text);
+  background: rgba(43, 38, 32, 0.05);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+/* Sidebar search over 39 presets in 9 categories */
+.sound-sidebar-wrap { display: flex; flex-direction: column; min-height: 0; }
+.sidebar-search { padding: 0 0 10px 0; }
+.sidebar-search input {
+  width: 100%;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 11px;
+  color: var(--text);
+  background: var(--paper-deep, #E4DBC7);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 8px 11px;
+  outline: none;
+}
+.sidebar-search input:focus { border-color: var(--accent); }
+.sidebar-empty {
+  font-size: 12px;
+  color: var(--text-faint);
+  padding: 10px 4px;
+  margin: 0;
+}
+
+/* Seven columns of knobs has no sensible sub-1400px form — below that the
+   row wraps into readable groups instead of squeezing. */
+@media (max-width: 1400px) {
+  .controls-row { grid-template-columns: repeat(4, 1fr) !important; }
+}
+@media (max-width: 1050px) {
+  .controls-row { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 700px) {
+  .controls-row { grid-template-columns: 1fr !important; }
+  .synth-layout { display: block; }
+  .sound-sidebar-wrap { margin-bottom: 20px; }
+}

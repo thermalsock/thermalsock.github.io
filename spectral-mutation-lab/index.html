@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="spectral-mutation-lab">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thermalsock Labs — Spectral Mutation Lab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
+  <meta name="description" content="A real-time FFT processor in your browser. Splits input into 2048 bins, then freezes, morphs, shifts and scatters them.">
+  <link rel="canonical" href="https://thermalsocklabs.com/spectral-mutation-lab/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Spectral Mutation Lab — Thermalsock Labs">
+  <meta property="og:description" content="A real-time FFT processor in your browser. Splits input into 2048 bins, then freezes, morphs, shifts and scatters them.">
+  <meta property="og:url" content="https://thermalsocklabs.com/spectral-mutation-lab/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Spectral Mutation Lab — Thermalsock Labs">
+  <meta name="twitter:description" content="A real-time FFT processor in your browser. Splits input into 2048 bins, then freezes, morphs, shifts and scatters them.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -31,7 +46,7 @@
         </select>
       </label>
 
-      <button id="startBtn" class="btn-primary">Start engine</button>
+      <button id="startBtn" class="btn-primary">Start listening</button>
       <p id="gateError" class="gate-error" hidden></p>
     </div>
   </div>
@@ -47,21 +62,12 @@
           <line x1="30" y1="6.5" x2="39" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#8B4A2B">Spectral Mutation Lab</span>
+          <span class="brand-appname">Spectral Mutation Lab</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
 
-      <nav class="page-nav" aria-label="Thermalsock Labs apps">
-        <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
-        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
-        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
-        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
-        <a class="page-nav-link active" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
-        <a class="page-nav-link" href="../loom/index.html">Loom</a>
-        <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
-        <a class="page-nav-link" href="../illuminated-ear/index.html">Illuminated Ear</a>
-      </nav>
+      <nav class="page-nav" data-app-switcher="spectral-mutation-lab" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
       <div class="topbar-right">
         <span id="freezeAToggle" class="pill toggle">
@@ -72,6 +78,11 @@
           <span class="status-dot"></span>
           <span>Freeze B</span>
         </span>
+        <button id="loadSampleBtn" class="pill action" type="button" title="Load an audio file to mutate instead of live input">Load Sample&hellip;</button>
+        <input type="file" id="sampleFileInput" accept="audio/*" hidden />
+        <button id="recordBtn" class="pill record" type="button" aria-pressed="false" title="Record output to a WAV file (R)">
+          <span class="rec-dot"></span><span id="recordLabel">Record</span>
+        </button>
         <span class="pill live">
           <span id="statusDot" class="status-dot live"></span>
           <span id="statusText">Running</span>
@@ -97,47 +108,47 @@
             Spectral Engine
           </h2>
 
-          <div class="rack-panel">
-            <div class="rack-section">
-              <div class="rack-section-header">Freeze</div>
+          <div class="rack-panel rack-chain">
+            <div class="rack-section" data-stage="freezeStage">
+              <div class="rack-section-header"><span class="stage-num">1</span>Freeze<button class="stage-bypass" type="button" data-stage-toggle="freezeStage" aria-pressed="false" title="Bypass Freeze" aria-label="Bypass Freeze"></button></div>
               <div class="knob-row">
                 <div id="knobFreezeMix"></div>
                 <div id="knobMorphAB"></div>
               </div>
               <div class="rack-divider-label">Mix · A/B morph</div>
-              <div class="rack-toggle-row" style="margin-top:8px;">
+              <div class="rack-toggle-row" class="spaced-lg">
                 <span class="rack-pill toggle-chip" data-toggle="freezeA">Capture A</span>
                 <span class="rack-pill toggle-chip" data-toggle="freezeB">Capture B</span>
               </div>
-              <button id="clearFreezeBtn" class="rack-pill" style="margin-top:6px;">Clear freeze</button>
+              <button id="clearFreezeBtn" class="rack-pill" class="spaced">Clear freeze</button>
             </div>
 
-            <div class="rack-section">
-              <div class="rack-section-header">Shift</div>
+            <div class="rack-section" data-stage="shiftStage">
+              <div class="rack-section-header"><span class="stage-num">2</span>Shift<button class="stage-bypass" type="button" data-stage-toggle="shiftStage" aria-pressed="false" title="Bypass Shift" aria-label="Bypass Shift"></button></div>
               <div class="knob-row">
                 <div id="knobShiftSemi"></div>
               </div>
               <div class="rack-divider-label">Bin-resample pitch</div>
             </div>
 
-            <div class="rack-section">
-              <div class="rack-section-header">Reverse</div>
+            <div class="rack-section" data-stage="reverseStage">
+              <div class="rack-section-header"><span class="stage-num">3</span>Reverse<button class="stage-bypass" type="button" data-stage-toggle="reverseStage" aria-pressed="false" title="Bypass Reverse" aria-label="Bypass Reverse"></button></div>
               <div class="knob-row">
                 <div id="knobReverseAmt"></div>
               </div>
               <div class="rack-divider-label">Spectral mirror</div>
             </div>
 
-            <div class="rack-section">
-              <div class="rack-section-header">Smear</div>
+            <div class="rack-section" data-stage="smearStage">
+              <div class="rack-section-header"><span class="stage-num">4</span>Smear<button class="stage-bypass" type="button" data-stage-toggle="smearStage" aria-pressed="false" title="Bypass Smear" aria-label="Bypass Smear"></button></div>
               <div class="knob-row">
                 <div id="knobSmearAmt"></div>
               </div>
               <div class="rack-divider-label">Temporal + freq blur</div>
             </div>
 
-            <div class="rack-section">
-              <div class="rack-section-header">Scatter</div>
+            <div class="rack-section" data-stage="scatterStage">
+              <div class="rack-section-header"><span class="stage-num">5</span>Scatter<button class="stage-bypass" type="button" data-stage-toggle="scatterStage" aria-pressed="false" title="Bypass Scatter" aria-label="Bypass Scatter"></button></div>
               <div class="knob-row">
                 <div id="knobScatterAmt"></div>
               </div>
@@ -219,6 +230,63 @@
 
         <section class="card panel-group">
           <h2>
+            <span class="chip teal" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M1 8c2-5 4-5 6 0s4 5 6 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </span>
+            Modulation
+          </h2>
+          <p class="panel-note">Freeze, morph and smear are the parameters that want slow movement. Two LFOs, each free-running.</p>
+          <div class="row">
+            <label for="lfo1Target">LFO 1 →</label>
+            <select id="lfo1Target"></select>
+          </div>
+          <div class="row">
+            <label for="lfo1Rate">Rate</label>
+            <input type="range" id="lfo1Rate" min="0.01" max="4" step="0.01" value="0.15" />
+            <span class="row-value" id="lfo1RateReadout">0.15 Hz</span>
+          </div>
+          <div class="row">
+            <label for="lfo1Depth">Depth</label>
+            <input type="range" id="lfo1Depth" min="0" max="1" step="0.01" value="0" />
+            <span class="row-value" id="lfo1DepthReadout">0%</span>
+          </div>
+          <div class="row">
+            <label for="lfo1Shape">Shape</label>
+            <select id="lfo1Shape">
+              <option value="sine">Sine</option>
+              <option value="triangle">Triangle</option>
+              <option value="ramp">Ramp</option>
+              <option value="random">Random (S&amp;H)</option>
+            </select>
+          </div>
+          <div class="row-divider"></div>
+          <div class="row">
+            <label for="lfo2Target">LFO 2 →</label>
+            <select id="lfo2Target"></select>
+          </div>
+          <div class="row">
+            <label for="lfo2Rate">Rate</label>
+            <input type="range" id="lfo2Rate" min="0.01" max="4" step="0.01" value="0.4" />
+            <span class="row-value" id="lfo2RateReadout">0.40 Hz</span>
+          </div>
+          <div class="row">
+            <label for="lfo2Depth">Depth</label>
+            <input type="range" id="lfo2Depth" min="0" max="1" step="0.01" value="0" />
+            <span class="row-value" id="lfo2DepthReadout">0%</span>
+          </div>
+          <div class="row">
+            <label for="lfo2Shape">Shape</label>
+            <select id="lfo2Shape">
+              <option value="sine">Sine</option>
+              <option value="triangle">Triangle</option>
+              <option value="ramp">Ramp</option>
+              <option value="random">Random (S&amp;H)</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="card panel-group">
+          <h2>
             <span class="chip blue" aria-hidden="true">
               <svg viewBox="0 0 16 16"><path d="M8 1.5 14 5v6l-6 3.5L2 11V5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
             </span>
@@ -259,12 +327,18 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
     <a href="../legal/disclaimer.html">Disclaimer</a>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/recorder.js"></script>
+<script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

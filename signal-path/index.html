@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="signal-path">
 <head>
 <meta charset="UTF-8">
 <title>Thermalsock Labs — Signal Path (Rig Map)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/chrome.css">
 <style>
   :root{
     --bg:#EDE6D6;
@@ -91,7 +92,43 @@
     background:var(--panel);border:1px solid var(--panel-edge);color:var(--text-dim);
     padding:8px 12px;border-radius:6px;cursor:pointer;letter-spacing:0.04em;
   }
-  #toolbar button:hover{color:var(--text);border-color:var(--c-audio);}
+  #toolbar button:hover:not(:disabled){color:var(--text);border-color:var(--c-audio);}
+  #toolbar button:disabled{opacity:0.4;cursor:default;}
+
+  /* Add Device is the primary action and Reset is destructive; they used to
+     look identical to Fit View. */
+  #toolbar button.tb-primary{
+    background:var(--c-audio);border-color:var(--c-audio);color:var(--paper,#EDE6D6);font-weight:600;
+  }
+  #toolbar button.tb-primary:hover{filter:brightness(1.08);color:var(--paper,#EDE6D6);}
+  #toolbar button.tb-danger{color:var(--text-faint);}
+  #toolbar button.tb-danger:hover:not(:disabled){color:#b8402a;border-color:#b8402a;}
+  #toolbar .tb-sep{width:1px;align-self:stretch;background:var(--panel-edge);margin:0 2px;}
+
+  /* Device search — with a 135-device catalog and large rigs, finding a
+     device meant panning around looking for it. */
+  .tb-search{position:relative;}
+  .tb-search input{
+    background:var(--panel);border:1px solid var(--panel-edge);color:var(--text);
+    padding:8px 12px;border-radius:6px;font-family:var(--sans);font-size:11px;
+    width:150px;outline:none;
+  }
+  .tb-search input:focus{border-color:var(--c-audio);}
+  #deviceSearchResults{
+    position:absolute;bottom:calc(100% + 6px);left:0;z-index:8;
+    background:var(--panel);border:1px solid var(--panel-edge);border-radius:8px;
+    min-width:230px;max-height:260px;overflow-y:auto;padding:4px;display:none;
+    box-shadow:0 10px 28px rgba(43,38,32,0.22);
+  }
+  #deviceSearchResults.open{display:block;}
+  #deviceSearchResults button{
+    display:block;width:100%;text-align:left;background:none;border:none;
+    padding:7px 10px;border-radius:5px;color:var(--text);font-family:var(--sans);
+    font-size:11.5px;cursor:pointer;letter-spacing:0;
+  }
+  #deviceSearchResults button:hover{background:rgba(139,74,43,0.12);}
+  #deviceSearchResults .res-maker{color:var(--text-faint);font-size:10px;display:block;}
+  #deviceSearchResults .res-empty{padding:8px 10px;color:var(--text-faint);font-size:11px;}
 
   /* ---------- Info panel ---------- */
   #infopanel{
@@ -261,6 +298,20 @@
   .af-btn-primary{background:var(--c-audio);border:1px solid var(--c-audio);color:var(--accent-fg);font-weight:700;}
   .af-btn-primary:hover{filter:brightness(1.1);}
 </style>
+  <meta name="description" content="Map every cable in your studio. Add devices from a 135-strong catalog and draw the connections between them.">
+  <link rel="canonical" href="https://thermalsocklabs.com/signal-path/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Signal Path — Thermalsock Labs">
+  <meta property="og:description" content="Map every cable in your studio. Add devices from a 135-strong catalog and draw the connections between them.">
+  <meta property="og:url" content="https://thermalsocklabs.com/signal-path/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Signal Path — Thermalsock Labs">
+  <meta name="twitter:description" content="Map every cable in your studio. Add devices from a 135-strong catalog and draw the connections between them.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 <div id="app">
@@ -268,18 +319,19 @@
 
   <div id="header">
     <div id="headerTop">
-      <a href="../index.html" id="headerBrand">
+      <a href="../index.html" class="brand-lockup" style="color:var(--app-accent)">
         <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="#9a6a1f"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="currentColor"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#b8402a" stroke-width="1.6"/>
         </svg>
-        <span id="headerBrandText">
-          <h1>SIGNAL<span>·</span>PATH</h1>
-          <span id="headerBrandSub">Thermalsock Labs</span>
+        <span class="brand-lockup-text">
+          <span class="brand-appname">Signal Path</span>
+          <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
+      <nav data-app-switcher="signal-path" data-base="../" aria-label="Thermalsock Labs apps"></nav>
     </div>
     <div class="sub">AMBIENT / DRONE LIVE RIG — NO DAW — DRAG · SCROLL TO ZOOM · HOVER FOR DETAIL</div>
   </div>
@@ -294,11 +346,20 @@
   </div>
 
   <div id="toolbar">
+    <button id="btnAddDevice" class="tb-primary">+ ADD DEVICE</button>
+    <div class="tb-search">
+      <input type="search" id="deviceSearch" placeholder="Find device&hellip;" aria-label="Find a device in the rig" autocomplete="off" />
+      <div id="deviceSearchResults" role="listbox" aria-label="Search results"></div>
+    </div>
+    <span class="tb-sep" aria-hidden="true"></span>
     <button id="btnFit">FIT VIEW</button>
-    <button id="btnAddDevice">+ ADD DEVICE</button>
-    <button id="btnReset">RESET LAYOUT</button>
+    <button id="btnUndo" disabled>UNDO</button>
+    <span class="tb-sep" aria-hidden="true"></span>
     <button id="btnExport">EXPORT JSON</button>
     <button id="btnImport">IMPORT JSON</button>
+    <button id="btnExportPng">EXPORT PNG</button>
+    <span class="tb-sep" aria-hidden="true"></span>
+    <button id="btnReset" class="tb-danger">RESET LAYOUT</button>
   </div>
 
   <div id="zoomlabel"></div>
@@ -317,6 +378,7 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 38px !important;width: 138px !important;display:block;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
@@ -403,6 +465,9 @@
   </div>
 </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
 <script>
 /* =========================================================================
    DATA MODEL
@@ -904,13 +969,16 @@ const CABLES = [
    ENGINE
    ========================================================================= */
 
-const canvas = document.getElementById('c');
+// `let`, not `const`: exportPng temporarily retargets the draw routines at an
+// offscreen canvas so the whole rig can be rendered at print resolution
+// without duplicating every draw function.
+let canvas = document.getElementById('c');
 // Canvas font strings can't resolve CSS custom properties (var(--mono) etc
 // silently fails to parse and canvas falls back to its own default) --
 // this needs a literal, resolved stack. Shared sans family across every
 // Thermalsock Labs app, matching Transient Lab's chrome.
 const FONT_SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');   // see note on `canvas` above
 const DPR = Math.max(1, window.devicePixelRatio || 1);
 
 let view = {x:0, y:0, scale:0.85};
@@ -1396,6 +1464,7 @@ function delIconAt(sx,sy){
 function deleteNode(node){
   const idx = NODES.indexOf(node);
   if(idx===-1) return;
+  pushUndo('delete device');
   NODES.splice(idx,1);
   for(let i=CABLES.length-1;i>=0;i--){
     if(CABLES[i][0]===node.id || CABLES[i][2]===node.id) CABLES.splice(i,1);
@@ -1423,7 +1492,7 @@ function openDetails(node){
   modalTag.textContent = (node.maker? node.maker+' — ' : '') + node.cat.toUpperCase();
   modalTitle.textContent = node.name;
   modalRole.textContent = node.role;
-  modalBody.innerHTML = node.details ? node.details : '<p id="modalEmpty">Deep-dive settings for this device haven\'t been documented yet — ask for it and it\'ll show up here.</p>';
+  modalBody.innerHTML = node.details ? node.details : '<p id="modalEmpty">No detailed notes for this device yet. Use <strong>Edit Device</strong> to add your own settings, patch notes, or reminders here.</p>';
   modalOverlay.classList.add('show');
 }
 function closeDetails(){
@@ -1574,6 +1643,7 @@ window.addEventListener('mouseup', ()=>{
     if(cableDrag.target){
       const v = canConnect(cableDrag.fromNode, cableDrag.fromPort, cableDrag.target.node, cableDrag.target.port);
       if(v.ok){
+        pushUndo('add cable');
         CABLES.push([cableDrag.fromNode.id, cableDrag.fromPort.id, cableDrag.target.node.id, cableDrag.target.port.id, cableDrag.fromPort.type, '']);
         rebuildIndexes();
         refreshLegend();
@@ -1621,21 +1691,103 @@ document.querySelectorAll('.leg-row').forEach(row=>{
 });
 refreshLegend();
 
+/* ---------------------------------------------------------------------
+   AUTOSAVE + UNDO
+
+   This app had no persistence at all. You could build a twenty-device rig,
+   close the tab, and lose it unless you'd remembered to Export JSON — for a
+   tool whose whole purpose is documenting a rig you already own, that's the
+   wrong default. It also had destructive actions (delete cable, delete port
+   with cascade, reset layout) with no way back.
+
+   State lives in NODES/CABLES/view, which already round-trip through the
+   export format, so both features reuse that same serialisation.
+   --------------------------------------------------------------------- */
+
+const rigStore = window.TSStore ? window.TSStore.create('signal-path') : null;
+
+function serialiseRig(){
+  return {
+    kind:'signal-path-rig',
+    version:2,
+    nodes: NODES,
+    cables: CABLES,
+    view: {x:view.x, y:view.y, scale:view.scale},
+  };
+}
+
+function restoreRig(data, {restoreView=true}={}){
+  if(!data || !Array.isArray(data.nodes) || !Array.isArray(data.cables)) return false;
+  NODES.splice(0,NODES.length,...data.nodes);
+  CABLES.splice(0,CABLES.length,...data.cables);
+  rebuildIndexes();
+  refreshLegend();
+  if(restoreView && data.view){
+    view.x = data.view.x; view.y = data.view.y; view.scale = data.view.scale;
+    draw();
+  } else {
+    fitView();
+  }
+  return true;
+}
+
+/* Dragging a device fires continuously, so the write is debounced rather
+   than run on every pointermove. */
+const persistRig = rigStore
+  ? rigStore.debounced('rig', 500)
+  : function(){};
+
+function autosave(){
+  if(!rigStore) return;
+  persistRig(serialiseRig());
+}
+
+/* ---- Undo ---- */
+const undoStack = [];
+const UNDO_LIMIT = 40;
+
+function pushUndo(label){
+  try{
+    undoStack.push({label, snapshot: JSON.parse(JSON.stringify(serialiseRig()))});
+    if(undoStack.length > UNDO_LIMIT) undoStack.shift();
+    refreshUndoBtn();
+  }catch(err){
+    console.warn('[signal-path] could not snapshot for undo:', err);
+  }
+}
+
+function refreshUndoBtn(){
+  const btn = document.getElementById('btnUndo');
+  if(!btn) return;
+  const top = undoStack[undoStack.length-1];
+  btn.disabled = undoStack.length === 0;
+  btn.title = top ? ('Undo ' + top.label + ' (Ctrl+Z)') : 'Nothing to undo';
+}
+
+function performUndo(){
+  const entry = undoStack.pop();
+  if(!entry) return;
+  restoreRig(entry.snapshot, {restoreView:false});
+  refreshUndoBtn();
+  autosave();
+}
+
 /* toolbar */
 document.getElementById('btnFit').addEventListener('click', fitView);
+document.getElementById('btnUndo').addEventListener('click', performUndo);
 document.getElementById('btnReset').addEventListener('click', ()=>{
+  // Reset used to reload the page, which with autosave on would simply
+  // restore the same rig — and it destroyed work with no confirmation.
+  if(!confirm('Reset the layout back to the built-in starter rig?\n\nYour current rig will be replaced. This can be undone with Ctrl+Z.')) return;
+  pushUndo('reset layout');
+  if(rigStore) rigStore.remove('rig');
   location.reload();
 });
 document.getElementById('btnExport').addEventListener('click', ()=>{
   // Full rig export: every node (with its details/ports/position) plus every
   // cable, so a customized rig (devices added/removed) round-trips completely
   // — not just layout positions.
-  const data = {
-    kind:'signal-path-rig',
-    version:2,
-    nodes: NODES,
-    cables: CABLES,
-  };
+  const data = serialiseRig();
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1652,11 +1804,9 @@ document.getElementById('filein').addEventListener('change', (e)=>{
     try{
       const data = JSON.parse(ev.target.result);
       if(data && data.kind==='signal-path-rig' && Array.isArray(data.nodes) && Array.isArray(data.cables)){
-        NODES.splice(0,NODES.length,...data.nodes);
-        CABLES.splice(0,CABLES.length,...data.cables);
-        rebuildIndexes();
-        refreshLegend();
-        fitView();
+        pushUndo('import');
+        restoreRig(data, {restoreView:false});
+        autosave();
       } else if(Array.isArray(data)){
         // Backward-compatible: positions-only export from an earlier version.
         data.forEach(d=>{ if(nodeMap[d.id]){ nodeMap[d.id].x=d.x; nodeMap[d.id].y=d.y; } });
@@ -2206,6 +2356,7 @@ afSave.addEventListener('click', ()=>{
     details: null,
     ports,
   };
+  pushUndo('add device');
   NODES.push(node);
   rebuildIndexes();
   refreshLegend();
@@ -2236,7 +2387,7 @@ window.addEventListener('keydown', (e)=>{
     const tag = document.activeElement && document.activeElement.tagName;
     if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
     const idx = CABLES.indexOf(selectedCable);
-    if(idx!==-1) CABLES.splice(idx,1);
+    if(idx!==-1){ pushUndo('delete cable'); CABLES.splice(idx,1); }
     selectedCable = null;
     rebuildIndexes();
     refreshLegend();
@@ -2247,5 +2398,181 @@ window.addEventListener('keydown', (e)=>{
 resize();
 fitView();
 </script>
+  <script>
+/* ---------------------------------------------------------------------
+   PNG EXPORT
+   JSON round-trips fine, but you couldn't get an image of your patch map to
+   print, pin to the wall, or paste into a forum post — which is the main
+   thing people actually want from a wiring diagram.
+
+   Renders to an offscreen canvas at the rig's own bounds rather than
+   screenshotting the viewport, so the export contains the whole rig at full
+   resolution regardless of pan/zoom, and none of the floating UI chrome.
+   --------------------------------------------------------------------- */
+function exportPng(){
+  if(NODES.length === 0) return;
+
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  NODES.forEach(n=>{
+    minX=Math.min(minX,n.x); minY=Math.min(minY,n.y);
+    maxX=Math.max(maxX,n.x+n.w); maxY=Math.max(maxY,n.y+n.h);
+  });
+  const pad = 60;
+  minX-=pad; minY-=pad; maxX+=pad; maxY+=pad;
+  const wWorld = maxX-minX, hWorld = maxY-minY;
+
+  const dpr = 2; // print-usable resolution
+  const out = document.createElement('canvas');
+  out.width = Math.round(wWorld*dpr);
+  out.height = Math.round(hWorld*dpr);
+  const octx = out.getContext('2d');
+
+  // Paper ground, matching the app rather than exporting transparency.
+  octx.fillStyle = '#EDE6D6';
+  octx.fillRect(0,0,out.width,out.height);
+
+  // Swap the module-level canvas/ctx/view the draw functions close over,
+  // draw once, then put everything back. Saves duplicating every draw
+  // routine just to target a second surface.
+  const savedCtx = ctx, savedCanvas = canvas;
+  const savedView = {x:view.x, y:view.y, scale:view.scale};
+  const savedHover = hovered, savedSelected = selectedCable;
+
+  try{
+    ctx = octx; canvas = out;
+    view.scale = dpr; view.x = -minX; view.y = -minY;
+    hovered = null; selectedCable = null;   // no hover chrome in the export
+
+    CABLES.forEach(c=>drawCable(c,false));
+    NODES.forEach(drawNode);
+  } finally {
+    ctx = savedCtx; canvas = savedCanvas;
+    view.x = savedView.x; view.y = savedView.y; view.scale = savedView.scale;
+    hovered = savedHover; selectedCable = savedSelected;
+    draw();
+  }
+
+  out.toBlob(blob=>{
+    if(!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+    a.href = url; a.download = 'signal-path-rig-' + stamp + '.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }, 'image/png');
+}
+
+document.getElementById('btnExportPng').addEventListener('click', exportPng);
+
+/* ---------------------------------------------------------------------
+   DEVICE SEARCH — jump straight to a device instead of panning to find it
+   --------------------------------------------------------------------- */
+function focusNode(node){
+  view.scale = Math.max(view.scale, 0.9);
+  view.x = -node.x + (window.innerWidth/view.scale - node.w)/2;
+  view.y = -node.y + (window.innerHeight/view.scale - node.h)/2;
+  draw();
+}
+
+(function wireDeviceSearch(){
+  const input = document.getElementById('deviceSearch');
+  const results = document.getElementById('deviceSearchResults');
+  if(!input || !results) return;
+
+  function close(){ results.classList.remove('open'); results.innerHTML=''; }
+
+  function run(){
+    const q = input.value.trim().toLowerCase();
+    if(!q){ close(); return; }
+    const hits = NODES.filter(n=>
+      (n.name||'').toLowerCase().includes(q) ||
+      (n.maker||'').toLowerCase().includes(q) ||
+      (n.cat||'').toLowerCase().includes(q)
+    ).slice(0,10);
+
+    results.innerHTML = '';
+    if(hits.length === 0){
+      results.innerHTML = '<div class="res-empty">Nothing in this rig matches.</div>';
+    } else {
+      hits.forEach(n=>{
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = (n.name||'Device') + '<span class="res-maker">' + (n.maker||'') + '</span>';
+        b.addEventListener('click', ()=>{ focusNode(n); close(); input.value=''; input.blur(); });
+        results.appendChild(b);
+      });
+    }
+    results.classList.add('open');
+  }
+
+  input.addEventListener('input', run);
+  input.addEventListener('focus', run);
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Escape'){ close(); input.blur(); }
+    if(e.key === 'Enter'){
+      const first = results.querySelector('button');
+      if(first) first.click();
+    }
+  });
+  document.addEventListener('click', e=>{
+    if(!results.contains(e.target) && e.target !== input) close();
+  });
+})();
+
+/* ---------------------------------------------------------------------
+   AUTOSAVE WIRING + RESTORE ON LOAD
+   --------------------------------------------------------------------- */
+(function wirePersistence(){
+  if(!rigStore) return;
+
+  const saved = rigStore.get('rig', null);
+  if(saved && restoreRig(saved, {restoreView:true})){
+    console.log('[signal-path] restored saved rig:', saved.nodes.length, 'devices,', saved.cables.length, 'cables');
+  }
+
+  // Anything that mutates the rig or the viewport schedules a debounced save.
+  ['pointerup','wheel','keyup'].forEach(evt=>{
+    window.addEventListener(evt, autosave, {passive:true});
+  });
+  window.addEventListener('beforeunload', ()=>{
+    // Flush immediately — the debounce timer won't survive the unload.
+    if(rigStore) rigStore.set('rig', serialiseRig());
+  });
+})();
+
+/* ---------------------------------------------------------------------
+   SHORTCUTS
+   --------------------------------------------------------------------- */
+if(window.TSShortcuts){
+  window.TSShortcuts.register([
+    {keys:'f', group:'View', label:'Fit the whole rig in view', run:fitView},
+    {keys:'+', group:'View', label:'Zoom in',
+     run:()=>{ view.scale = Math.min(3, view.scale*1.15); draw(); }},
+    {keys:'-', group:'View', label:'Zoom out',
+     run:()=>{ view.scale = Math.max(0.15, view.scale/1.15); draw(); }},
+    {keys:'a', group:'Rig', label:'Add a device',
+     run:()=>document.getElementById('btnAddDevice').click()},
+    {keys:'/', group:'Rig', label:'Search for a device in the rig',
+     run:()=>document.getElementById('deviceSearch').focus()},
+    {keys:'p', group:'Export', label:'Export the rig as a PNG', run:exportPng},
+    {keys:'e', group:'Export', label:'Export the rig as JSON',
+     run:()=>document.getElementById('btnExport').click()},
+    {keys:'?', group:'General', label:'Show this help'},
+  ]);
+}
+
+// Ctrl/Cmd+Z is handled separately — TSShortcuts deliberately ignores
+// modified keypresses so it never competes with browser shortcuts.
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){
+    if(window.TSShortcuts && window.TSShortcuts.isTypingTarget(e.target)) return;
+    e.preventDefault();
+    performUndo();
+  }
+});
+
+</script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

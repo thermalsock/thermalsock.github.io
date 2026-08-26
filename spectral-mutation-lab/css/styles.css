@@ -1,3 +1,5 @@
+/* Header, brand lockup and status-pill rules live in
+   ../shared/chrome.css — do not redefine them here. */
 /* Design tokens ---------------------------------------------------------
    Shared Thermalsock Labs house style: kraft-paper chassis, ink text, one
    rust accent thread through every interactive/live element. Matches the
@@ -185,23 +187,7 @@ input[type="text"], input[type="number"] {
 
 .app { height: 100%; display: flex; flex-direction: column; }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  row-gap: 10px;
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--hairline);
-  background: linear-gradient(180deg, rgba(43, 38, 32, 0.03), transparent);
-}
 
-.brand-lockup { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-.brand-mark { flex: none; display: block; }
-.brand-lockup-text { display: flex; flex-direction: column; line-height: 1.2; }
-.brand-appname { font-family: var(--serif-display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
-.brand-sub { font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.02em; }
-.brand-lockup:hover .brand-appname { filter: brightness(1.15); }
 
 .page-nav {
   display: flex;
@@ -224,7 +210,6 @@ input[type="text"], input[type="number"] {
 .page-nav-link:hover { color: var(--text); }
 .page-nav-link.active { color: var(--accent-fg); background: var(--accent); font-weight: 600; }
 
-.topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .pill {
   display: inline-flex;
@@ -575,3 +560,145 @@ button.rack-pill { font-family: var(--sans); }
 }
 #legalBar a { color: var(--text-dim); text-decoration: none; }
 #legalBar a:hover { color: var(--accent); }
+
+/* --- Signal-chain numbering, per-stage bypass, record, maximised view -----
+   The processor runs Freeze -> Shift -> Reverse -> Smear -> Scatter in a
+   fixed order, but the rack showed five equal knob clusters with no hint of
+   that. Numbering plus connectors teaches the tool. */
+
+.rack-chain { position: relative; }
+.rack-chain .rack-section { position: relative; }
+/* Connector arrow between consecutive stages. */
+.rack-chain .rack-section + .rack-section::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 18px;
+  width: 7px; height: 7px;
+  border-right: 1.5px solid var(--hairline);
+  border-bottom: 1.5px solid var(--hairline);
+  transform: rotate(-45deg);
+}
+
+.rack-section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.stage-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 8.5px;
+  color: var(--text-faint);
+  flex: none;
+}
+
+/* A knob at zero looked identical to an active stage at low depth. Bypass
+   makes "this stage is doing nothing" an explicit, visible state. */
+.stage-bypass {
+  margin-left: auto;
+  width: 26px; height: 14px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex: none;
+  transition: background .2s, border-color .2s;
+}
+.stage-bypass::after {
+  content: '';
+  position: absolute;
+  left: 2px; top: 1.5px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform .2s, background .2s;
+}
+.stage-bypass[aria-pressed="true"] { background: rgba(43, 38, 32, 0.10); }
+.stage-bypass[aria-pressed="true"]::after {
+  transform: translateX(11px);
+  background: var(--text-faint);
+}
+.rack-section[data-bypassed="true"] { opacity: 0.42; }
+.rack-section[data-bypassed="true"] .knob-row { filter: grayscale(1); }
+
+/* Maximised spectrogram — it's the whole point of the app and it was sharing
+   vertical space with a rack of equal visual weight. */
+#spectrogramWrap { position: relative; }
+.view-expand {
+  position: absolute;
+  right: 10px; top: 10px;
+  z-index: 4;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: rgba(237, 230, 214, 0.85);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.view-expand:hover { color: var(--text); border-color: var(--accent); }
+body[data-maximised="true"] .rack-panel,
+body[data-maximised="true"] .panel,
+body[data-maximised="true"] .rack-toggle-row { display: none; }
+body[data-maximised="true"] #spectrogramWrap { height: calc(100vh - 150px); }
+
+.pill.action, .pill.record {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.pill.action:hover { color: var(--text); border-color: var(--accent); }
+.pill.record .rec-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-faint);
+  transition: background .2s;
+}
+.pill.record[aria-pressed="true"] {
+  color: var(--danger, #b8402a);
+  border-color: var(--danger, #b8402a);
+  background: rgba(184, 64, 42, 0.10);
+}
+.pill.record[aria-pressed="true"] .rec-dot {
+  background: var(--danger, #b8402a);
+  animation: ts-rec-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ts-rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  .pill.record[aria-pressed="true"] .rec-dot { animation: none; }
+}
+
+.spaced { margin-top: 6px; }
+.spaced-lg { margin-top: 8px; }
+
+.panel-note {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+.row-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 12px 0;
+}

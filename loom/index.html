@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="loom">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thermalsock Labs - Loom</title>
 <meta name="description" content="Loom - a modal chord and drone generator for ambient, drone, and psybient music. Modal harmony, open voicings, drone integration, and slow non-functional movement, with real audio playback.">
-<link rel="icon" href="data:,">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/chrome.css">
 <style>
+  /* Header and brand rules live in ../shared/chrome.css. */
+
   :root{
     --chassis: #EDE6D6;
     --panel: #E4DBC7;
@@ -38,18 +41,6 @@
   }
   a{color:inherit;}
   input,select,button{font-family:inherit;}
-
-  .topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 20px; border-bottom:1px solid var(--hairline);
-    background:linear-gradient(180deg, rgba(43,38,32,0.03), transparent);
-  }
-  .brand{ font-family:var(--mono); font-size:13px; letter-spacing:0.03em; display:flex; align-items:center; gap:11px; }
-  .brand-lockup{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
-  .brand-lockup-text{ display:flex; flex-direction:column; line-height:1.2; }
-  .brand-appname{ font-family:var(--serif-display); font-weight:600; font-size:15px; }
-  .brand-sub{ font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:0.02em; }
-  .topbar-right{ display:flex; align-items:center; gap:10px; }
   .page-nav{ display:flex; gap:4px; flex-wrap:wrap; background:rgba(43,38,32,0.04); border:1px solid var(--hairline); border-radius:999px; padding:3px; }
   .page-nav-link{ font-family:var(--sans); font-size:11px; letter-spacing:0.04em; text-decoration:none; color:var(--text-dim); padding:6px 14px; border-radius:999px; }
   .page-nav-link:hover{ color:var(--text); }
@@ -121,6 +112,29 @@
     letter-spacing:0.01em;
   }
   .gen-btn:hover{ filter:brightness(1.08); }
+  /* Generate now leads the sidebar rather than sitting between cards five
+     and six, so it needs breathing room beneath it. */
+  .sidebar > .gen-btn{ margin-bottom:18px; }
+
+  /* Descriptions used to appear/change under each select, so the sidebar
+     height jumped as you browsed modes. Reserving two lines stops that. */
+  .mode-desc{ min-height:2.6em; }
+
+  .row-inline{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .row-inline label[for]{ font-size:11px; color:var(--text-faint); letter-spacing:0.04em; }
+  .row-inline select{ flex:1; }
+  .cb-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-dim); }
+
+  /* Step buttons flank Play; they're secondary to it. */
+  #prevChordBtn, #nextChordBtn{
+    min-width:38px; padding-left:10px; padding-right:10px;
+    background:transparent; color:var(--text-dim);
+  }
+  #prevChordBtn:hover:not(:disabled), #nextChordBtn:hover:not(:disabled){ color:var(--accent); }
+  #prevChordBtn:disabled, #nextChordBtn:disabled{ opacity:0.3; cursor:default; }
+
+  /* The suggestion box toggled display, shifting everything below it. */
+  .suggestion-box[hidden]{ display:block !important; visibility:hidden; }
 
   .io-row{ display:flex; gap:10px; }
   .io-btn{
@@ -281,6 +295,18 @@
   ::-webkit-scrollbar{ width:8px; }
   ::-webkit-scrollbar-thumb{ background:var(--hairline-strong); border-radius:4px; }
 </style>
+  <link rel="canonical" href="https://thermalsocklabs.com/loom/">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Loom — Thermalsock Labs">
+  <meta property="og:description" content="A modal chord and drone engine for ambient work. Generate progressions, hear them, and take them to your synth.">
+  <meta property="og:url" content="https://thermalsocklabs.com/loom/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Loom — Thermalsock Labs">
+  <meta name="twitter:description" content="A modal chord and drone engine for ambient work. Generate progressions, hear them, and take them to your synth.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -294,22 +320,13 @@
           <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#2f7a72">Loom</span>
+          <span class="brand-appname">Loom</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
     </div>
 
-    <nav class="page-nav" aria-label="Thermalsock Labs apps">
-      <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
-      <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
-      <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
-      <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
-      <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
-      <a class="page-nav-link active" href="../loom/index.html">Loom</a>
-      <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
-      <a class="page-nav-link" href="../illuminated-ear/index.html">Illuminated Ear</a>
-    </nav>
+    <nav class="page-nav" data-app-switcher="loom" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
     <div class="topbar-right">
       <button class="pill help-btn" id="helpBtn" type="button">? How this works</button>
@@ -319,6 +336,9 @@
 
   <div class="stage">
     <div class="sidebar">
+
+      <button class="gen-btn" id="generateBtn">Generate Progression</button>
+
 
       <div class="card">
         <h3><span class="chip teal" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="5" cy="11" r="2.2" fill="currentColor"/><path d="M7.2 11V3.5L12 5v2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Mode</h3>
@@ -382,12 +402,25 @@
         </div>
       </div>
 
-      <button class="gen-btn" id="generateBtn">Generate Progression</button>
-
       <div class="card">
         <h3><span class="chip blue" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2v7m0 0-3-3m3 3 3-3M3 12.5h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Preset</h3>
         <div class="io-row">
           <button class="io-btn" id="exportBtn">Export JSON</button>
+          <button class="io-btn" id="importBtn">Import JSON</button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden />
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><span class="chip cyan" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="3" y="6" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 6V2.5M6 4l2-1.5L10 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>MIDI Output</h3>
+        <select id="midiOutSelect"><option value="">(none - internal synth only)</option></select>
+        <p class="mode-desc">Send the progression to a hardware synth instead of only hearing it here.</p>
+        <div class="row-inline">
+          <label class="cb-row"><input type="checkbox" id="midiOutMuteLocal"> Mute internal synth</label>
+        </div>
+        <div class="row-inline">
+          <label for="midiOutChannel">Channel</label>
+          <select id="midiOutChannel"></select>
         </div>
       </div>
 
@@ -395,7 +428,9 @@
 
     <div class="main">
       <div class="transport">
+        <button class="transport-btn" id="prevChordBtn" title="Previous chord (left arrow)" aria-label="Previous chord">&larr;</button>
         <button class="transport-btn" id="playBtn">Play</button>
+        <button class="transport-btn" id="nextChordBtn" title="Next chord (right arrow)" aria-label="Next chord">&rarr;</button>
         <div class="transport-tempo">
           <label>Seconds / chord</label>
           <input type="range" id="tempoSlider" min="1.5" max="8" step="0.5" value="3.5">
@@ -411,7 +446,7 @@
         </div>
       </div>
 
-      <div class="suggestion-box" id="suggestionBox" style="display:none;">
+      <div class="suggestion-box" id="suggestionBox" hidden>
         <h3>Texture Suggestion</h3>
         <p id="suggestionText"></p>
       </div>
@@ -423,6 +458,7 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 38px !important;width: 138px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>&copy; 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
@@ -449,6 +485,9 @@
     </div>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
 <script>
 (function(){
 'use strict';
@@ -837,7 +876,9 @@ function generateProgression(){
   };
 
   renderProgression();
-  document.getElementById('suggestionBox').style.display = 'block';
+  // Reveal without changing display, so the reserved space stays reserved
+  // and nothing below it shifts.
+  document.getElementById('suggestionBox').hidden = false;
   document.getElementById('suggestionText').textContent = buildSuggestion(movementId, voicing.id, currentProgression.droneOn);
   document.getElementById('transportStatus').textContent = 'Ready - ' + N + ' chords generated';
   stopPlayback();
@@ -1017,8 +1058,14 @@ function playChordAtStep(stepIndex){
   activeVoices.forEach(v => fadeOutVoice(v, release));
   activeVoices = [];
 
+  // Mirror the chord to the MIDI output, if one is selected.
+  midiOutSendChord(chord.semis.map(semi => 48 + currentProgression.rootIdx + semi));
+
+  const muteLocal = localSynthMuted();
+
   chord.semis.forEach(semi => {
     const midi = 48 + currentProgression.rootIdx + semi;
+    if (muteLocal) return;   // hardware is carrying the sound instead
     const osc = audioCtx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.value = midiToFreq(midi);
@@ -1096,6 +1143,7 @@ function scheduleNextStep(){
 }
 
 function stopPlayback(){
+  midiOutAllOff();
   isPlaying = false;
   if(playTimer){ clearTimeout(playTimer); playTimer = null; }
   if(audioCtx){
@@ -1122,7 +1170,19 @@ document.getElementById('playBtn').addEventListener('click', () => {
 document.getElementById('exportBtn').addEventListener('click', () => {
   if(!currentProgression){ alert('Generate a progression first.'); return; }
   const data = {
-    kind: 'loom-progression', version: 1,
+    kind: 'loom-progression', version: 2,
+    // Raw control values, so an import can restore the exact settings.
+    // v1 exported display names only, which couldn't round-trip.
+    settings: {
+      root: document.getElementById('rootSelect').value,
+      mode: document.getElementById('modeSelect').value,
+      movement: document.getElementById('movementSelect').value,
+      voicing: document.getElementById('voicingSelect').value,
+      doubleRoot: document.getElementById('doubleRootCb').checked,
+      drone: document.getElementById('droneCb').checked,
+      droneOctave: document.getElementById('droneOctSlider').value,
+      tempo: document.getElementById('tempoSlider').value,
+    },
     root: NOTE_NAMES[currentProgression.rootIdx],
     mode: currentProgression.modeName,
     movement: MOVEMENTS.find(m=>m.id===currentProgression.movementId).name,
@@ -1356,7 +1416,8 @@ function initMidi(){
   }
   navigator.requestMIDIAccess({sysex:false}).then(access => {
     refreshMidiInputs(access);
-    access.onstatechange = () => refreshMidiInputs(access);
+    populateMidiOutputs(access);
+    access.onstatechange = () => { refreshMidiInputs(access); populateMidiOutputs(access); };
   }).catch(() => {
     statusEl.textContent = 'MIDI access was denied';
   });
@@ -1461,5 +1522,256 @@ try{
 
 })();
 </script>
+  <script>
+/* =========================================================================
+   MIDI OUTPUT
+
+   Loom generates progressions and drones for people with hardware synths on
+   the desk, and could not send a single note to them — there was no
+   `.outputs` reference anywhere on the site. Notes now go out alongside (or
+   instead of) the internal pad synth.
+   ========================================================================= */
+
+let midiOut = null;
+let midiOutChannel = 0;
+let midiOutNotesOn = [];
+
+function populateMidiOutputs(access){
+  const sel = document.getElementById('midiOutSelect');
+  if(!sel) return;
+  const previous = sel.value;
+  sel.innerHTML = '<option value="">(none - internal synth only)</option>';
+  [...access.outputs.values()].forEach(out => {
+    const o = document.createElement('option');
+    o.value = out.id;
+    o.textContent = out.name || 'MIDI output';
+    sel.appendChild(o);
+  });
+  // Keep the chosen device across a hot-plug of some other device.
+  if(previous && [...access.outputs.values()].some(o => o.id === previous)){
+    sel.value = previous;
+    midiOut = access.outputs.get(previous);
+  }
+}
+
+function populateMidiChannels(){
+  const sel = document.getElementById('midiOutChannel');
+  if(!sel || sel.options.length) return;
+  for(let i = 1; i <= 16; i++){
+    const o = document.createElement('option');
+    o.value = String(i - 1);
+    o.textContent = String(i);
+    sel.appendChild(o);
+  }
+}
+
+function midiOutAllOff(){
+  if(!midiOut) { midiOutNotesOn = []; return; }
+  midiOutNotesOn.forEach(note => {
+    try { midiOut.send([0x80 | midiOutChannel, note, 0]); } catch(e) { /* device unplugged */ }
+  });
+  midiOutNotesOn = [];
+}
+
+function midiOutSendChord(midiNotes){
+  if(!midiOut) return;
+  midiOutAllOff();
+  midiNotes.forEach(note => {
+    if(note < 0 || note > 127) return;   // out of MIDI range
+    try {
+      midiOut.send([0x90 | midiOutChannel, note, 80]);
+      midiOutNotesOn.push(note);
+    } catch(e) { /* device unplugged mid-progression */ }
+  });
+}
+
+function localSynthMuted(){
+  const cb = document.getElementById('midiOutMuteLocal');
+  return !!(cb && cb.checked && midiOut);
+}
+
+/* =========================================================================
+   IMPORT, PERSISTENCE, STEP-THROUGH, SHORTCUTS
+   ========================================================================= */
+
+const loomStore = window.TSStore ? window.TSStore.create('loom') : null;
+
+const SETTING_IDS = ['rootSelect','modeSelect','movementSelect','voicingSelect',
+                     'droneOctSlider','tempoSlider'];
+const CHECK_IDS = ['doubleRootCb','droneCb','midiPlayThroughCb','midiOutMuteLocal'];
+
+function saveLoomSettings(){
+  if(!loomStore) return;
+  const out = {};
+  SETTING_IDS.forEach(id => { const el = document.getElementById(id); if(el) out[id] = el.value; });
+  CHECK_IDS.forEach(id => { const el = document.getElementById(id); if(el) out[id] = el.checked; });
+  const midiSel = document.getElementById('midiOutSelect');
+  const chSel = document.getElementById('midiOutChannel');
+  if(midiSel) out.midiOut = midiSel.value;
+  if(chSel) out.midiOutChannel = chSel.value;
+  loomStore.set('settings', out);
+}
+
+function restoreLoomSettings(){
+  if(!loomStore) return;
+  const cfg = loomStore.get('settings', null);
+  if(!cfg) return;
+  SETTING_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el && cfg[id] != null){ el.value = cfg[id]; el.dispatchEvent(new Event('input')); el.dispatchEvent(new Event('change')); }
+  });
+  CHECK_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el && cfg[id] != null){ el.checked = cfg[id]; el.dispatchEvent(new Event('change')); }
+  });
+  const chSel = document.getElementById('midiOutChannel');
+  if(chSel && cfg.midiOutChannel != null){ chSel.value = cfg.midiOutChannel; midiOutChannel = parseInt(cfg.midiOutChannel, 10) || 0; }
+}
+
+function applyImportedSettings(settings){
+  if(!settings) return;
+  const map = {
+    root:'rootSelect', mode:'modeSelect', movement:'movementSelect',
+    voicing:'voicingSelect', droneOctave:'droneOctSlider', tempo:'tempoSlider',
+  };
+  Object.keys(map).forEach(key => {
+    const el = document.getElementById(map[key]);
+    if(el && settings[key] != null){
+      el.value = settings[key];
+      el.dispatchEvent(new Event('input'));
+      el.dispatchEvent(new Event('change'));
+    }
+  });
+  const dr = document.getElementById('doubleRootCb');
+  if(dr && settings.doubleRoot != null){ dr.checked = settings.doubleRoot; dr.dispatchEvent(new Event('change')); }
+  const dc = document.getElementById('droneCb');
+  if(dc && settings.drone != null){ dc.checked = settings.drone; dc.dispatchEvent(new Event('change')); }
+}
+
+/* Step through the progression chord by chord — play-the-whole-thing or
+   nothing is the wrong granularity for learning voicings. */
+let stepCursor = 0;
+
+function refreshStepButtons(){
+  const prev = document.getElementById('prevChordBtn');
+  const next = document.getElementById('nextChordBtn');
+  const n = currentProgression ? currentProgression.chords.length : 0;
+  if(prev) prev.disabled = n === 0;
+  if(next) next.disabled = n === 0;
+}
+
+function stepChord(delta){
+  if(!currentProgression || !currentProgression.chords.length) return;
+  if(isPlaying) stopPlayback();
+  ensureAudioCtx();
+  const n = currentProgression.chords.length;
+  stepCursor = ((stepCursor + delta) % n + n) % n;
+  playChordAtStep(stepCursor);
+  const status = document.getElementById('transportStatus');
+  if(status) status.textContent = 'Chord ' + (stepCursor + 1) + ' of ' + n;
+}
+
+function wireLoomExtras(){
+  populateMidiChannels();
+
+  const outSel = document.getElementById('midiOutSelect');
+  if(outSel){
+    outSel.addEventListener('change', () => {
+      midiOutAllOff();
+      if(!outSel.value){ midiOut = null; saveLoomSettings(); return; }
+      if(navigator.requestMIDIAccess){
+        navigator.requestMIDIAccess({sysex:false}).then(access => {
+          midiOut = access.outputs.get(outSel.value) || null;
+          saveLoomSettings();
+        }).catch(() => { midiOut = null; });
+      }
+    });
+  }
+
+  const chSel = document.getElementById('midiOutChannel');
+  if(chSel){
+    chSel.addEventListener('change', () => {
+      midiOutAllOff();
+      midiOutChannel = parseInt(chSel.value, 10) || 0;
+      saveLoomSettings();
+    });
+  }
+
+  const muteCb = document.getElementById('midiOutMuteLocal');
+  if(muteCb) muteCb.addEventListener('change', saveLoomSettings);
+
+  // Import — export existed with no way back in, so it was write-only.
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+  if(importBtn && importFile){
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try{
+          const data = JSON.parse(ev.target.result);
+          if(!data || data.kind !== 'loom-progression'){
+            alert("That file doesn't look like a Loom progression export.");
+            return;
+          }
+          if(data.settings){
+            applyImportedSettings(data.settings);
+            generateProgression();
+          } else {
+            // v1 exports carry display names only — the settings can't be
+            // restored exactly, so say so rather than silently guessing.
+            alert('This is an older Loom export without saved settings, so it can\u2019t be restored exactly. Re-export from this version to get a file that round-trips.');
+          }
+        }catch(err){ alert('Could not read that file: ' + err.message); }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  SETTING_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el){ el.addEventListener('change', saveLoomSettings); el.addEventListener('input', saveLoomSettings); }
+  });
+  CHECK_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', saveLoomSettings);
+  });
+
+  const prev = document.getElementById('prevChordBtn');
+  const next = document.getElementById('nextChordBtn');
+  if(prev) prev.addEventListener('click', () => stepChord(-1));
+  if(next) next.addEventListener('click', () => stepChord(1));
+  refreshStepButtons();
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    stepCursor = 0;
+    refreshStepButtons();
+    saveLoomSettings();
+  });
+
+  restoreLoomSettings();
+
+  if(window.TSShortcuts){
+    window.TSShortcuts.register([
+      {keys:'space', group:'Transport', label:'Play / stop the progression',
+       run:() => document.getElementById('playBtn').click()},
+      {keys:'left', group:'Transport', label:'Previous chord', run:() => stepChord(-1)},
+      {keys:'right', group:'Transport', label:'Next chord', run:() => stepChord(1)},
+      {keys:'g', group:'Progression', label:'Generate a new progression',
+       run:() => document.getElementById('generateBtn').click()},
+      {keys:'e', group:'Progression', label:'Export as JSON',
+       run:() => document.getElementById('exportBtn').click()},
+      {keys:'?', group:'General', label:'Show this help'},
+    ]);
+  }
+}
+
+wireLoomExtras();
+
+</script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

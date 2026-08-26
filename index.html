@@ -5,7 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thermalsock Labs</title>
 <meta name="description" content="Thermalsock Labs — small tools for tuning, drawing, and understanding sound, built in a home studio.">
-<link rel="icon" href="data:,">
+<link rel="canonical" href="https://thermalsocklabs.com/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#EDE6D6">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Thermalsock Labs">
+<meta property="og:title" content="Thermalsock Labs">
+<meta property="og:description" content="Small tools for tuning, drawing, and understanding sound, built in a home studio.">
+<meta property="og:url" content="https://thermalsocklabs.com/">
+<meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Thermalsock Labs">
+<meta name="twitter:description" content="Small tools for tuning, drawing, and understanding sound, built in a home studio.">
+<meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -180,8 +192,6 @@
     box-shadow:0 1px 2px rgba(43,38,32,0.06), 0 1px 1px rgba(43,38,32,0.04);
     transition:transform 0.4s var(--ease), border-color 0.3s var(--ease), box-shadow 0.4s var(--ease);
   }
-    transition:transform 0.4s var(--ease), border-color 0.3s var(--ease), box-shadow 0.4s var(--ease);
-  }
   .module:nth-child(odd):hover{ transform:translateY(-6px) rotate(-0.4deg); }
   .module:nth-child(even):hover{ transform:translateY(-6px) rotate(0.4deg); }
   .module:hover{
@@ -227,6 +237,71 @@
   @keyframes heroFade{ to{ opacity:1; transform:translateY(0); } }
 
   .schematic{ will-change:transform; }
+
+  /* ---------- About ---------- */
+  .about-section{ margin-top:44px; }
+  .about-body{
+    background:var(--paper-deep); border:1px solid rgba(43,38,32,0.18); border-radius:var(--radius);
+    padding:26px 28px; box-shadow:0 1px 2px rgba(43,38,32,0.06);
+    max-width:760px;
+  }
+  .about-body p{ font-family:var(--serif-body); font-size:14.5px; color:var(--ink-soft); margin:0 0 12px 0; line-height:1.65; }
+  .about-body p:last-child{ margin-bottom:0; }
+  .about-body a{ color:var(--rust); border-bottom:1px solid rgba(139,74,43,0.4); }
+  .about-body a:hover{ border-bottom-color:var(--rust); }
+
+  /* ---------- Responsive ---------- */
+  /* Tablet: pull the generous desktop padding in before anything overflows. */
+  @media (max-width: 1000px){
+    nav{ padding:18px 28px; }
+    .nav-links{ gap:22px; }
+    .hero{ padding:56px 28px 32px 28px; }
+    .section{ padding:16px 28px 48px 28px; }
+    footer{ padding:24px 28px 40px 28px; }
+  }
+
+  /* Narrow: the nav becomes two rows — brand + stamp on top, links below in a
+     horizontally scrollable strip. No JS, no hamburger, nothing overflows. */
+  @media (max-width: 760px){
+    nav{
+      flex-wrap:wrap; row-gap:14px; padding:16px 20px;
+    }
+    .brand{ flex:1 1 auto; min-width:0; }
+    .brand-text{ font-size:17px; }
+    .stamp-btn{ flex:none; padding:8px 15px; font-size:10.5px; }
+    .nav-links{
+      order:3; flex:1 0 100%;
+      gap:20px; overflow-x:auto; padding-bottom:2px;
+      scrollbar-width:none; -ms-overflow-style:none;
+    }
+    .nav-links::-webkit-scrollbar{ display:none; }
+    .nav-links a{ white-space:nowrap; }
+
+    .hero{ padding:44px 20px 24px 20px; }
+    .eyebrow{ margin-bottom:16px; font-size:10.5px; }
+    .hero-sub{ font-size:17px; margin-bottom:28px; }
+    .hero-ctas{ flex-wrap:wrap; gap:14px; margin-bottom:44px; }
+    .schematic{ height:132px; }
+
+    .section{ padding:12px 20px 40px 20px; }
+    .section-head h2{ font-size:22px; }
+    .module-grid{ grid-template-columns:1fr; gap:14px; }
+    .cat-section{ margin-bottom:30px; }
+
+    .featured-card{ gap:18px; padding:22px 20px; }
+    .about-body{ padding:22px 20px; }
+    .featured-cta{ width:100%; }
+
+    footer{ padding:22px 20px 36px 20px; flex-direction:column; gap:14px; }
+    footer span[data-footer-links]{ flex-wrap:wrap; }
+  }
+
+  /* The hover lift is a pointer affordance — on touch it just causes a stuck
+     hover state after a tap, so it's disabled where there's no hover. */
+  @media (hover: none){
+    .module:hover, .module:nth-child(odd):hover, .module:nth-child(even):hover,
+    .featured-card:hover{ transform:none; }
+  }
 </style>
 </head>
 <body>
@@ -243,11 +318,11 @@
     </span>
   </div>
   <div class="nav-links">
-    <a href="#">Instruments</a>
-    <a href="#">Also Building</a>
-    <a href="#">About the Studio</a>
+    <a href="#instruments">Instruments</a>
+    <a href="#also-building">Also Building</a>
+    <a href="#about">About the Studio</a>
   </div>
-  <a href="#" class="stamp-btn">Enter the Studio</a>
+  <a href="#instruments" class="stamp-btn">Enter the Studio</a>
 </nav>
 
 <div class="hero">
@@ -256,7 +331,7 @@
   <p class="hero-sub hero-load">Small tools, built for listening and monitoring soundscapes.</p>
   <div class="hero-ctas hero-load">
     <a href="#instruments" class="stamp-btn">See the Instruments</a>
-    <a href="#" class="btn-plain">Rudiment on Steam</a>
+    <a href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener" class="btn-plain">Rudiment on Steam</a>
   </div>
 
   <div class="schematic hero-load" id="schematic">
@@ -275,7 +350,7 @@
 <div class="section" id="instruments">
   <div class="section-head reveal">
     <h2>Currently in the studio</h2>
-    <span class="count">8 instruments &middot; 1 game &middot; 1 utility</span>
+    <span class="count" id="toolCount">11 tools</span>
   </div>
 
   <div class="cat-section">
@@ -329,6 +404,13 @@
       <p>Shape LFOs and envelopes exactly like the hardware.</p>
       <span class="tag">Web</span>
     </a>
+    <a href="sound-design/index.html" class="module reveal">
+      <div class="module-jack"></div>
+      <h3>Sound Design</h3>
+      <div class="kicker">Take 5 patch reference</div>
+      <p>39 named sounds, with the knob settings and envelope shape for each.</p>
+      <span class="tag">Web</span>
+    </a>
     </div>
   </div>
 
@@ -339,7 +421,7 @@
       <div class="module-jack"></div>
       <h3>The Illuminated Ear</h3>
       <div class="kicker">Ear-training game</div>
-      <p>The manuscript plays you a short line of glyphs, heard not read — play it back to illuminate the page. Miss a note and a scribe's correction mark shows you where.</p>
+      <p>Hear a short line of notes, play it back, and see exactly where you went wrong.</p>
       <span class="tag">Web</span>
     </a>
     <a href="transient-lab/index.html" class="module reveal">
@@ -359,7 +441,7 @@
       <div class="module-jack"></div>
       <h3>Ambient Bloom</h3>
       <div class="kicker">Audio-reactive illuminated manuscript</div>
-      <p>An invented Voynich-style script that inks itself onto the page as you play — pitch, dynamics, and timbre all shape the hand.</p>
+      <p>A live visual instrument — one painted horizon, driven by what you play.</p>
       <span class="tag">Web</span>
     </a>
     <a href="signal-path/index.html" class="module reveal">
@@ -372,7 +454,7 @@
     </div>
   </div>
 
-  <div class="featured-section reveal">
+  <div class="featured-section reveal" id="also-building">
     <div class="featured-head"><h2>Also from the studio</h2><span class="rule"></span></div>
     <a href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener" class="featured-card">
       <div class="module-jack"></div>
@@ -383,11 +465,20 @@
       </div>
     </a>
   </div>
+
+  <div class="about-section reveal" id="about">
+    <div class="featured-head"><h2>About the studio</h2><span class="rule"></span></div>
+    <div class="about-body">
+      <p>Thermalsock Labs is one person in a home studio, building small tools for the gear already on the desk. Most of them started because something was hard to tune, hard to see, or hard to remember.</p>
+      <p>Everything here runs in the browser. Nothing is uploaded, nothing is recorded, and nothing is sent anywhere — the audio never leaves your machine. There are no accounts and no tracking.</p>
+      <p>The tools are free. If one of them saves you an afternoon, <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">buy me a coffee</a>.</p>
+    </div>
+  </div>
 </div>
 
 <footer>
   <span>&copy; 2026 Thermalsock Labs &middot; made in the studio, not in the cloud</span>
-  <span style="display:flex; gap:20px;">
+  <span data-footer-links style="display:flex; gap:20px;">
     <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">Buy me a coffee</a>
     <a href="legal/privacy.html">Privacy</a>
     <a href="legal/disclaimer.html">Disclaimer</a>
@@ -398,10 +489,25 @@
 (function(){
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Stagger module reveals within the same row so they don't all pop at once.
+  // The count is derived from the cards actually on the page rather than typed
+  // by hand, so it can't drift out of date when a tool is added or removed.
+  var countEl = document.getElementById('toolCount');
+  if (countEl){
+    var n = document.querySelectorAll('#instruments .module-grid .module').length;
+    countEl.textContent = n + (n === 1 ? ' tool' : ' tools') + ' \u00b7 all free, all in the browser';
+  }
+
+  // Stagger module reveals. The index resets per grid, so each row of cards
+  // ripples from its own left edge instead of every card past the sixth
+  // sharing one flat delay from a single page-wide counter.
   var reveals = document.querySelectorAll('.reveal');
-  reveals.forEach(function(el, i){
-    el.style.transitionDelay = reduceMotion ? '0s' : (Math.min(i, 6) * 0.06) + 's';
+  reveals.forEach(function(el){
+    if (reduceMotion){ el.style.transitionDelay = '0s'; return; }
+    var grid = el.parentElement;
+    var i = (grid && grid.classList.contains('module-grid'))
+      ? Array.prototype.indexOf.call(grid.children, el)
+      : 0;
+    el.style.transitionDelay = (Math.min(i, 5) * 0.07) + 's';
   });
 
   if ('IntersectionObserver' in window){

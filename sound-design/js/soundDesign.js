@@ -264,3 +264,288 @@ populateSidebar();
 
 // Start on Classic Analog Bass (matches the card's original static content).
 selectPresetByName('Classic Analog Bass');
+
+/* =========================================================================
+   AUDITION, INTERACTIVE KNOBS, SEARCH, PREV/NEXT
+
+   Three problems this closes:
+   - The page documented 39 patches and could not make a sound.
+   - The knobs were decorative: tick rings, numbered scales and a pointer,
+     with no pointer handlers anywhere. Everything about them said "grab me".
+   - The Octave knobs' LEDs were never wired, so on those the display was
+     actively wrong rather than merely static.
+   ========================================================================= */
+
+import { AuditionVoice } from './audition.js';
+
+const voice = new AuditionVoice();
+const sdStore = window.TSStore ? window.TSStore.create('sound-design') : null;
+
+let currentPreset = null;
+let edited = false;
+
+/* --- Audition ---------------------------------------------------------- */
+
+function auditionNote() {
+  const sel = document.getElementById('auditionNote');
+  return sel ? parseInt(sel.value, 10) : 48;
+}
+
+function setAuditionUi(on) {
+  const btn = document.getElementById('auditionBtn');
+  if (!btn) return;
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  document.getElementById('auditionLabel').textContent = on ? 'Playing' : 'Audition';
+}
+
+function toggleAudition() {
+  if (voice.playing) { voice.stop(); setAuditionUi(false); return; }
+  if (!currentPreset) return;
+  // Audition whatever is on the panel right now, edits included — otherwise
+  // turning a knob and pressing play would replay the unedited preset.
+  voice.play(livePresetFromPanel(), auditionNote());
+  setAuditionUi(true);
+}
+
+voice.onEnded = () => setAuditionUi(false);
+
+/* --- Interactive knobs -------------------------------------------------- */
+
+const ANGLE_MIN = -115;
+const ANGLE_MAX = 115;
+
+/** Nearest qualitative level for an angle — the presets, ADSR chart and
+ *  audition engine all speak in levels, so a drag has to land back on one. */
+function angleToLevel(angle) {
+  const t = (angle - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN);
+  const names = ['min', 'low', 'mid', 'high', 'max'];
+  const idx = Math.max(0, Math.min(4, Math.round(t * 4)));
+  return names[idx];
+}
+
+function angleOf(pointerEl) {
+  const raw = pointerEl.style.getPropertyValue('--angle');
+  const n = parseFloat(raw);
+  return Number.isNaN(n) ? 0 : n;
+}
+
+/** Which preset field does this pointer id drive? Built by inverting
+ *  KNOB_IDS, so it can't drift from the existing wiring. */
+function buildKnobFieldMap() {
+  const map = {};
+  Object.entries(KNOB_IDS).forEach(([section, entry]) => {
+    Object.entries(entry).forEach(([field, id]) => { map[id] = [section, field]; });
+  });
+  return map;
+}
+const KNOB_FIELDS = buildKnobFieldMap();
+
+/** The panel's current state as a preset-shaped object, so audition and the
+ *  ADSR chart both read from what's actually on screen. */
+function livePresetFromPanel() {
+  if (!currentPreset) return null;
+  const live = JSON.parse(JSON.stringify(currentPreset));
+  Object.entries(KNOB_FIELDS).forEach(([id, path]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const level = angleToLevel(angleOf(el));
+    if (path.length === 2) {
+      if (!live[path[0]]) live[path[0]] = {};
+      live[path[0]][path[1]] = level;
+    }
+  });
+  return live;
+}
+
+function markEdited(on) {
+  edited = on;
+  const badge = document.getElementById('editedBadge');
+  if (badge) badge.classList.toggle('show', on);
+}
+
+/** Octave LEDs were static — the pointer angle updated per preset but the
+ *  lit LED never did, so the display contradicted the knob. */
+function syncOctaveLeds(pointerId) {
+  const ptr = document.getElementById(pointerId);
+  if (!ptr) return;
+  const svg = ptr.closest('svg');
+  if (!svg) return;
+  const leds = svg.querySelectorAll('.knob-led');
+  if (!leds.length) return;
+  const level = angleToLevel(angleOf(ptr));
+  const idx = ['min', 'low', 'mid', 'high', 'max'].indexOf(level);
+  // Four LEDs across five levels: min/low share the first.
+  const ledIdx = Math.max(0, Math.min(leds.length - 1, Math.round(idx * (leds.length - 1) / 4)));
+  leds.forEach((led, i) => led.classList.toggle('on', i === ledIdx));
+}
+
+function makeKnobInteractive(pointerEl) {
+  const svg = pointerEl.closest('svg');
+  const wrap = pointerEl.closest('.knob-wrap');
+  if (!svg || !wrap) return;
+
+  let readout = wrap.querySelector('.knob-readout');
+  if (!readout) {
+    readout = document.createElement('span');
+    readout.className = 'knob-readout';
+    wrap.appendChild(readout);
+  }
+
+  svg.setAttribute('tabindex', '0');
+  svg.setAttribute('role', 'slider');
+  svg.setAttribute('aria-valuemin', '0');
+  svg.setAttribute('aria-valuemax', '4');
+
+  const applyAngle = (angle) => {
+    const clamped = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, angle));
+    pointerEl.style.setProperty('--angle', `${clamped}deg`);
+    const level = angleToLevel(clamped);
+    readout.textContent = level;
+    svg.setAttribute('aria-valuenow', String(['min','low','mid','high','max'].indexOf(level)));
+    svg.setAttribute('aria-valuetext', level);
+    syncOctaveLeds(pointerEl.id);
+    markEdited(true);
+    refreshChartFromPanel();
+  };
+
+  let startY = 0, startAngle = 0, dragging = false;
+
+  svg.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    startAngle = angleOf(pointerEl);
+    wrap.classList.add('is-dragging');
+    readout.textContent = angleToLevel(startAngle);
+    svg.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  svg.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    // Vertical drag, the standard for synth knobs — a rotational drag is
+    // fiddly on a control this small.
+    applyAngle(startAngle + (startY - e.clientY) * 1.6);
+  });
+
+  const end = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    wrap.classList.remove('is-dragging');
+    try { svg.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+  };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', end);
+
+  svg.addEventListener('keydown', (e) => {
+    const step = (ANGLE_MAX - ANGLE_MIN) / 4;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { applyAngle(angleOf(pointerEl) + step); e.preventDefault(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { applyAngle(angleOf(pointerEl) - step); e.preventDefault(); }
+  });
+}
+
+function refreshChartFromPanel() {
+  const live = livePresetFromPanel();
+  if (live && typeof buildAdsrChart === 'function') buildAdsrChart(live.ampEnv);
+}
+
+/* --- Search, prev/next, shortcuts --------------------------------------- */
+
+function filterSidebar(query) {
+  const q = query.trim().toLowerCase();
+  let visible = 0;
+  els.sidebar.querySelectorAll('.sound-nav-group').forEach((group) => {
+    let groupHits = 0;
+    group.querySelectorAll('.sound-nav-item').forEach((btn) => {
+      const preset = PRESETS.find((p) => p.name === btn.dataset.name);
+      const hay = `${btn.dataset.name} ${preset ? preset.category : ''} ${preset ? preset.blurb : ''}`.toLowerCase();
+      const hit = !q || hay.includes(q);
+      btn.hidden = !hit;
+      if (hit) { groupHits++; visible++; }
+    });
+    group.hidden = groupHits === 0;
+  });
+  const empty = document.getElementById('sidebarEmpty');
+  if (empty) empty.hidden = visible > 0;
+}
+
+function stepPreset(delta) {
+  if (!currentPreset) return;
+  const i = PRESETS.findIndex((p) => p.name === currentPreset.name);
+  if (i < 0) return;
+  const next = PRESETS[(i + delta + PRESETS.length) % PRESETS.length];
+  selectPresetByName(next.name);
+  const btn = els.sidebar.querySelector(`[data-name="${CSS.escape(next.name)}"]`);
+  if (btn) btn.scrollIntoView({ block: 'nearest' });
+}
+
+function wireSoundDesignExtras() {
+  document.querySelectorAll('.knob-pointer').forEach(makeKnobInteractive);
+  document.querySelectorAll('.knob-octave .knob-pointer').forEach((p) => syncOctaveLeds(p.id));
+
+  const title = document.getElementById('soundTitle');
+  if (title && !document.getElementById('editedBadge')) {
+    const badge = document.createElement('button');
+    badge.id = 'editedBadge';
+    badge.className = 'edited-badge';
+    badge.type = 'button';
+    badge.textContent = 'Edited \u00b7 reset';
+    badge.title = 'The panel no longer matches the documented preset. Click to restore it.';
+    badge.addEventListener('click', () => { if (currentPreset) selectPresetByName(currentPreset.name); });
+    title.appendChild(badge);
+  }
+
+  const auditionBtn = document.getElementById('auditionBtn');
+  if (auditionBtn) auditionBtn.addEventListener('click', toggleAudition);
+
+  const noteSel = document.getElementById('auditionNote');
+  if (noteSel) {
+    const saved = sdStore ? sdStore.get('auditionNote', null) : null;
+    if (saved) noteSel.value = saved;
+    noteSel.addEventListener('change', () => {
+      if (sdStore) sdStore.set('auditionNote', noteSel.value);
+    });
+  }
+
+  const prev = document.getElementById('prevPresetBtn');
+  const next = document.getElementById('nextPresetBtn');
+  if (prev) prev.addEventListener('click', () => stepPreset(-1));
+  if (next) next.addEventListener('click', () => stepPreset(1));
+
+  const search = document.getElementById('presetSearch');
+  if (search) {
+    search.addEventListener('input', () => filterSidebar(search.value));
+    search.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { search.value = ''; filterSidebar(''); search.blur(); }
+    });
+  }
+
+  if (window.TSShortcuts) {
+    window.TSShortcuts.register([
+      { keys: 'space', group: 'Audition', label: 'Play / stop the current patch', run: toggleAudition },
+      { keys: 'left', group: 'Browsing', label: 'Previous sound', run: () => stepPreset(-1) },
+      { keys: 'right', group: 'Browsing', label: 'Next sound', run: () => stepPreset(1) },
+      { keys: '/', group: 'Browsing', label: 'Search the sound list',
+        run: () => { const el = document.getElementById('presetSearch'); if (el) el.focus(); } },
+      { keys: 'r', group: 'Panel', label: 'Reset the panel to the documented preset',
+        run: () => { if (currentPreset) selectPresetByName(currentPreset.name); } },
+      { keys: '?', group: 'General', label: 'Show this help' },
+    ]);
+  }
+}
+
+/* applyPreset is the single point every selection passes through, so the
+   active-preset pointer and the edited flag are maintained here rather than
+   at each call site. */
+const _applyPreset = applyPreset;
+applyPreset = function (preset) {
+  _applyPreset(preset);
+  currentPreset = preset;
+  markEdited(false);
+  if (voice.playing) { voice.stop(); setAuditionUi(false); }
+  document.querySelectorAll('.knob-octave .knob-pointer').forEach((p) => syncOctaveLeds(p.id));
+};
+
+wireSoundDesignExtras();
+// Re-apply the opening preset now the wrapper is installed, so the octave
+// LEDs and active-preset pointer are correct from the first paint.
+selectPresetByName('Classic Analog Bass');

@@ -1189,3 +1189,224 @@ function loop() {
   }
   requestAnimationFrame(loop);
 }
+
+/* =========================================================================
+   UNDO
+   With a mod matrix, an XY pad, a macro bank and a Randomise button, one
+   wrong click could destroy a patch with no way back — the snapshot bank
+   only helped if you'd remembered to snapshot first. This pushes a state
+   before every destructive action and restores it on Z.
+   ========================================================================= */
+
+const undoStack = [];
+const UNDO_LIMIT = 30;
+
+function pushUndo(label) {
+  try {
+    undoStack.push({ label, state: captureState() });
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    refreshUndoButton();
+  } catch (err) {
+    // Never let a bookkeeping failure break the action itself.
+    console.warn('[granulator] could not snapshot for undo:', err);
+  }
+}
+
+function refreshUndoButton() {
+  const btn = $('undoBtn');
+  if (!btn) return;
+  const top = undoStack[undoStack.length - 1];
+  btn.disabled = undoStack.length === 0;
+  btn.textContent = top ? `Undo ${top.label}` : 'Undo';
+  btn.title = top ? `Undo ${top.label} (Z)` : 'Nothing to undo';
+}
+
+function performUndo() {
+  const entry = undoStack.pop();
+  if (!entry) return;
+  applyState(entry.state);
+  refreshUndoButton();
+}
+
+/* =========================================================================
+   OUTPUT RECORDING
+   Records the processed output to a 16-bit WAV. The tap sits on the worklet
+   node, so what lands in the file is exactly the grain output, not the dry
+   input and not whatever else is going to the speakers.
+   ========================================================================= */
+
+let recorder = null;
+let recordTimer = null;
+
+function updateRecordUi(on) {
+  const btn = $('recordBtn');
+  if (!btn) return;
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (!on) {
+    $('recordLabel').textContent = 'Record';
+    if (recordTimer) { clearInterval(recordTimer); recordTimer = null; }
+  }
+}
+
+function startRecording() {
+  if (!window.TSRecorder || !audioEngine.workletNode) return;
+  recorder = window.TSRecorder.create(audioEngine.audioCtx, audioEngine.workletNode);
+  recorder.start().then(() => {
+    updateRecordUi(true);
+    recordTimer = setInterval(() => {
+      const secs = recorder.durationSeconds();
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      $('recordLabel').textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }, 250);
+  }).catch((err) => {
+    console.error('[granulator] could not start recording:', err);
+    updateRecordUi(false);
+  });
+}
+
+function stopRecording() {
+  if (!recorder) return;
+  recorder.stop();
+  const wrote = recorder.download('granulator');
+  if (!wrote) console.warn('[granulator] nothing captured — recording was too short');
+  recorder = null;
+  updateRecordUi(false);
+}
+
+function toggleRecording() {
+  if (recorder && recorder.recording) stopRecording();
+  else startRecording();
+}
+
+/* ---- Wiring for undo, recording, panel collapse and shortcuts ---------- */
+
+function wireGranulatorExtras() {
+  const undoBtn = $('undoBtn');
+  if (undoBtn) undoBtn.addEventListener('click', performUndo);
+  refreshUndoButton();
+
+  const recBtn = $('recordBtn');
+  if (recBtn) recBtn.addEventListener('click', toggleRecording);
+
+  // Snapshot before anything that replaces the whole patch.
+  $('randomiseBtn').addEventListener('click', () => pushUndo('randomise'), true);
+  $('presetSelect').addEventListener('change', () => pushUndo('preset load'), true);
+
+  // Collapsible panels, with the open/closed set remembered between visits.
+  const store = window.TSStore ? window.TSStore.create('granulator') : null;
+  const collapsedSaved = store ? store.get('collapsedPanels', []) : [];
+  document.querySelectorAll('.card.collapsible').forEach((card, i) => {
+    const toggle = card.querySelector('.panel-toggle');
+    if (!toggle) return;
+    const key = `panel${i}`;
+    const setCollapsed = (collapsed) => {
+      card.setAttribute('data-collapsed', collapsed ? 'true' : 'false');
+      toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    };
+    setCollapsed(collapsedSaved.indexOf(key) !== -1);
+    toggle.addEventListener('click', () => {
+      const nowCollapsed = card.getAttribute('data-collapsed') !== 'true';
+      setCollapsed(nowCollapsed);
+      if (store) {
+        const list = [];
+        document.querySelectorAll('.card.collapsible').forEach((c, j) => {
+          if (c.getAttribute('data-collapsed') === 'true') list.push(`panel${j}`);
+        });
+        store.set('collapsedPanels', list);
+      }
+    });
+  });
+
+  if (window.TSShortcuts) {
+    window.TSShortcuts.register([
+      { keys: 'space', group: 'Performance', label: 'Freeze / unfreeze the buffer',
+        run: () => $('freezeToggle').click() },
+      { keys: 'r', group: 'Performance', label: 'Start / stop recording to WAV',
+        run: toggleRecording },
+      { keys: 'z', group: 'Patch', label: 'Undo the last patch change',
+        run: performUndo },
+      { keys: 'x', group: 'Patch', label: 'Randomise the grain engine',
+        run: () => $('randomiseBtn').click() },
+      { keys: 'l', group: 'Patch', label: 'Load a sample into the buffer',
+        run: () => $('loadSampleBtn').click() },
+      { keys: '?', group: 'General', label: 'Show this help' },
+    ]);
+  }
+}
+
+wireGranulatorExtras();
+
+/* =========================================================================
+   TEMPO SYNC
+   Duration, Density and Scan Speed were free-running while the transport
+   already knew the tempo — so the instrument could never lock to a track.
+   Each can now be pinned to a musical division; the value is recomputed
+   whenever the clock reports a new BPM, and "Free" restores manual control.
+   ========================================================================= */
+
+const tempoSync = { grainDuration: null, density: null, scanSpeed: null };
+
+function currentBpm() {
+  const bpm = midi && typeof midi.internalBpm === 'number' ? midi.internalBpm : 120;
+  // Guard against a stalled or absent clock reporting nonsense.
+  return bpm > 20 && bpm < 400 ? bpm : 120;
+}
+
+function applyTempoSync() {
+  const bpm = currentBpm();
+  const beatSeconds = 60 / bpm;
+
+  // Duration is in milliseconds; the division is in beats.
+  if (tempoSync.grainDuration) {
+    const ms = beatSeconds * tempoSync.grainDuration * 1000;
+    // The Duration control tops out at 500ms — clamp rather than silently
+    // writing a value the knob can't represent.
+    setParamValue('grainDuration', Math.max(1, Math.min(500, Math.round(ms))));
+    if (modEngine) modEngine.baseValues.grainDuration = getParamValue('grainDuration');
+  }
+
+  // Density is grains per second, so a 1/8 division means 2 grains per beat.
+  if (tempoSync.density) {
+    const grainsPerSecond = 1 / (beatSeconds * tempoSync.density);
+    setParamValue('density', +Math.max(0.1, Math.min(200, grainsPerSecond)).toFixed(1));
+    if (modEngine) modEngine.baseValues.density = getParamValue('density');
+  }
+
+  // Scan speed is expressed as buffer-lengths per second; the division says
+  // how many beats one full pass through the buffer should take.
+  if (tempoSync.scanSpeed) {
+    const passSeconds = beatSeconds * tempoSync.scanSpeed;
+    const speed = passSeconds > 0 ? 1 / passSeconds : 1;
+    setParamValue('scanSpeed', +Math.max(-4, Math.min(4, speed)).toFixed(3));
+    if (modEngine) modEngine.baseValues.scanSpeed = getParamValue('scanSpeed');
+  }
+}
+
+function wireTempoSync() {
+  const map = {
+    syncDurationSelect: 'grainDuration',
+    syncDensitySelect: 'density',
+    syncScanSelect: 'scanSpeed',
+  };
+  Object.keys(map).forEach((selectId) => {
+    const el = $(selectId);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      const v = parseFloat(el.value);
+      tempoSync[map[selectId]] = el.value === '' || Number.isNaN(v) ? null : v;
+      applyTempoSync();
+    });
+  });
+
+  // Recompute on every clock tick, on top of the existing BPM readout.
+  const previousOnClockTick = midi.onClockTick;
+  midi.onClockTick = () => {
+    if (previousOnClockTick) previousOnClockTick();
+    if (tempoSync.grainDuration || tempoSync.density || tempoSync.scanSpeed) {
+      applyTempoSync();
+    }
+  };
+}
+
+wireTempoSync();

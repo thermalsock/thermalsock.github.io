@@ -1,0 +1,208 @@
+/* Thermalsock Labs — shared chrome.
+ *
+ * There were nine separate copies of the .topbar rules across the apps, and
+ * they had already drifted apart; two more apps (Signal Path, Transient Lab)
+ * used entirely different header components. The switcher was the only truly
+ * shared element on the page, which drew attention to the inconsistency
+ * around it rather than hiding it.
+ *
+ * This is the single definition. Load it BEFORE the app's own stylesheet so
+ * an app can still override a specific rule where it genuinely needs to —
+ * but the default should be to use these as-is.
+ *
+ * Per-app identity colour comes from --app-accent, set on <html> via
+ * data-app. Nothing here should be restyled per app; fill the header's
+ * slots instead.
+ */
+
+:root {
+  /* Field Notes palette — the canonical values. */
+  --paper: #EDE6D6;
+  --paper-deep: #E4DBC7;
+  --grid-line: rgba(43, 38, 32, 0.09);
+  --ink: #2B2620;
+  --ink-soft: #5C5346;
+  --ink-faint: #8A8070;
+  --rust: #8B4A2B;
+  --rust-hi: #A0562F;
+  --hairline: rgba(43, 38, 32, 0.14);
+  --danger: #b8402a;
+
+  --serif-display: 'Fraunces', Georgia, serif;
+  --serif-body: 'Newsreader', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Default identity colour; each app overrides via [data-app]. */
+  --app-accent: #8B4A2B;
+}
+
+/* Per-app identity colours. Previously these were inline
+   style="color:#2f7a72" attributes on the app name, so the colour lived in
+   the markup and nothing else could use it. */
+[data-app="oscilloscope"]          { --app-accent: #8B4A2B; }
+[data-app="granulator"]            { --app-accent: #8B4A2B; }
+[data-app="spectral-mutation-lab"] { --app-accent: #7A5230; }
+[data-app="loom"]                  { --app-accent: #2f7a72; }
+[data-app="subharmonicon"]         { --app-accent: #8B4A2B; }
+[data-app="modulus-studio"]        { --app-accent: #6B4E9E; }
+[data-app="sound-design"]          { --app-accent: #8B4A2B; }
+[data-app="illuminated-ear"]       { --app-accent: #8B4A2B; }
+[data-app="transient-lab"]         { --app-accent: #8B4A2B; }
+[data-app="ambient-bloom"]         { --app-accent: #8B4A2B; }
+[data-app="signal-path"]           { --app-accent: #8B4A2B; }
+
+/* ---------- The header ----------
+   Three regions: brand lockup, app switcher, then a right-hand slot the app
+   fills with its own controls. Apps add controls to .topbar-right; they
+   don't restyle the bar. */
+
+.ts-topbar,
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  gap: 16px;
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--hairline);
+  background: linear-gradient(180deg, rgba(43, 38, 32, 0.03), transparent);
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  flex: none;
+}
+.brand-mark { flex: none; display: block; }
+.brand-lockup-text { display: flex; flex-direction: column; line-height: 1.2; }
+
+/* App name prominent and coloured, studio name grey underneath — the
+   pattern Transient Lab's hub strip already used and everyone else now
+   matches. */
+.brand-appname {
+  font-family: var(--serif-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  color: var(--app-accent);
+}
+.brand-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+.brand-lockup:hover .brand-appname { filter: brightness(1.12); }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+/* ---------- Status pill ---------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  background: rgba(43, 38, 32, 0.04);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  flex: none;
+}
+.status-dot.live { background: var(--app-accent); }
+
+/* ---------- Shared session banner ----------
+   Shown when an app reuses the input device chosen in another app, so the
+   continuity is visible rather than mysterious. */
+
+.ts-session-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  background: rgba(139, 74, 43, 0.07);
+  border: 1px solid rgba(139, 74, 43, 0.22);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin: 0 0 14px 0;
+}
+.ts-session-note strong { color: var(--ink); font-weight: 600; }
+.ts-session-note button {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.ts-session-note button:hover { color: var(--ink); border-color: var(--app-accent); }
+
+/* ---------- Cross-app links ----------
+   "See this in the Oscilloscope" style links between tools that are about
+   the same gear. This is what makes the set read as one studio rather than
+   eleven tabs that share a stylesheet. */
+
+.ts-related {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  padding: 10px 0 0 0;
+}
+.ts-related-label {
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-size: 9.5px;
+}
+.ts-related a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  background: rgba(43, 38, 32, 0.04);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 5px 11px;
+  transition: color .2s, border-color .2s;
+}
+.ts-related a:hover { color: var(--app-accent); border-color: var(--app-accent); }
+.ts-related a::after {
+  content: '\2192';
+  opacity: 0.5;
+}
+
+@media (max-width: 760px) {
+  .ts-topbar, .topbar { padding: 11px 16px; gap: 10px; }
+  .brand-appname { font-size: 14px; }
+  .topbar-right { gap: 8px; }
+}

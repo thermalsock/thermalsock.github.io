@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="illuminated-ear">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thermalsock Labs — The Illuminated Ear</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
+  <meta name="description" content="An ear-training game. Hear a short line of notes, play it back, and see exactly where you went wrong.">
+  <link rel="canonical" href="https://thermalsocklabs.com/illuminated-ear/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="The Illuminated Ear — Thermalsock Labs">
+  <meta property="og:description" content="An ear-training game. Hear a short line of notes, play it back, and see exactly where you went wrong.">
+  <meta property="og:url" content="https://thermalsocklabs.com/illuminated-ear/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Illuminated Ear — Thermalsock Labs">
+  <meta name="twitter:description" content="An ear-training game. Hear a short line of notes, play it back, and see exactly where you went wrong.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -39,7 +54,7 @@
       </label>
       <p class="gate-copy" id="midiGateStatus" style="margin-top:-8px; font-size:12px;">Checking for a MIDI keyboard…</p>
 
-      <button id="startBtn" class="btn-primary">Start</button>
+      <button id="startBtn" class="btn-primary">Start listening</button>
       <p id="gateError" class="gate-error" hidden></p>
     </div>
   </div>
@@ -55,21 +70,12 @@
           <line x1="30" y1="6.5" x2="39" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#8B4A2B">The Illuminated Ear</span>
+          <span class="brand-appname">The Illuminated Ear</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
 
-      <nav class="page-nav" aria-label="Thermalsock Labs apps">
-        <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
-        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
-        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
-        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
-        <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
-        <a class="page-nav-link" href="../loom/index.html">Loom</a>
-        <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
-        <a class="page-nav-link active" href="../illuminated-ear/index.html">Illuminated Ear</a>
-      </nav>
+      <nav class="page-nav" data-app-switcher="illuminated-ear" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
       <div class="topbar-right">
         <span class="pill" id="levelPill">Lv.1 Basic Hearing</span>
@@ -96,33 +102,77 @@
           </div>
         </section>
 
-        <!-- Main game view: shown once tuned -->
-        <section class="card page-card" id="gameCard" hidden>
-          <div class="page-wrap">
-            <canvas id="pageCanvas"></canvas>
-            <div class="page-label" id="phaseLabel">Listen…</div>
+        <!-- Mode tabs: shown once tuned -->
+        <div id="modeTabBar" class="mode-tab-bar" hidden>
+          <button class="mode-tab active" data-mode="train" id="trainTab">Train Your Ear</button>
+          <button class="mode-tab" data-mode="game" id="gameTab">Game</button>
+          <span class="tonic-readout" style="margin-left:auto;">Tonic: <strong id="tonicReadout">—</strong></span>
+          <button class="io-btn" id="retuneBtn" style="margin-left:8px;">Retune</button>
+          <span class="pill" id="midiStatusPill">MIDI: —</span>
+        </div>
+
+        <!-- TRAINING MODE -->
+        <section id="trainView" hidden>
+          <div class="card" id="stageNav">
+            <div id="stageList" class="stage-list"></div>
           </div>
+          <div class="card" id="lessonContainer" hidden>
+            <button class="io-btn" id="backToStagesBtn" style="margin-bottom:14px;">&larr; Back to lessons</button>
+            <div id="lessonContent"></div>
+          </div>
+        </section>
 
-          <div class="feedback-banner" id="feedbackBanner" hidden></div>
-
-          <div class="game-controls">
-            <button class="io-btn" id="replayBtn">Replay sequence</button>
-            <button class="io-btn" id="retuneBtn">Retune</button>
-            <span class="tonic-readout">Tonic: <strong id="tonicReadout">—</strong></span>
-            <span class="pill" id="midiStatusPill" style="margin-left:auto;">MIDI: —</span>
+        <!-- GAME MODE -->
+        <section id="gameView" hidden>
+          <div class="card" id="gameLessonNav">
+            <h2>Choose what to test</h2>
+            <p class="mode-desc" style="margin-bottom:14px;">Only lessons you've completed in training appear here. Complete more lessons to unlock more game content.</p>
+            <div id="gameLessonList" class="stage-list"></div>
+          </div>
+          <div class="card" id="gamePlayArea" hidden>
+            <div class="game-round-header">
+              <h2 id="gameRoundTitle">—</h2>
+              <span class="try-status" id="gameRoundStatus">—</span>
+            </div>
+            <div id="gameQuestionArea" class="try-question"></div>
+            <div id="gameFeedback" class="try-feedback"></div>
+            <div id="gameRoundSummary" hidden class="game-summary"></div>
           </div>
         </section>
 
       </div>
 
       <aside class="panel">
-        <section class="card panel-group">
+        <section class="card panel-group" id="trainSidebar">
+          <h3>Training Progress</h3>
+          <div id="progressSummary" class="progress-summary"></div>
+          <div class="progress-total">
+            <span class="pt-label">Overall</span>
+            <span class="pt-value" id="progressTotal">0 / 0</span>
+          </div>
+          <div class="progress-actions">
+            <button id="exportProgressBtn" class="mini-btn" type="button">Export progress</button>
+            <button id="resetProgressBtn" class="mini-btn danger" type="button">Reset progress</button>
+          </div>
+        </section>
+
+        <section class="card panel-group" id="tempoCard">
+          <h3>Playback</h3>
+          <div class="row">
+            <label for="tempoSlider">Speed</label>
+            <input type="range" id="tempoSlider" min="40" max="160" step="5" value="100" aria-label="Playback speed" />
+            <span class="row-value" id="tempoReadout">100%</span>
+          </div>
+          <p class="mode-desc">Slow the phrase down while you learn it, then bring it back up.</p>
+        </section>
+
+        <section class="card panel-group" id="gameSidebar" hidden>
           <h3>Scale</h3>
           <select id="scaleSelect"></select>
           <p class="mode-desc" id="scaleDesc"></p>
         </section>
 
-        <section class="card panel-group">
+        <section class="card panel-group" id="gameSidebar2" hidden>
           <h3>This session</h3>
           <dl class="stats-list">
             <dt>Rounds played</dt><dd id="statRounds">0</dd>
@@ -132,7 +182,7 @@
           </dl>
         </section>
 
-        <section class="card panel-group">
+        <section class="card panel-group" id="gameSidebar3" hidden>
           <h3>Perceptual Upgrades</h3>
           <div class="xp-row">
             <span id="xpLabel">120 XP to Level 2</span>
@@ -142,12 +192,7 @@
             <label><input type="checkbox" id="pitchVisionCb" checked /> Pitch Vision</label>
             <label id="intervalVisionLabel" hidden><input type="checkbox" id="intervalVisionCb" checked /> Interval Vision</label>
           </div>
-          <p class="mode-desc">Correct notes earn XP toward new hint types shown just before each note plays — a wrong note still keeps whatever XP you'd already earned that round. Levels 4-6 (triad, melody, and rhythm vision) aren't built yet.</p>
-        </section>
-
-        <section class="card panel-group">
-          <h3>How it's scored</h3>
-          <p class="mode-desc">Each round plays a short sequence of notes, then goes quiet — play it back on your instrument, voice, or MIDI keyboard. A correct sequence lights up the page and the next round is one note longer. A wrong note ends the round early and shows you which one broke the chain; the next round backs off by one note rather than resetting to the start.</p>
+          <p class="mode-desc">Correct notes earn XP. Game draws from stages you've trained on.</p>
         </section>
       </aside>
     </main>
@@ -158,12 +203,17 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
     <a href="../legal/disclaimer.html">Disclaimer</a>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

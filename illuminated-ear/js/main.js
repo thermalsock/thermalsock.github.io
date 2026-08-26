@@ -1,101 +1,138 @@
 // main.js — The Illuminated Ear
-// Ties together: AudioEngine (mic), pitchDetect.js + activity.js (listening),
-// glyphs.js (drawing), sequence.js + game.js (the actual game), all reused
-// as-is from Ambient Bloom/Loom's proven implementations rather than
-// rewritten.
+// Two modes: Training (structured lessons) and Game (test what you trained).
+// Both use the same curriculum and exercise types. MIDI keyboard is the
+// primary answer input in both modes; mic/voice tuning is the fallback.
 
 import { AudioEngine, pickLouderChannel } from './audioEngine.js';
 import { detectPitch, levelDb, PitchLock } from './pitchDetect.js';
 import { ActivityDetector, rms } from './activity.js';
-import { drawGlyph, GLYPH_ADVANCE } from './glyphs.js';
-import { Game, PHASE, LEVELS } from './game.js';
-import { SCALES } from './sequence.js';
+import { GameSession, getAvailableGameLessons, getStageName } from './game.js';
 import { initMidi, onMidiNoteOn, onMidiDevicesChanged, hasMidiDevice } from './midi.js';
-import { drawPitchVision, drawIntervalVision, signedInterval } from './vision.js';
+import { STAGES } from './curriculum.js';
+import { renderLesson, setAudioCtx, setTonic as setLessonTonic, stopAll as stopLessonAudio, setTempoScale as setLessonTempo } from './lessonEngine.js';
+import { isLessonCompleted, getCompletedLessonIds, getTryScore, resetProgress } from './progress.js';
 
 const $ = (id) => document.getElementById(id);
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const INK = '#4a3826';
-const INK_GOLD = '#8B4A2B'; // "illumination" color for confirmed-correct marks — the site's own accent, doubling as literal gilt ink
-const INK_CORRECTION = '#b8402a';
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
 const audioEngine = new AudioEngine();
 const activity = new ActivityDetector();
 const tuningLock = new PitchLock({ requiredStableFrames: 12, toleranceCents: 12 });
-let game = null;
 
 let appState = 'tuning'; // 'tuning' | 'playing'
+let currentMode = 'train'; // 'train' | 'game'
 let tonicLockedAtMs = null;
-const TUNE_CONFIRM_MS = 900; // held on top of the lock itself, so confirming a tonic reads as a deliberate "yes, that one" rather than an instant, easy-to-miss flash
-
-let ctx = null;
-let pageW = 0, pageH = 0;
-let targetX = 0, responseX = 0; // running horizontal write-position for each row, reset every round
-const TARGET_ROW_Y = 90;
-const RESPONSE_ROW_Y = 210;
-const ROW_START_X = 40;
-
-let jitterCounter = 1;
-let allTimeBest = parseInt(localStorage.getItem('illuminatedEar.bestStreak') || '0', 10);
-let pitchVisionEnabled = true;
-let intervalVisionEnabled = true;
+const TUNE_CONFIRM_MS = 900;
+let tonicFreq = null;
+let tonicMidi = null; // MIDI note number of the tonic
 let midiConnected = false;
+let gameSession = null;
+let allTimeBest = parseInt(localStorage.getItem('illuminatedEar.bestStreak') || '0', 10);
+const PITCH_DETECT_MIN_RMS = 0.012;
 
 // ---------------------------------------------------------------------------
-// MIDI — set up as early as possible (doesn't need mic permission first),
-// so the gate can honestly say whether a keyboard is available before the
-// player even hits Start.
+// Helpers
+// ---------------------------------------------------------------------------
+
+function freqToNoteName(freq) {
+  const midi = 69 + 12 * Math.log2(freq / 440);
+  const rounded = Math.round(midi);
+  const name = NOTE_NAMES[((rounded % 12) + 12) % 12];
+  const octave = Math.floor(rounded / 12) - 1;
+  return `${name}${octave}`;
+}
+
+function midiToNoteName(midi) {
+  const name = NOTE_NAMES[((midi % 12) + 12) % 12];
+  const octave = Math.floor(midi / 12) - 1;
+  return `${name}${octave}`;
+}
+
+function midiToFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function freqToMidi(freq) {
+  return Math.round(69 + 12 * Math.log2(freq / 440));
+}
+
+function gatedDetectPitch(buf, opts) {
+  return rms(buf) >= PITCH_DETECT_MIN_RMS ? detectPitch(buf, audioEngine.sampleRate, opts) : null;
+}
+
+function semitoneToFreq(semitones) {
+  return tonicFreq * Math.pow(2, semitones / 12);
+}
+
+// ---------------------------------------------------------------------------
+// Tone playback for game mode
+// ---------------------------------------------------------------------------
+
+function playGameTone(semitones, durSec = 0.5, vol = 0.18) {
+  if (!audioEngine.audioCtx) return;
+  const freq = semitoneToFreq(semitones);
+  const osc = audioEngine.audioCtx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+  const gain = audioEngine.audioCtx.createGain();
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(audioEngine.audioCtx.destination);
+  const now = audioEngine.audioCtx.currentTime + 0.02;
+  osc.start(now);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(vol, now + 0.03);
+  gain.gain.setValueAtTime(vol, now + durSec - 0.08);
+  gain.gain.linearRampToValueAtTime(0, now + durSec);
+  osc.stop(now + durSec + 0.02);
+}
+
+function playGamePair(a, b) {
+  playGameTone(a, 0.45);
+  setTimeout(() => playGameTone(b, 0.45), 500);
+}
+
+// ---------------------------------------------------------------------------
+// MIDI
 // ---------------------------------------------------------------------------
 
 initMidi().then(({ supported, deviceNames }) => {
   const gateStatus = $('midiGateStatus');
   if (!supported) {
-    gateStatus.textContent = 'No MIDI support detected in this browser — mic/voice input will be used instead.';
+    gateStatus.textContent = 'No MIDI support — mic/voice input will be used.';
   } else if (deviceNames.length === 0) {
-    gateStatus.textContent = 'No MIDI keyboard connected yet — mic/voice input will be used, or plug one in any time.';
+    gateStatus.textContent = 'No MIDI keyboard connected — plug one in any time.';
   } else {
-    gateStatus.textContent = `MIDI keyboard connected: ${deviceNames.join(', ')}.`;
+    gateStatus.textContent = `MIDI keyboard: ${deviceNames.join(', ')}`;
   }
 });
 
 onMidiDevicesChanged((deviceNames) => {
   midiConnected = deviceNames.length > 0;
   const pill = $('midiStatusPill');
-  if (pill) pill.textContent = midiConnected ? `MIDI: ${deviceNames[0]}` : 'MIDI: not connected';
+  if (pill) pill.textContent = midiConnected ? `MIDI: ${deviceNames[0]}` : 'MIDI: —';
   const tuneCopy = $('tuneCopy');
-  if (tuneCopy) {
-    tuneCopy.textContent = midiConnected
-      ? 'Press a single key on your MIDI keyboard — or sing/play a sustained note into the mic instead. Everything that follows is relative to it, so there\'s no wrong note to start on.'
-      : 'Play or sing a single sustained note — whatever\'s comfortable for your instrument or voice. Everything that follows is relative to it, so there\'s no wrong note to start on.';
+  if (tuneCopy && midiConnected) {
+    tuneCopy.textContent = 'Press a single key on your MIDI keyboard — everything that follows is relative to it.';
   }
 });
+
+// The MIDI note-on handler — routes to tuning OR to the active game
+// question's MIDI answer handler, depending on state.
+let onMidiAnswer = null; // set by renderGameQuestion / lessonEngine when expecting a MIDI answer
+// Set alongside onMidiAnswer so keyboard shortcuts can replay the current
+// question or pick a numbered choice without a MIDI device attached.
+let currentQuestionControls = null;
 
 onMidiNoteOn((midiNoteNumber, velocity) => {
-  if (!game) return;
-  const nowMs = performance.now();
   if (appState === 'tuning') {
-    confirmTonicFromMidi(midiNoteNumber, nowMs);
-  } else if (game.phase === PHASE.RECALLING) {
-    const result = game.processMidiNoteOn(midiNoteNumber, nowMs);
-    handleRecallResult(result);
+    confirmTonicFromMidi(midiNoteNumber);
+    return;
+  }
+  if (onMidiAnswer) {
+    onMidiAnswer(midiNoteNumber);
   }
 });
-
-// Minimum RMS before even attempting pitch detection. Normalized
-// autocorrelation only measures *shape* correlation, not absolute level —
-// it doesn't inherently know the difference between a real played note and
-// mic self-noise or 50/60Hz electrical hum picked up from a laptop's own
-// power supply, both of which are genuinely periodic enough to sometimes
-// read as a confident "pitch" even at a barely-there amplitude. Confirmed
-// directly: a simulated near-silent hum buffer (RMS ~0.0006) produced a
-// "confident" (0.89) detection with no gate in place. This is what caused
-// tuning to fire on nothing at all — not a tolerance/timing problem, a
-// missing floor.
-const PITCH_DETECT_MIN_RMS = 0.012;
-
-function gatedDetectPitch(buf, opts) {
-  return rms(buf) >= PITCH_DETECT_MIN_RMS ? detectPitch(buf, audioEngine.sampleRate, opts) : null;
-}
 
 // ---------------------------------------------------------------------------
 // Gate / startup
@@ -111,161 +148,31 @@ async function populateDevices() {
       opt.textContent = d.label || `Input ${i + 1}`;
       select.appendChild(opt);
     });
-  } catch (err) { /* pre-permission enumeration can throw in some browsers; non-fatal */ }
+  } catch {}
 }
 populateDevices();
 
 $('startBtn').addEventListener('click', async () => {
-  const deviceId = $('deviceSelect').value || null;
   $('startBtn').disabled = true;
   $('startBtn').textContent = 'Starting…';
   try {
-    await audioEngine.start(deviceId);
+    await audioEngine.start($('deviceSelect').value || null);
     $('gate').hidden = true;
     $('app').hidden = false;
     boot();
   } catch (err) {
-    console.error(err);
     $('gateError').hidden = false;
     $('gateError').textContent = err.name === 'NotAllowedError'
-      ? 'Microphone access was denied. Grant permission and try again.'
-      : `Could not start listening: ${err.message || err}`;
+      ? 'Microphone access was denied.'
+      : `Could not start: ${err.message || err}`;
     $('startBtn').disabled = false;
     $('startBtn').textContent = 'Start';
   }
 });
 
 // ---------------------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------------------
-
-function boot() {
-  const scaleSelect = $('scaleSelect');
-  SCALES.forEach((s) => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.name;
-    scaleSelect.appendChild(opt);
-  });
-  scaleSelect.value = SCALES[0].id;
-  updateScaleDesc();
-  scaleSelect.addEventListener('change', () => {
-    if (game) game.setScale(SCALES.find((s) => s.id === scaleSelect.value));
-    updateScaleDesc();
-  });
-
-  game = new Game(SCALES[0]);
-  $('statAllTimeBest').textContent = allTimeBest;
-  updateStatsUI();
-
-  setupCanvas();
-
-  $('replayBtn').addEventListener('click', () => {
-    if (game.phase === PHASE.RECALLING || game.phase === PHASE.LISTENING) {
-      replayCurrentSequence();
-    }
-  });
-  $('retuneBtn').addEventListener('click', () => {
-    appState = 'tuning';
-    tonicLockedAtMs = null;
-    tuningLock.reset();
-    $('gameCard').hidden = true;
-    $('tuneCard').hidden = false;
-    $('tuneNote').textContent = '—';
-    $('tuneHint').textContent = 'Waiting for a steady note…';
-    $('tuneProgressFill').style.width = '0%';
-    $('statusText').textContent = 'Tuning';
-  });
-
-  $('pitchVisionCb').addEventListener('change', (e) => { pitchVisionEnabled = e.target.checked; });
-  $('intervalVisionCb').addEventListener('change', (e) => { intervalVisionEnabled = e.target.checked; });
-
-  requestAnimationFrame(frame);
-}
-
-function updateScaleDesc() {
-  const s = SCALES.find((x) => x.id === $('scaleSelect').value) || SCALES[0];
-  $('scaleDesc').textContent = s.desc;
-}
-
-function setupCanvas() {
-  const canvas = $('pageCanvas');
-  const rect = canvas.getBoundingClientRect();
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  pageW = Math.max(1, Math.round(rect.width));
-  pageH = Math.max(1, Math.round(rect.height));
-  canvas.width = pageW * dpr;
-  canvas.height = pageH * dpr;
-  ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  paintVellum();
-}
-
-// ---------------------------------------------------------------------------
-// Page rendering — a simplified single-page version of Ambient Bloom's
-// aged-vellum background, since this game only ever needs one page visible
-// at a time rather than a two-page spread.
-// ---------------------------------------------------------------------------
-
-function seededRand(seed) {
-  let s = seed >>> 0;
-  return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
-}
-
-function paintVellum() {
-  const rand = seededRand((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
-  const baseHue = 38 + rand() * 12;
-  const baseLight = 78 + rand() * 5;
-  ctx.fillStyle = `hsl(${baseHue}, 30%, ${baseLight}%)`;
-  ctx.fillRect(0, 0, pageW, pageH);
-
-  for (let i = 0; i < 4; i++) {
-    const x = rand() * pageW, y = rand() * pageH, r = 50 + rand() * 120;
-    const darker = rand() < 0.6;
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-    const tone = darker
-      ? `hsla(${30 + rand() * 20}, 36%, ${44 + rand() * 15}%,`
-      : `hsla(${45 + rand() * 15}, 40%, ${88 + rand() * 6}%,`;
-    grad.addColorStop(0, tone + (0.05 + rand() * 0.04) + ')');
-    grad.addColorStop(1, tone + '0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, pageW, pageH);
-  }
-
-  const spotCount = 16 + Math.floor(rand() * 16);
-  for (let i = 0; i < spotCount; i++) {
-    const x = rand() * pageW, y = rand() * pageH, r = 0.7 + rand() * 2.6;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsla(${18 + rand() * 16}, 45%, ${34 + rand() * 15}%, ${0.06 + rand() * 0.08})`;
-    ctx.fill();
-  }
-
-  // Faint baseline rules for the two rows, like a manuscript's ruled lines.
-  ctx.strokeStyle = 'rgba(43,38,32,0.09)';
-  ctx.lineWidth = 1;
-  [TARGET_ROW_Y + 8, RESPONSE_ROW_Y + 8].forEach((y) => {
-    ctx.beginPath();
-    ctx.moveTo(ROW_START_X - 10, y);
-    ctx.lineTo(pageW - 20, y);
-    ctx.stroke();
-  });
-
-  targetX = ROW_START_X;
-  responseX = ROW_START_X;
-}
-
-// ---------------------------------------------------------------------------
 // Tuning
 // ---------------------------------------------------------------------------
-
-function freqToNoteName(freq) {
-  const midi = 69 + 12 * Math.log2(freq / 440);
-  const rounded = Math.round(midi);
-  const name = NOTE_NAMES[((rounded % 12) + 12) % 12];
-  const octave = Math.floor(rounded / 12) - 1;
-  return `${name}${octave}`;
-}
 
 function updateTuning(buf, nowMs) {
   const pitchResult = gatedDetectPitch(buf, { minHz: 50, maxHz: 1500 });
@@ -274,17 +181,14 @@ function updateTuning(buf, nowMs) {
   if (pitchResult) {
     $('tuneNote').textContent = freqToNoteName(pitchResult.freq);
   }
-
   if (locked != null) {
     if (tonicLockedAtMs == null) {
       tonicLockedAtMs = nowMs;
-      $('tuneHint').textContent = 'Locked — hold it a moment longer…';
+      $('tuneHint').textContent = 'Locked — hold it…';
     }
     const progress = Math.min(1, (nowMs - tonicLockedAtMs) / TUNE_CONFIRM_MS);
     $('tuneProgressFill').style.width = `${progress * 100}%`;
-    if (progress >= 1) {
-      confirmTonic(locked);
-    }
+    if (progress >= 1) confirmTonic(locked);
   } else {
     tonicLockedAtMs = null;
     $('tuneProgressFill').style.width = '0%';
@@ -293,201 +197,461 @@ function updateTuning(buf, nowMs) {
 }
 
 function confirmTonic(freq) {
-  game.setTonic(freq);
+  tonicFreq = freq;
+  tonicMidi = freqToMidi(freq);
+  setLessonTonic(freq);
+  if (audioEngine.audioCtx) setAudioCtx(audioEngine.audioCtx);
   $('tonicReadout').textContent = freqToNoteName(freq);
   appState = 'playing';
   $('tuneCard').hidden = true;
-  $('gameCard').hidden = false;
-  $('statusText').textContent = 'Listening';
-  startNewRound();
+  $('modeTabBar').hidden = false;
+  $('statusText').textContent = 'Ready';
+  switchMode(currentMode);
 }
 
-// MIDI tuning is exact (a note-on is unambiguous, no autocorrelation
-// guesswork to wait out) but still holds for a brief beat before
-// switching screens — an instant, zero-feedback cut would reproduce
-// exactly the "it vanished before I could react" problem the mic flow
-// had before its confirm delay was added, just via a different cause.
 let midiTuneTimer = null;
-function confirmTonicFromMidi(midiNoteNumber, nowMs) {
-  const freq = 440 * Math.pow(2, (midiNoteNumber - 69) / 12);
-  $('tuneNote').textContent = freqToNoteName(freq);
+function confirmTonicFromMidi(midiNoteNumber) {
+  const freq = midiToFreq(midiNoteNumber);
+  $('tuneNote').textContent = midiToNoteName(midiNoteNumber);
   $('tuneHint').textContent = 'Locked — from your MIDI keyboard.';
   $('tuneProgressFill').style.width = '100%';
   if (midiTuneTimer) clearTimeout(midiTuneTimer);
   midiTuneTimer = setTimeout(() => { if (appState === 'tuning') confirmTonic(freq); }, 500);
 }
 
-// ---------------------------------------------------------------------------
-// Listen phase — plays the sequence with a simple pad voice, writing each
-// glyph onto the target row in sync with its note.
-// ---------------------------------------------------------------------------
-
-function playTone(semitoneOffset, whenSec, durSec) {
-  const freq = game.tonicFreq * Math.pow(2, semitoneOffset / 12);
-  const osc = audioEngine.audioCtx.createOscillator();
-  osc.type = 'triangle';
-  osc.frequency.value = freq;
-  const gain = audioEngine.audioCtx.createGain();
-  gain.gain.value = 0;
-  osc.connect(gain);
-  gain.connect(audioEngine.audioCtx.destination);
-  osc.start(whenSec);
-  const attack = 0.03, release = 0.12;
-  gain.gain.setValueAtTime(0, whenSec);
-  gain.gain.linearRampToValueAtTime(0.16, whenSec + attack);
-  gain.gain.setValueAtTime(0.16, whenSec + durSec - release);
-  gain.gain.linearRampToValueAtTime(0, whenSec + durSec);
-  osc.stop(whenSec + durSec + 0.02);
+function goToRetune() {
+  appState = 'tuning';
+  tonicLockedAtMs = null;
+  tonicFreq = null;
+  tonicMidi = null;
+  tuningLock.reset();
+  stopLessonAudio();
+  onMidiAnswer = null;
+  $('gameView').hidden = true;
+  $('trainView').hidden = true;
+  $('modeTabBar').hidden = true;
+  $('tuneCard').hidden = false;
+  $('tuneNote').textContent = '—';
+  $('tuneHint').textContent = 'Waiting for a steady note…';
+  $('tuneProgressFill').style.width = '0%';
+  $('statusText').textContent = 'Tuning';
 }
 
-let listenTimers = [];
-function clearListenTimers() {
-  listenTimers.forEach((t) => clearTimeout(t));
-  listenTimers = [];
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+
+function boot() {
+  $('statAllTimeBest').textContent = allTimeBest;
+  $('retuneBtn').addEventListener('click', goToRetune);
+  $('trainTab').addEventListener('click', () => switchMode('train'));
+  $('gameTab').addEventListener('click', () => switchMode('game'));
+  $('backToStagesBtn').addEventListener('click', showStageNav);
+  renderStageNav();
+  renderProgressSummary();
+  requestAnimationFrame(frame);
 }
 
-const NOTE_DUR_MS = 480;
-const NOTE_GAP_MS = 140;
+// ---------------------------------------------------------------------------
+// Mode switching
+// ---------------------------------------------------------------------------
 
-function scheduleListenPhase(sequence) {
-  clearListenTimers();
-  $('phaseLabel').textContent = 'Listen…';
-  $('statusText').textContent = 'Playing';
-  const VISION_LEAD_MS = 160; // how far ahead of the note the hint appears — "telegraphed," not simultaneous
-  let nextTargetX = targetX; // precomputed so the vision cue (drawn before the note) lands at the same x the glyph will use
-  sequence.forEach((offset, i) => {
-    const stepMs = i * (NOTE_DUR_MS + NOTE_GAP_MS);
-    const cueX = nextTargetX;
-    nextTargetX += GLYPH_ADVANCE;
+function switchMode(mode) {
+  currentMode = mode;
+  stopLessonAudio();
+  onMidiAnswer = null;
+  $('trainTab').classList.toggle('active', mode === 'train');
+  $('gameTab').classList.toggle('active', mode === 'game');
+  $('trainView').hidden = mode !== 'train';
+  $('trainSidebar').hidden = mode !== 'train';
+  $('gameView').hidden = mode !== 'game';
+  $('gameSidebar').hidden = mode !== 'game';
+  $('gameSidebar2').hidden = mode !== 'game';
+  $('gameSidebar3').hidden = mode !== 'game';
+  if (mode === 'game') {
+    showGameLessonNav();
+  } else {
+    showStageNav();
+    renderProgressSummary();
+  }
+}
 
-    if (pitchVisionEnabled || intervalVisionEnabled) {
-      listenTimers.push(setTimeout(() => {
-        if (game.visionUnlocked.pitch && pitchVisionEnabled) {
-          const prev = i > 0 ? sequence[i - 1] : offset;
-          const direction = i === 0 ? 0 : Math.sign(signedInterval(prev, offset));
-          drawPitchVision(ctx, cueX, TARGET_ROW_Y, offset, direction);
-        }
-        if (i > 0 && game.visionUnlocked.interval && intervalVisionEnabled) {
-          drawIntervalVision(ctx, cueX, TARGET_ROW_Y - 16, signedInterval(sequence[i - 1], offset));
-        }
-      }, Math.max(0, stepMs - VISION_LEAD_MS)));
+// ---------------------------------------------------------------------------
+// Training mode
+// ---------------------------------------------------------------------------
+
+function renderStageNav() {
+  const container = $('stageList');
+  container.innerHTML = '';
+  STAGES.forEach(stage => {
+    const group = document.createElement('div');
+    group.className = 'stage-group';
+    group.innerHTML = `<h3>${stage.name}</h3><p class="stage-desc">${stage.desc}</p>`;
+    const list = document.createElement('div');
+    list.className = 'lesson-list';
+    stage.lessons.forEach(lesson => {
+      const card = document.createElement('div');
+      card.className = 'lesson-card';
+      const completed = isLessonCompleted(lesson.id);
+      card.innerHTML = `<div><div class="lc-name">${lesson.name}</div><div class="lc-sub">${lesson.subtitle}</div></div><span class="lc-check">${completed ? '✓' : ''}</span>`;
+      card.addEventListener('click', () => openLesson(lesson));
+      list.appendChild(card);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  });
+}
+
+function showStageNav() {
+  stopLessonAudio();
+  onMidiAnswer = null;
+  $('stageNav').hidden = false;
+  $('lessonContainer').hidden = true;
+  renderStageNav();
+  renderProgressSummary();
+}
+
+function openLesson(lesson) {
+  $('stageNav').hidden = true;
+  $('lessonContainer').hidden = false;
+  if (audioEngine.audioCtx) setAudioCtx(audioEngine.audioCtx);
+  renderLesson($('lessonContent'), lesson, (passed) => {
+    renderProgressSummary();
+    showStageNav();
+  });
+}
+
+function renderProgressSummary() {
+  const container = $('progressSummary');
+  container.innerHTML = '';
+  const completed = getCompletedLessonIds();
+  STAGES.forEach(stage => {
+    const total = stage.lessons.length;
+    const done = stage.lessons.filter(l => completed.includes(l.id)).length;
+    const pct = total > 0 ? (done / total) * 100 : 0;
+    const div = document.createElement('div');
+    div.className = 'progress-stage';
+    div.innerHTML = `<span class="ps-name">${stage.name}</span><div class="ps-bar"><div class="ps-bar-fill" style="width:${pct}%"></div></div><span class="ps-count">${done}/${total} completed</span>`;
+    container.appendChild(div);
+  });
+
+  // Overall figure across every stage — there was per-stage detail but no
+  // single answer to "how far through am I".
+  const totalEl = $('progressTotal');
+  if (totalEl) {
+    const allLessons = STAGES.reduce((n, st) => n + st.lessons.length, 0);
+    const allDone = STAGES.reduce(
+      (n, st) => n + st.lessons.filter(l => completed.includes(l.id)).length, 0);
+    totalEl.textContent = `${allDone} / ${allLessons}`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Game mode — lesson-based testing with MIDI keyboard as answer input
+// ---------------------------------------------------------------------------
+
+/** Convert a semitone offset (relative to tonic) to a display name like "F4" */
+function offsetToNoteName(semitones) {
+  if (tonicMidi == null) return `+${semitones}st`;
+  return midiToNoteName(tonicMidi + semitones);
+}
+
+function showGameLessonNav() {
+  onMidiAnswer = null;
+  $('gameLessonNav').hidden = false;
+  $('gamePlayArea').hidden = true;
+  const list = $('gameLessonList');
+  list.innerHTML = '';
+  const available = getAvailableGameLessons();
+
+  if (available.length === 0) {
+    list.innerHTML = '<p class="mode-desc">Complete at least one lesson in Training to unlock game content.</p>';
+    return;
+  }
+
+  const mixedCard = document.createElement('div');
+  mixedCard.className = 'lesson-card';
+  mixedCard.innerHTML = '<div><div class="lc-name">Mixed — all completed lessons</div><div class="lc-sub">Random questions from everything you\'ve trained</div></div>';
+  mixedCard.addEventListener('click', () => startGameRound(null));
+  list.appendChild(mixedCard);
+
+  STAGES.forEach(stage => {
+    const stageLessons = available.filter(l => stage.lessons.some(sl => sl.id === l.id));
+    if (stageLessons.length === 0) return;
+    const group = document.createElement('div');
+    group.className = 'stage-group';
+    group.innerHTML = `<h3>${stage.name}</h3>`;
+    const lessonList = document.createElement('div');
+    lessonList.className = 'lesson-list';
+    stageLessons.forEach(lesson => {
+      const card = document.createElement('div');
+      card.className = 'lesson-card';
+      card.innerHTML = `<div><div class="lc-name">${lesson.name}</div><div class="lc-sub">${lesson.subtitle}</div></div>`;
+      card.addEventListener('click', () => startGameRound(lesson.id));
+      lessonList.appendChild(card);
+    });
+    group.appendChild(lessonList);
+    list.appendChild(group);
+  });
+}
+
+function startGameRound(lessonId) {
+  gameSession = new GameSession();
+  if (!gameSession.start(lessonId)) return;
+  $('gameLessonNav').hidden = true;
+  $('gamePlayArea').hidden = false;
+  $('gameRoundSummary').hidden = true;
+  $('gameRoundTitle').textContent = gameSession.lessonName;
+  $('statusText').textContent = 'Game';
+  renderGameQuestion();
+}
+
+function renderGameQuestion() {
+  const q = gameSession.currentQuestion;
+  if (!q) return;
+
+  $('gameRoundStatus').textContent = `${gameSession.currentIndex + 1}/${gameSession.totalQuestions}  ·  Streak: ${gameSession.streak}`;
+  $('gameFeedback').textContent = '';
+  $('gameFeedback').className = 'try-feedback';
+  const area = $('gameQuestionArea');
+  area.innerHTML = '';
+
+  // --- Note name display ---
+  // For interval/degree: always plays tonic first as reference, then the
+  // mystery note. Show "C4 → ?" so the user knows the structure.
+  // For higher_lower: plays two tones — never show note names (that would
+  // give away the answer).
+  const tonicName = offsetToNoteName(0);
+  let questionDisplay = '';
+  let instruction = '';
+
+  if (q.type === 'higher_lower') {
+    questionDisplay = '♩  ♩';
+    instruction = 'You\'ll hear two tones. Is the second one higher, lower, or the same as the first?';
+  } else if (q.type === 'identify_interval') {
+    questionDisplay = `${tonicName} → ?`;
+    instruction = `You\'ll hear your tonic (${tonicName}) then a second note. Play back the second note on your keyboard, or click the interval name below.`;
+  } else if (q.type === 'identify_degree') {
+    questionDisplay = `${tonicName} → ?`;
+    instruction = `You\'ll hear your tonic (${tonicName}) then a scale degree. Play back the second note on your keyboard, or click the degree below.`;
+  }
+
+  const display = document.createElement('div');
+  display.className = 'game-note-display';
+  display.textContent = questionDisplay;
+  area.appendChild(display);
+
+  // Play button
+  const playBtn = document.createElement('button');
+  playBtn.className = 'lesson-play-btn';
+  playBtn.textContent = '▶ Listen';
+  playBtn.addEventListener('click', () => {
+    if (q.type === 'higher_lower') {
+      playGamePair(q.a, q.b);
+    } else if (q.type === 'identify_interval') {
+      // Always play tonic first, then the interval note
+      playGameTone(0, 0.4, 0.15);
+      setTimeout(() => playGameTone(q.b, 0.5, 0.2), 500);
+    } else if (q.type === 'identify_degree') {
+      playGameTone(0, 0.4, 0.15);
+      setTimeout(() => playGameTone(q.offset, 0.5, 0.2), 500);
+    }
+  });
+  area.appendChild(playBtn);
+
+  // Instruction
+  const prompt = document.createElement('p');
+  prompt.className = 'try-prompt';
+  prompt.textContent = instruction;
+  area.appendChild(prompt);
+
+  // --- MIDI answer handler ---
+  let answered = false;
+  onMidiAnswer = (midiNoteNumber) => {
+    if (answered) return;
+    if (q.type === 'higher_lower') return; // higher/lower uses buttons, not keys
+
+    const playedOffset = ((midiNoteNumber - tonicMidi) % 12 + 12) % 12;
+    const playedNoteName = midiToNoteName(midiNoteNumber);
+    let matchedChoice = null;
+
+    if (q.type === 'identify_interval' && q.choiceSemitones) {
+      const idx = q.choiceSemitones.indexOf(playedOffset);
+      if (idx >= 0) matchedChoice = q.choices[idx];
+    } else if (q.type === 'identify_degree' && q.choiceOffsets) {
+      const idx = q.choiceOffsets.indexOf(playedOffset);
+      if (idx >= 0) matchedChoice = q.choices[idx];
     }
 
-    listenTimers.push(setTimeout(() => {
-      playTone(offset, audioEngine.audioCtx.currentTime, NOTE_DUR_MS / 1000);
-      jitterCounter++;
-      drawGlyph(ctx, targetX, TARGET_ROW_Y, offset, 0.75, INK, jitterCounter * 97);
-      targetX += GLYPH_ADVANCE;
-    }, stepMs));
+    if (matchedChoice) {
+      answered = true;
+      submitGameAnswer(matchedChoice, area.querySelector('.try-choices'), playedNoteName);
+    } else {
+      // The user pressed a note that isn't one of the valid choices —
+      // show it briefly so they know their keypress was registered, but
+      // don't score it (they may have hit a wrong key accidentally).
+      display.textContent = `${offsetToNoteName(0)} → ${playedNoteName}`;
+      display.className = 'game-note-display pressed-miss';
+      setTimeout(() => {
+        display.textContent = questionDisplay;
+        display.className = 'game-note-display';
+      }, 600);
+    }
+  };
+
+  // Expose replay + the choice buttons so keyboard shortcuts can drive the
+  // question without reaching for the mouse or a MIDI keyboard.
+  currentQuestionControls = { replay: () => playBtn.click(), choices: [] };
+
+  // --- Click-based choices (fallback / higher-lower) ---
+  const choicesWrap = document.createElement('div');
+  choicesWrap.className = 'try-choices';
+  q.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'try-choice-btn';
+    btn.textContent = choice;
+    if (currentQuestionControls) currentQuestionControls.choices.push(btn);
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      onMidiAnswer = null;
+      submitGameAnswer(choice, choicesWrap, null);
+    });
+    choicesWrap.appendChild(btn);
   });
-  const totalMs = sequence.length * (NOTE_DUR_MS + NOTE_GAP_MS) + 350;
-  listenTimers.push(setTimeout(() => beginRecall(), totalMs));
+  area.appendChild(choicesWrap);
+
+  // Auto-play
+  playBtn.click();
 }
 
-function replayCurrentSequence() {
-  clearListenTimers();
-  game.restartListen();
-  // Re-write the target row from scratch so a replay doesn't double up marks.
-  paintVellum();
-  scheduleListenPhase(game.sequence);
-}
-
-function beginRecall() {
-  game.beginRecall(performance.now());
-  $('phaseLabel').textContent = 'Your turn — play it back';
-  $('statusText').textContent = 'Your turn';
-}
-
-// ---------------------------------------------------------------------------
-// Recall phase feedback
-// ---------------------------------------------------------------------------
-
-function drawResponseMark(correct, offset) {
-  jitterCounter++;
-  if (correct) {
-    drawGlyph(ctx, responseX, RESPONSE_ROW_Y, offset, 0.9, INK_GOLD, jitterCounter * 97);
-  } else {
-    // A scribe's correction mark, not a wrong glyph — showing the wrong
-    // shape wouldn't mean anything to the player, a correction slash does.
-    ctx.save();
-    ctx.strokeStyle = INK_CORRECTION;
-    ctx.lineWidth = 1.6;
-    ctx.globalAlpha = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(responseX - 4, RESPONSE_ROW_Y - 7);
-    ctx.lineTo(responseX + 9, RESPONSE_ROW_Y + 7);
-    ctx.moveTo(responseX + 9, RESPONSE_ROW_Y - 7);
-    ctx.lineTo(responseX - 4, RESPONSE_ROW_Y + 7);
-    ctx.stroke();
-    ctx.restore();
-  }
-  responseX += GLYPH_ADVANCE;
-}
-
-function showFeedback(success, notesCorrect, totalNotes) {
-  const banner = $('feedbackBanner');
-  banner.hidden = false;
-  banner.className = 'feedback-banner ' + (success ? 'success' : 'fail');
-  banner.textContent = success
-    ? `Decoded! ${totalNotes}/${totalNotes} notes — the page illuminates.`
-    : `${notesCorrect}/${totalNotes} notes matched before the line broke.`;
-}
-
-function updateStatsUI() {
-  $('scorePill').textContent = `Score ${game.score}`;
-  $('streakPill').textContent = `Streak ${game.streak}`;
-  $('statRounds').textContent = game.roundsPlayed;
-  $('statLength').textContent = `${game.sequenceLength} note${game.sequenceLength === 1 ? '' : 's'}`;
-  $('statBestStreak').textContent = game.bestStreak;
-  if (game.bestStreak > allTimeBest) {
-    allTimeBest = game.bestStreak;
-    localStorage.setItem('illuminatedEar.bestStreak', String(allTimeBest));
-    $('statAllTimeBest').textContent = allTimeBest;
-  }
-
-  const level = game.levelInfo;
-  const next = game.nextLevelInfo;
-  $('levelPill').textContent = `Lv.${level.level} ${level.name}`;
-  if (next) {
-    const span = next.xpRequired - level.xpRequired;
-    const into = game.xp - level.xpRequired;
-    $('xpBarFill').style.width = `${Math.min(100, (into / span) * 100)}%`;
-    $('xpLabel').textContent = `${next.xpRequired - game.xp} XP to Level ${next.level}`;
-  } else {
-    $('xpBarFill').style.width = '100%';
-    $('xpLabel').textContent = `Level ${level.level} — Full Vision reached`;
-  }
-
-  const unlocked = game.visionUnlocked;
-  const anyUnlocked = Object.keys(unlocked).length > 0;
-  $('visionToggleRow').hidden = !anyUnlocked;
-  $('intervalVisionLabel').hidden = !unlocked.interval;
-}
-
-/** Shared by both the mic/audio recall path (frame(), below) and the MIDI
- * note-on handler above — same UI reaction either way to a note being
- * scored or a round ending, regardless of which input produced it. */
-function handleRecallResult(result) {
+function submitGameAnswer(choice, choicesWrap, pressedNoteName) {
+  const result = gameSession.answer(choice);
   if (!result) return;
-  if (result.noteScored) {
-    drawResponseMark(result.correct, result.offset);
+
+  const q = gameSession.currentQuestion;
+  const area = $('gameQuestionArea');
+
+  // Highlight correct/wrong in button list
+  if (choicesWrap) {
+    choicesWrap.querySelectorAll('.try-choice-btn').forEach(b => {
+      if (b.textContent === choice) b.classList.add(result.correct ? 'correct' : 'wrong');
+      if (!result.correct && b.textContent === result.correctAnswer) b.classList.add('correct');
+    });
   }
-  if (result.roundOver) {
-    const notesCorrect = game.responses.filter((r) => r.correct).length;
-    showFeedback(result.success, notesCorrect, game.sequence.length);
-    updateStatsUI();
-    $('phaseLabel').textContent = result.success ? 'Illuminated' : 'Line broken';
-    $('statusText').textContent = 'Listening';
-    setTimeout(() => { if (appState === 'playing') startNewRound(); }, 1700);
+
+  // Show the pressed key in the big display
+  const display = area.querySelector('.game-note-display');
+  if (display && pressedNoteName) {
+    display.textContent = `${offsetToNoteName(0)} → ${pressedNoteName}`;
+    display.className = 'game-note-display ' + (result.correct ? 'pressed-correct' : 'pressed-wrong');
+  }
+
+  // Feedback text
+  const fb = $('gameFeedback');
+  fb.className = 'try-feedback ' + (result.correct ? 'fb-correct' : 'fb-wrong');
+  if (result.correct) {
+    fb.textContent = `Correct! +${result.xpGained} XP`;
+  } else {
+    let correctNoteName = '';
+    if (q && q.type === 'identify_interval' && q.choiceSemitones) {
+      const correctIdx = q.choices.indexOf(result.correctAnswer);
+      if (correctIdx >= 0) correctNoteName = offsetToNoteName(q.choiceSemitones[correctIdx]);
+    } else if (q && q.type === 'identify_degree' && q.choiceOffsets) {
+      const correctIdx = q.choices.indexOf(result.correctAnswer);
+      if (correctIdx >= 0) correctNoteName = offsetToNoteName(q.choiceOffsets[correctIdx]);
+    }
+
+    let msg = pressedNoteName
+      ? `You played ${pressedNoteName}. The answer was ${result.correctAnswer}`
+      : `The answer was ${result.correctAnswer}`;
+    if (correctNoteName) msg += ` (${correctNoteName})`;
+    msg += '.';
+    if (result.explanation) msg += ' ' + result.explanation;
+    fb.textContent = msg;
+  }
+
+  $('gameRoundStatus').textContent = `${gameSession.currentIndex + 1}/${gameSession.totalQuestions}  ·  Streak: ${gameSession.streak}`;
+
+  if (result.correct) {
+    // Correct: auto-advance after a brief moment
+    setTimeout(() => {
+      onMidiAnswer = null;
+      if (result.roundOver) showGameSummary(result.summary);
+      else { gameSession.next(); renderGameQuestion(); }
+    }, 900);
+  } else {
+    // Wrong: do NOT auto-advance. Show a "Next" button so the user can
+    // read the explanation at their own pace, replay the correct answer,
+    // and actually learn from the mistake rather than having it flash past.
+    onMidiAnswer = null;
+
+    const wrongControls = document.createElement('div');
+    wrongControls.className = 'try-btn-row';
+    wrongControls.style.marginTop = '12px';
+
+    // "Hear the correct answer" button — plays the tonic then the right note
+    if (q && (q.type === 'identify_interval' || q.type === 'identify_degree')) {
+      const hearBtn = document.createElement('button');
+      hearBtn.className = 'lesson-play-btn';
+      hearBtn.textContent = '▶ Hear correct answer';
+      hearBtn.addEventListener('click', () => {
+        const correctOffset = q.type === 'identify_interval'
+          ? q.choiceSemitones[q.choices.indexOf(result.correctAnswer)]
+          : q.choiceOffsets[q.choices.indexOf(result.correctAnswer)];
+        playGameTone(0, 0.35, 0.13);
+        setTimeout(() => playGameTone(correctOffset, 0.5, 0.2), 450);
+      });
+      wrongControls.appendChild(hearBtn);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'lesson-play-btn';
+    nextBtn.textContent = result.roundOver ? 'See results' : 'Next question';
+    nextBtn.addEventListener('click', () => {
+      if (result.roundOver) showGameSummary(result.summary);
+      else { gameSession.next(); renderGameQuestion(); }
+    });
+    wrongControls.appendChild(nextBtn);
+
+    fb.after(wrongControls);
   }
 }
 
-function startNewRound() {
-  $('feedbackBanner').hidden = true;
-  paintVellum();
-  const seq = game.startRound();
-  updateStatsUI();
-  scheduleListenPhase(seq);
+function showGameSummary(summary) {
+  onMidiAnswer = null;
+  $('gameQuestionArea').innerHTML = '';
+  $('gameFeedback').textContent = '';
+  $('gameFeedback').className = 'try-feedback';
+  $('gameRoundStatus').textContent = 'Round complete';
+
+  const wrap = $('gameRoundSummary');
+  wrap.hidden = false;
+  wrap.innerHTML = `
+    <div class="gs-score">${summary.correct}/${summary.total}</div>
+    <div class="gs-detail">${summary.pct}% correct — best streak: ${summary.bestStreak}</div>
+    <div class="gs-xp">+${summary.xpEarned} XP earned</div>
+  `;
+
+  const btnRow = document.createElement('div');
+  btnRow.className = 'try-btn-row';
+  btnRow.style.justifyContent = 'center';
+  btnRow.style.marginTop = '14px';
+
+  const againBtn = document.createElement('button');
+  againBtn.className = 'lesson-play-btn';
+  againBtn.textContent = 'Play again';
+  againBtn.addEventListener('click', () => startGameRound(gameSession.lessonId));
+
+  const backBtn = document.createElement('button');
+  backBtn.className = 'lesson-play-btn';
+  backBtn.textContent = 'Choose another';
+  backBtn.addEventListener('click', showGameLessonNav);
+
+  btnRow.appendChild(againBtn);
+  btnRow.appendChild(backBtn);
+  wrap.appendChild(btnRow);
+  $('statusText').textContent = 'Ready';
 }
 
 // ---------------------------------------------------------------------------
@@ -499,27 +663,111 @@ let lastFrameTime = performance.now();
 function frame(now) {
   const dtMs = Math.min(80, now - lastFrameTime);
   lastFrameTime = now;
-
   if (audioEngine.isRunning) {
     const timeData = audioEngine.getTimeDomainData();
     const buf = pickLouderChannel(timeData);
-
-    // The activity detector's envelopes run continuously whenever the mic
-    // is live, not just during recall — otherwise they'd go stale across
-    // however long the (silent-to-the-detector) listen phase lasts, and
-    // the first onset of a fresh recall phase would be checked against a
-    // slow-envelope baseline from well before it, rather than the
-    // just-quiet room it should be comparing against.
-    const { onset } = activity.update(buf, dtMs);
-
-    if (appState === 'tuning') {
-      updateTuning(buf, now);
-    } else if (game.phase === PHASE.RECALLING) {
-      const pitchResult = gatedDetectPitch(buf, { minHz: 50, maxHz: 1500 });
-      const result = game.processRecallFrame(onset, pitchResult, now);
-      handleRecallResult(result);
-    }
+    activity.update(buf, dtMs);
+    if (appState === 'tuning') updateTuning(buf, now);
   }
-
   requestAnimationFrame(frame);
 }
+
+/* =========================================================================
+   PROGRESS CONTROLS, PLAYBACK SPEED, KEYBOARD ANSWERING
+
+   resetProgress() was exported from progress.js and never called from
+   anywhere in the UI — a learner wanting a clean slate had to clear site
+   data by hand. Progress also had no way out of this browser, and nothing
+   could be slowed down or answered without a mouse.
+   ========================================================================= */
+
+const earStore = window.TSStore ? window.TSStore.create('illuminated-ear') : null;
+
+function wireProgressControls() {
+  const resetBtn = $('resetProgressBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('Reset all progress?\n\nEvery completed lesson and best score will be cleared. This cannot be undone — export first if you want a copy.')) return;
+      resetProgress();
+      renderProgressSummary();
+      showStageNav();
+    });
+  }
+
+  const exportBtn = $('exportProgressBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const completed = getCompletedLessonIds();
+      const payload = {
+        kind: 'illuminated-ear-progress',
+        version: 1,
+        exported: new Date().toISOString(),
+        completed,
+        scores: completed.reduce((acc, id) => {
+          const sc = getTryScore(id);
+          if (sc) acc[id] = sc;
+          return acc;
+        }, {}),
+        stages: STAGES.map(st => ({
+          id: st.id,
+          name: st.name,
+          done: st.lessons.filter(l => completed.includes(l.id)).length,
+          total: st.lessons.length,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `illuminated-ear-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  }
+}
+
+function wireTempoControl() {
+  const slider = $('tempoSlider');
+  const readout = $('tempoReadout');
+  if (!slider) return;
+
+  const saved = earStore ? earStore.get('tempo', 100) : 100;
+  slider.value = saved;
+  readout.textContent = `${saved}%`;
+  setLessonTempo(saved / 100);
+
+  slider.addEventListener('input', () => {
+    const pct = parseInt(slider.value, 10);
+    readout.textContent = `${pct}%`;
+    setLessonTempo(pct / 100);
+    if (earStore) earStore.set('tempo', pct);
+  });
+}
+
+function wireEarShortcuts() {
+  if (!window.TSShortcuts) return;
+
+  const pickChoice = (n) => {
+    if (!currentQuestionControls) return;
+    const btn = currentQuestionControls.choices[n];
+    if (btn) btn.click();
+  };
+
+  window.TSShortcuts.register([
+    { keys: 'space', group: 'Question', label: 'Replay the current question',
+      run: () => currentQuestionControls && currentQuestionControls.replay() },
+    { keys: '1', group: 'Question', label: 'Choose the first answer', run: () => pickChoice(0) },
+    { keys: '2', group: 'Question', label: 'Choose the second answer', run: () => pickChoice(1) },
+    { keys: '3', group: 'Question', label: 'Choose the third answer', run: () => pickChoice(2) },
+    { keys: '4', group: 'Question', label: 'Choose the fourth answer', run: () => pickChoice(3) },
+    { keys: 'escape', group: 'Navigation', label: 'Back to the lesson list',
+      run: () => { const b = $('backToStagesBtn'); if (b && !b.hidden) b.click(); } },
+    { keys: '?', group: 'General', label: 'Show this help' },
+  ]);
+}
+
+wireProgressControls();
+wireTempoControl();
+wireEarShortcuts();

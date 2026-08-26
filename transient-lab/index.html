@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html data-app="transient-lab">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Transient Lab</title>
   <meta name="description" content="A MIDI synth training app -- scales, chords, and genre-based ear/hand training with real-time audio analysis.">
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/chrome.css">
 
   <style>
     html, body {
@@ -74,10 +75,29 @@
     /* Support widget -- small, fixed corner, out of the way of the
        app's own UI. Rudiment's store links are commented out below;
        add them once those listings are live. */
+    /* Legal bar — every other app on the site has one; this page was the
+       only app besides Subharmonicon and Ambient Bloom missing it. */
+    #legalBar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 5px 12px;
+      font: 400 10.5px 'IBM Plex Mono', ui-monospace, monospace;
+      color: #8A8070;
+      background: rgba(237, 230, 214, 0.92);
+      border-top: 1px solid rgba(43, 38, 32, 0.14);
+    }
+    #legalBar a { color: #8A8070; text-decoration: none; }
+    #legalBar a:hover { color: #8B4A2B; }
+
     #support-widget {
       position: fixed;
       right: 14px;
-      bottom: 14px;
+      bottom: 30px;
       z-index: 10;
       display: flex;
       flex-direction: column;
@@ -122,6 +142,108 @@
       background: #E4DBC7;
       border-bottom: 1px solid #C9BFA0;
     }
+    #hub-strip .hs-spacer { flex: 1 1 auto; }
+    #hub-strip .hs-progress {
+      font: 500 10.5px 'IBM Plex Mono', ui-monospace, monospace;
+      letter-spacing: 0.05em; color: #8B4A2B; white-space: nowrap;
+    }
+    #hub-strip .hs-btn {
+      font: 400 10px 'IBM Plex Mono', ui-monospace, monospace;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: #5C5346; background: transparent;
+      border: 1px solid rgba(43,38,32,0.22); border-radius: 999px;
+      padding: 6px 12px; cursor: pointer; white-space: nowrap;
+      transition: color .2s, border-color .2s;
+    }
+    #hub-strip .hs-btn:hover { color: #2B2620; border-color: #8B4A2B; }
+    #hub-strip .hs-btn.danger:hover { color: #b8402a; border-color: #b8402a; }
+
+    /* Lesson search — 216 scale packs with no filter meant browsing a
+       canvas-drawn dropdown to find anything. */
+    #hub-strip .hs-search { position: relative; }
+    #hub-strip .hs-search input {
+      font: 400 11px 'IBM Plex Mono', ui-monospace, monospace;
+      color: #2B2620; background: #EDE6D6;
+      border: 1px solid rgba(43,38,32,0.22); border-radius: 999px;
+      padding: 6px 12px; width: 150px; outline: none;
+    }
+    #hub-strip .hs-search input:focus { border-color: #8B4A2B; }
+    #lessonSearchResults {
+      position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
+      background: #EDE6D6; border: 1px solid rgba(43,38,32,0.22);
+      border-radius: 10px; padding: 4px; min-width: 260px;
+      max-height: 300px; overflow-y: auto; display: none;
+      box-shadow: 0 12px 30px rgba(43,38,32,0.22);
+    }
+    #lessonSearchResults.open { display: block; }
+    #lessonSearchResults button {
+      display: block; width: 100%; text-align: left; background: none;
+      border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer;
+      font: 400 12px 'Newsreader', Georgia, serif; color: #2B2620;
+    }
+    #lessonSearchResults button:hover { background: rgba(139,74,43,0.12); }
+    #lessonSearchResults .ls-pack {
+      display: block; font: 400 9.5px 'IBM Plex Mono', monospace;
+      color: #8A8070; letter-spacing: 0.05em;
+    }
+    #lessonSearchResults .ls-empty { padding: 8px 10px; color: #8A8070; font-size: 11px; }
+
+    /* Progress panel */
+    #progressPanel {
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(26,22,17,0.55);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    #progressPanel[hidden] { display: none; }
+    #progressPanel .pp-inner {
+      background: #EDE6D6; border: 1px solid rgba(43,38,32,0.22);
+      border-radius: 14px; padding: 24px 26px; width: 100%; max-width: 520px;
+      max-height: 78vh; overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(43,38,32,0.28);
+    }
+    #progressPanel .pp-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    #progressPanel h2 {
+      font: 600 21px 'Fraunces', Georgia, serif; color: #2B2620; margin: 0;
+    }
+    #progressPanel .pp-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 17px; color: #8A8070; padding: 4px 6px; border-radius: 6px;
+    }
+    #progressPanel .pp-close:hover { color: #8B4A2B; background: rgba(139,74,43,0.10); }
+    #progressPanel .pp-actions {
+      display: flex; gap: 8px; margin-top: 18px;
+      padding-top: 14px; border-top: 1px solid rgba(43,38,32,0.14);
+    }
+    .pp-summary {
+      font: 400 14px 'Newsreader', Georgia, serif; color: #5C5346; margin: 0 0 16px 0;
+    }
+    .pp-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 0; border-bottom: 1px solid rgba(43,38,32,0.10);
+    }
+    .pp-row:last-child { border-bottom: none; }
+    .pp-name { flex: 1; font: 400 13px 'Newsreader', Georgia, serif; color: #2B2620; }
+    .pp-name small { display: block; font: 400 9.5px 'IBM Plex Mono', monospace; color: #8A8070; }
+    .pp-bar { width: 90px; height: 6px; background: rgba(43,38,32,0.12); border-radius: 3px; overflow: hidden; }
+    .pp-bar-fill { height: 100%; background: #8B4A2B; }
+    .pp-pct { width: 38px; text-align: right; font: 500 11px 'IBM Plex Mono', monospace; color: #5C5346; }
+    .pp-empty { color: #8A8070; font: 400 13px 'Newsreader', Georgia, serif; }
+
+    /* The canvas is a fixed 1920x1080 scaled to fit, so on a 1366-wide
+       laptop everything renders at ~71% — including the small note-name and
+       fingering text. Nudging the floor up keeps that text legible rather
+       than letting it shrink with the viewport. */
+    @media (max-width: 1500px) {
+      #canvas-wrap { min-width: 1100px; }
+      #hub-strip .hs-search input { width: 110px; }
+    }
+    @media (max-width: 1100px) {
+      #hub-strip { flex-wrap: wrap; row-gap: 8px; }
+      #hub-strip .hs-spacer { flex-basis: 100%; height: 0; }
+    }
     #hub-strip a {
       display: flex;
       align-items: center;
@@ -142,22 +264,43 @@
       letter-spacing: 0.02em;
     }
   </style>
+  <link rel="canonical" href="https://thermalsocklabs.com/transient-lab/">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Transient Lab — Thermalsock Labs">
+  <meta property="og:description" content="Scales, chords and genre lessons judged live against your MIDI keyboard.">
+  <meta property="og:url" content="https://thermalsocklabs.com/transient-lab/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Transient Lab — Thermalsock Labs">
+  <meta name="twitter:description" content="Scales, chords and genre lessons judged live against your MIDI keyboard.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 
 <body>
   <div id="hub-strip">
-    <a href="../index.html">
-      <svg class="hs-mark" width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="1" y="2" width="9" height="9" stroke="#8A7A57" stroke-width="1.4"/>
-        <rect x="12" y="2" width="9" height="9" stroke="#8A7A57" stroke-width="1.4"/>
-        <rect x="23" y="2" width="9" height="9" fill="#8B4A2B"/>
-        <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#b8402a" stroke-width="1.6"/>
-      </svg>
-      <span class="hs-text">
-        <span class="hs-appname">Transient Lab</span>
-        <span class="hs-sub">Thermalsock Labs</span>
+    <a href="../index.html" class="brand-lockup" style="color:var(--app-accent)">
+        <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="currentColor"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#b8402a" stroke-width="1.6"/>
+        </svg>
+      <span class="brand-lockup-text">
+        <span class="brand-appname">Transient Lab</span>
+        <span class="brand-sub">Thermalsock Labs</span>
       </span>
     </a>
+    <div class="hs-spacer"></div>
+    <span class="hs-progress" id="hsProgress" title="Lessons passed (80% accuracy or better)">&mdash;</span>
+    <div class="hs-search">
+      <input type="search" id="lessonSearch" placeholder="Find a lesson&hellip;" aria-label="Find a lesson" autocomplete="off" />
+      <div id="lessonSearchResults" role="listbox" aria-label="Lesson search results"></div>
+    </div>
+    <button class="hs-btn" id="progressBtn" type="button" title="Progress &amp; accuracy">Progress</button>
+    <button class="hs-btn" id="shortcutsBtn" type="button" title="Keyboard shortcuts (?)">Shortcuts</button>
+    <nav data-app-switcher="transient-lab" data-base="../" aria-label="Thermalsock Labs apps"></nav>
   </div>
 
   <div id="compat-banner">
@@ -169,6 +312,27 @@
     <canvas id="sequencer" width="1920" height="1080"></canvas>
   </div>
 
+  <div id="progressPanel" hidden>
+    <div class="pp-inner" role="dialog" aria-modal="true" aria-label="Progress and accuracy">
+      <div class="pp-head">
+        <h2>Progress</h2>
+        <button class="pp-close" id="progressClose" type="button" aria-label="Close">&#10005;</button>
+      </div>
+      <div id="progressBody"></div>
+      <div data-related data-base="../"></div>
+      <div class="pp-actions">
+        <button class="hs-btn" id="exportProgressBtn" type="button">Export JSON</button>
+        <button class="hs-btn danger" id="resetProgressBtn" type="button">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="legalBar">
+    <span>&copy; 2026 Thermalsock Labs</span>
+    <a href="../legal/privacy.html">Privacy</a>
+    <a href="../legal/disclaimer.html">Disclaimer</a>
+  </div>
+
   <div id="support-widget">
     <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 45px !important;width: 163px !important;">
@@ -177,6 +341,9 @@
     <span class="store-link pending" title="App Store review in progress">📱 Rudiment on the App Store - coming soon</span>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
   <script>
     // Web MIDI is Chrome/Edge/Firefox 108+ only -- Safari (desktop and
     // iOS) has never shipped it and WebKit has no roadmap to. This app
@@ -193,5 +360,6 @@
   </script>
 
   <script type="module" src="./engine.js"></script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

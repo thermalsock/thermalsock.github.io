@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="oscilloscope">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thermalsock Labs — Web Oscilloscope</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
+  <meta name="description" content="A real dual-trace oscilloscope in your browser — trigger, cursors, FFT, spectrogram and tuner, all running locally.">
+  <link rel="canonical" href="https://thermalsocklabs.com/oscilloscope/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Web Oscilloscope — Thermalsock Labs">
+  <meta property="og:description" content="A real dual-trace oscilloscope in your browser — trigger, cursors, FFT, spectrogram and tuner, all running locally.">
+  <meta property="og:url" content="https://thermalsocklabs.com/oscilloscope/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Web Oscilloscope — Thermalsock Labs">
+  <meta name="twitter:description" content="A real dual-trace oscilloscope in your browser — trigger, cursors, FFT, spectrogram and tuner, all running locally.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -29,7 +44,7 @@
         </select>
       </label>
 
-      <button id="startBtn" class="btn-primary">Start capture</button>
+      <button id="startBtn" class="btn-primary">Start listening</button>
       <p id="gateError" class="gate-error" hidden></p>
     </div>
   </div>
@@ -45,24 +60,29 @@
           <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#8B4A2B">Oscilloscope</span>
+          <span class="brand-appname">Oscilloscope</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
 
-      <nav class="page-nav" aria-label="Thermalsock Labs apps">
-        <a class="page-nav-link active" href="../oscilloscope/index.html">Oscilloscope</a>
-        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
-        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
-        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
-        <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
-        <a class="page-nav-link" href="../loom/index.html">Loom</a>
-        <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
-        <a class="page-nav-link" href="../illuminated-ear/index.html">Illuminated Ear</a>
-      </nav>
+      <nav class="page-nav" data-app-switcher="oscilloscope" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
       <div class="topbar-right">
-        <span id="modePill" class="pill mode">Time Domain</span>
+        <label class="topbar-mode">
+          <span class="topbar-mode-label">Mode</span>
+          <select id="displayMode" aria-label="Display mode">
+            <option value="time">Time Domain</option>
+            <option value="xy">XY / Lissajous</option>
+            <option value="spectrum">FFT / Spectrum</option>
+            <option value="spectrogram">Spectrogram</option>
+            <option value="chromagram">Chromagram</option>
+            <option value="harmonics">Harmonics / Tuner</option>
+            <option value="balance">Harmonic Balance</option>
+          </select>
+        </label>
+        <button id="freezeBtn" class="pill toggle-pill" type="button" aria-pressed="false">Freeze</button>
+        <button id="exportPngBtn" class="pill toggle-pill" type="button" title="Save the current trace as a PNG (S)">Save PNG</button>
+        <button id="reopenGateBtn" class="pill toggle-pill" type="button" title="Change input device">Input…</button>
         <span class="pill live">
           <span id="statusDot" class="status-dot"></span>
           <span id="statusText">Not running</span>
@@ -99,8 +119,8 @@
               <label for="chBDelay">Ch B delay</label>
               <input type="range" id="chBDelay" min="-100" max="100" step="1" value="0" />
             </div>
-            <div class="row">
-              <label>&nbsp;</label>
+            <div class="row readout-row">
+              <span class="readout-name">Delay</span>
               <span id="chBDelayReadout" class="status-value">0 smp</span>
             </div>
             <div class="row">
@@ -195,18 +215,6 @@
             Display
           </h2>
           <div class="row">
-            <label for="displayMode">Mode</label>
-            <select id="displayMode">
-              <option value="time">Time Domain</option>
-              <option value="xy">XY / Lissajous</option>
-              <option value="spectrum">FFT / Spectrum</option>
-              <option value="spectrogram">Spectrogram</option>
-              <option value="chromagram">Chromagram</option>
-              <option value="harmonics">Harmonics / Tuner</option>
-              <option value="balance">Harmonic Balance</option>
-            </select>
-          </div>
-          <div class="row">
             <label for="themeSelect">Theme</label>
             <select id="themeSelect"></select>
           </div>
@@ -242,6 +250,10 @@
             <label for="triggerLevel">Level</label>
             <input type="range" id="triggerLevel" min="-1" max="1" step="0.01" value="0" />
           </div>
+          <div class="row readout-row">
+            <span class="readout-name">Level</span>
+            <span id="triggerLevelReadout" class="status-value">0.00</span>
+          </div>
           <div class="row">
             <label>Status</label>
             <span id="triggerStatus" class="status-value">--</span>
@@ -260,6 +272,37 @@
             <label for="vScale">Gain (input amp)</label>
             <input type="range" id="vScale" min="0.2" max="12" step="0.1" value="2.5" />
           </div>
+          <div class="row readout-row">
+            <span class="readout-name">Gain</span>
+            <span id="vScaleReadout" class="status-value">2.5&times;</span>
+          </div>
+        </section>
+
+        <section class="card panel-group">
+          <h2>
+            <span class="chip blue" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="M1 12h14M3 12V8M6 12V5M9 12V9M12 12V6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </span>
+            Horizontal
+          </h2>
+          <div class="row">
+            <label for="timebase">Window</label>
+            <select id="timebase">
+              <option value="256">256 samples</option>
+              <option value="512">512 samples</option>
+              <option value="1024" selected>1024 samples</option>
+              <option value="2048">2048 samples</option>
+              <option value="4096">4096 samples</option>
+            </select>
+          </div>
+          <div class="row readout-row">
+            <span class="readout-name">Time / div</span>
+            <span id="timePerDivReadout" class="status-value">--</span>
+          </div>
+          <div class="row readout-row">
+            <span class="readout-name">Window span</span>
+            <span id="windowSpanReadout" class="status-value">--</span>
+          </div>
         </section>
       </aside>
     </main>
@@ -270,12 +313,17 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
     <a href="../legal/disclaimer.html">Disclaimer</a>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

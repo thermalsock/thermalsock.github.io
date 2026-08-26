@@ -1,13 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="sound-design">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thermalsock Labs — Sound Design</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/synth-panel.css" />
+  <meta name="description" content="A patch reference for the Sequential Take 5 — 39 named sounds with the knob settings and envelope shape for each.">
+  <link rel="canonical" href="https://thermalsocklabs.com/sound-design/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Sound Design — Thermalsock Labs">
+  <meta property="og:description" content="A patch reference for the Sequential Take 5 — 39 named sounds with the knob settings and envelope shape for each.">
+  <meta property="og:url" content="https://thermalsocklabs.com/sound-design/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sound Design — Thermalsock Labs">
+  <meta name="twitter:description" content="A patch reference for the Sequential Take 5 — 39 named sounds with the knob settings and envelope shape for each.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -31,29 +46,40 @@
           <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#8B4A2B">Sound Design</span>
+          <span class="brand-appname">Sound Design</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
 
-      <nav class="page-nav" aria-label="Thermalsock Labs apps">
-        <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
-        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
-        <a class="page-nav-link active" href="../sound-design/index.html">Sound Design</a>
-        <a class="page-nav-link" href="../granulator/index.html">Granulator</a>
-        <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
-        <a class="page-nav-link" href="../loom/index.html">Loom</a>
-        <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
-        <a class="page-nav-link" href="../illuminated-ear/index.html">Illuminated Ear</a>
-      </nav>
+      <nav class="page-nav" data-app-switcher="sound-design" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
       <div class="topbar-right">
-        <span class="pill mode">Sequential Take 5 — patch reference</span>
+        <button class="pill action" id="prevPresetBtn" type="button" title="Previous sound (left arrow)" aria-label="Previous sound">&larr;</button>
+        <button class="pill audition" id="auditionBtn" type="button" aria-pressed="false" title="Hear this patch (Space)">
+          <span class="aud-icon" aria-hidden="true">&#9654;</span><span id="auditionLabel">Audition</span>
+        </button>
+        <button class="pill action" id="nextPresetBtn" type="button" title="Next sound (right arrow)" aria-label="Next sound">&rarr;</button>
+        <label class="note-picker" title="Note to audition">
+          <span>Note</span>
+          <select id="auditionNote">
+            <option value="36">C2</option>
+            <option value="48" selected>C3</option>
+            <option value="60">C4</option>
+            <option value="72">C5</option>
+          </select>
+        </label>
+        <span class="pill mode">Sequential Take 5 &mdash; patch reference</span>
       </div>
     </header>
 
     <main class="synth-layout">
-      <nav class="sound-sidebar" id="soundSidebar"></nav>
+      <div class="sound-sidebar-wrap">
+        <div class="sidebar-search">
+          <input type="search" id="presetSearch" placeholder="Find a sound&hellip;" aria-label="Find a sound" autocomplete="off" />
+        </div>
+        <nav class="sound-sidebar" id="soundSidebar"></nav>
+        <p class="sidebar-empty" id="sidebarEmpty" hidden>No sound matches that.</p>
+      </div>
 
       <div class="sound-main">
         <!-- Core signal path: OSCILLATORS / MIXER / FILTER / ENVELOPES -->
@@ -175,12 +201,17 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
     <a href="../legal/disclaimer.html">Disclaimer</a>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/soundDesign.js"></script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

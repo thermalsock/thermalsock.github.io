@@ -66,6 +66,14 @@ export class AudioEngine {
 
     this.sourceNode.connect(this.workletNode);
 
+    // Sample playback path. Granulator could load a file; this app was live
+    // input only, despite sharing the same worklet architecture. A loaded
+    // buffer feeds the same input gain node, so every mutation stage works
+    // on it identically — and swapping back to live input is just a
+    // disconnect.
+    this.samplePlayer = null;
+    this.usingSample = false;
+
     this.outputAnalyser = this.audioCtx.createAnalyser();
     this.outputAnalyser.fftSize = 1024;
     this.outputAnalyser.smoothingTimeConstant = 0.6;
@@ -74,6 +82,45 @@ export class AudioEngine {
     this.workletNode.connect(this.audioCtx.destination);
 
     return { sampleRate: this.sampleRate };
+  }
+
+  /**
+   * Play a decoded AudioBuffer into the mutation chain instead of live input.
+   * Loops, because every stage here (freeze, smear, scatter) is about
+   * sustained evolution — a one-shot would be over before you'd finished
+   * turning a knob.
+   */
+  playSample(audioBuffer) {
+    if (!this.audioCtx) return;
+    this.stopSample();
+    const src = this.audioCtx.createBufferSource();
+    src.buffer = audioBuffer;
+    src.loop = true;
+    src.connect(this.inputGainNode);
+    src.connect(this.workletNode);
+    src.start();
+    this.samplePlayer = src;
+    this.usingSample = true;
+    // Mute live input while the sample plays, otherwise both sum together.
+    try { this.sourceNode.disconnect(this.workletNode); } catch (e) { /* already detached */ }
+    try { this.sourceNode.disconnect(this.inputGainNode); } catch (e) { /* already detached */ }
+  }
+
+  stopSample() {
+    if (this.samplePlayer) {
+      try { this.samplePlayer.stop(); } catch (e) { /* already stopped */ }
+      try { this.samplePlayer.disconnect(); } catch (e) { /* already gone */ }
+      this.samplePlayer = null;
+    }
+    this.usingSample = false;
+  }
+
+  /** Return to live input after a sample has been loaded. */
+  useLiveInput() {
+    this.stopSample();
+    if (!this.sourceNode) return;
+    try { this.sourceNode.connect(this.inputGainNode); } catch (e) { /* already connected */ }
+    try { this.sourceNode.connect(this.workletNode); } catch (e) { /* already connected */ }
   }
 
   get isRunning() {

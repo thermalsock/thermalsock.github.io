@@ -1,14 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="modulus-studio">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thermalsock Labs - Modulus Studio</title>
 <meta name="description" content="Modulus Studio - a browser-based modulation modelling tool. Visualise LFOs, envelopes, performance controls, and random sources, and see how they combine to affect a destination.">
-<link rel="icon" href="data:,">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/chrome.css">
 <style>
+  /* Header and brand rules live in ../shared/chrome.css. */
+
   :root{
     /* Field Notes chassis tokens — same family as every other Thermalsock
        Labs app. */
@@ -50,19 +53,8 @@
   input,select,button{font-family:inherit;}
 
   /* ---------- Top bar ---------- */
-  .topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 20px; border-bottom:1px solid var(--hairline);
-    background:linear-gradient(180deg, rgba(43,38,32,0.03), transparent);
-  }
-  .brand{ font-family:var(--mono); font-size:13px; letter-spacing:0.03em; display:flex; align-items:center; gap:11px; }
-  .brand-lockup{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
-  .brand-lockup-text{ display:flex; flex-direction:column; line-height:1.2; }
-  .brand-appname{ font-family:var(--serif-display); font-weight:600; font-size:15px; }
-  .brand-sub{ font-family:var(--mono); font-size:10px; color:var(--text-dim); }
   .brand .sep{ color:var(--text-faint); }
   .brand .page{ color:var(--text-dim); }
-  .topbar-right{ display:flex; align-items:center; gap:10px; }
   .pill{
     display:inline-flex; align-items:center; gap:6px;
     font-family:var(--mono); font-size:11px; letter-spacing:0.03em;
@@ -225,6 +217,18 @@
   .legend{ display:flex; gap:16px; flex-wrap:wrap; padding:10px 16px; border-top:1px solid var(--hairline); }
   .legend-item{ display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; color:var(--text-dim); }
   .legend-item .sw{ width:14px; height:2px; border-radius:1px; }
+  /* Source bodies are filled by JS. Before that runs the page was six empty
+     labelled boxes; this gives them a skeleton so a slow load reads as
+     loading rather than broken. */
+  .source-body.is-loading{ min-height:64px; position:relative; }
+  .source-body.is-loading::after{
+    content:'Loading\2026';
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:10px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--text-faint);
+  }
+
   .graph-hint{
     padding:8px 16px 12px 16px; font-size:11.5px; color:var(--text-faint); line-height:1.5;
     border-top:1px solid var(--hairline);
@@ -293,6 +297,18 @@
   ::-webkit-scrollbar{ width:8px; }
   ::-webkit-scrollbar-thumb{ background:var(--hairline-strong); border-radius:4px; }
 </style>
+  <link rel="canonical" href="https://thermalsocklabs.com/modulus-studio/">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Modulus Studio — Thermalsock Labs">
+  <meta property="og:description" content="Shape LFOs and envelopes the way the hardware does, and see what happens when you stack several onto one destination.">
+  <meta property="og:url" content="https://thermalsocklabs.com/modulus-studio/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Modulus Studio — Thermalsock Labs">
+  <meta name="twitter:description" content="Shape LFOs and envelopes the way the hardware does, and see what happens when you stack several onto one destination.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -306,12 +322,13 @@
           <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#6a5a9c">Modulus Studio</span>
+          <span class="brand-appname">Modulus Studio</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
     </div>
     <div class="topbar-right">
+      <nav data-app-switcher="modulus-studio" data-base="../" aria-label="Thermalsock Labs apps"></nav>
       <button class="pill help-btn" id="helpBtn" type="button">? How this works</button>
       <span class="pill" id="midiPill">MIDI unavailable</span>
       <span class="pill live"><span class="status-dot"></span>Running</span>
@@ -323,27 +340,27 @@
 
       <div class="card">
         <h3><span class="chip" style="background:rgba(106,90,156,0.15);color:var(--c-lfo1)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 1</h3>
-        <div class="source-body" id="body-lfo1"></div>
+        <div class="source-body is-loading" id="body-lfo1"></div>
       </div>
 
       <div class="card">
         <h3><span class="chip" style="background:rgba(51,71,92,0.15);color:var(--c-lfo2)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 2</h3>
-        <div class="source-body" id="body-lfo2"></div>
+        <div class="source-body is-loading" id="body-lfo2"></div>
       </div>
 
       <div class="card">
         <h3><span class="chip" style="background:rgba(47,122,114,0.15);color:var(--c-env)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 13 5 4 8 8 11 6 14 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Envelope</h3>
-        <div class="source-body" id="body-env"></div>
+        <div class="source-body is-loading" id="body-env"></div>
       </div>
 
       <div class="card">
         <h3><span class="chip" style="background:rgba(154,106,31,0.15);color:var(--c-perf)" aria-hidden="true"><svg viewBox="0 0 16 16"><line x1="5" y1="2" x2="5" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="6" r="1.6" fill="currentColor"/><line x1="11" y1="2" x2="11" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="11" cy="10" r="1.6" fill="currentColor"/></svg></span>Performance</h3>
-        <div class="source-body" id="body-perf"></div>
+        <div class="source-body is-loading" id="body-perf"></div>
       </div>
 
       <div class="card">
         <h3><span class="chip" style="background:rgba(163,74,114,0.15);color:var(--c-rand)" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="4.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="4.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="11.5" r="1.3" fill="currentColor"/></svg></span>Random</h3>
-        <div class="source-body" id="body-rand"></div>
+        <div class="source-body is-loading" id="body-rand"></div>
       </div>
 
       <div class="card">
@@ -355,8 +372,28 @@
       <div class="card">
         <h3><span class="chip" style="background:rgba(43,38,32,0.06);color:var(--text-dim)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2v7m0 0-3-3m3 3 3-3M3 12.5h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Preset</h3>
         <div class="io-row">
+          <select id="hardwareProfile" title="Constrain LFO rates and shapes to a specific instrument">
+            <option value="generic">Generic (no limits)</option>
+            <option value="subharmonicon">Moog Subharmonicon</option>
+            <option value="take5">Sequential Take 5</option>
+            <option value="matriarch">Moog Matriarch</option>
+          </select>
+        </div>
+        <p class="graph-hint" id="profileNote">No instrument selected, so rates and shapes are unconstrained.</p>
+        <div class="io-row">
+          <select id="examplePreset">
+            <option value="">Load an example&hellip;</option>
+            <option value="slowFilterSweep">Slow filter sweep</option>
+            <option value="vibrato">Classic vibrato</option>
+            <option value="pluckEnv">Plucked amp envelope</option>
+            <option value="randomTexture">Random S&amp;H texture</option>
+            <option value="twoLfoDrift">Two-LFO drift</option>
+          </select>
+        </div>
+        <div class="io-row">
           <button class="io-btn" id="exportBtn">EXPORT JSON</button>
           <button class="io-btn" id="importBtn">IMPORT JSON</button>
+          <button class="io-btn" id="exportCurveBtn" title="Export the current destination's modulation curve as CSV">EXPORT CURVE</button>
         </div>
         <input type="file" id="fileInput" accept="application/json" style="display:none">
       </div>
@@ -407,6 +444,7 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 38px !important;width: 138px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
@@ -433,6 +471,9 @@
     </div>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1387,5 +1428,269 @@ try{
 
 })();
 </script>
+  <script>
+/* =========================================================================
+   HARDWARE PROFILES, EXAMPLE PRESETS, CURVE EXPORT, PERSISTENCE
+
+   The pitch is "shape LFOs and envelopes exactly like the hardware", but
+   there was no way to say *which* hardware, no built-in examples to learn
+   from, and nothing survived a reload except the tutorial-seen flag.
+   ========================================================================= */
+
+/* Rate ranges and available shapes for real instruments. These constrain the
+   controls so a patch you build here is actually dialable on the unit in
+   front of you, rather than a shape the hardware can't produce. */
+const HARDWARE_PROFILES = {
+  generic: {
+    label: 'Generic',
+    note: 'No instrument selected, so rates and shapes are unconstrained.',
+    rate: [0.01, 20],
+    shapes: ['sine','triangle','saw','ramp','square','random'],
+  },
+  subharmonicon: {
+    label: 'Moog Subharmonicon',
+    note: 'Two rhythm generators clocked from the sequencer; square and saw only, and the useful range is slow.',
+    rate: [0.1, 10],
+    shapes: ['square','saw'],
+  },
+  take5: {
+    label: 'Sequential Take 5',
+    note: 'One LFO with five shapes, plus a dedicated ADSR per voice. Rates run well into audio range.',
+    rate: [0.05, 20],
+    shapes: ['sine','triangle','saw','square','random'],
+  },
+  matriarch: {
+    label: 'Moog Matriarch',
+    note: 'Single LFO, continuously variable between triangle and square, plus sync. No sample-and-hold.',
+    rate: [0.05, 15],
+    shapes: ['triangle','square','saw'],
+  },
+};
+
+function applyHardwareProfile(id){
+  const profile = HARDWARE_PROFILES[id] || HARDWARE_PROFILES.generic;
+  const note = document.getElementById('profileNote');
+  if(note) note.textContent = profile.note;
+
+  // Clamp any LFO already outside the profile's range, so switching profile
+  // can't leave the patch describing something the instrument can't do.
+  ['lfo1','lfo2'].forEach(key => {
+    const src = SOURCES[key];
+    if(!src) return;
+    src.rate = Math.min(profile.rate[1], Math.max(profile.rate[0], src.rate));
+    if(profile.shapes.indexOf(src.shape) === -1) src.shape = profile.shapes[0];
+  });
+
+  ['body-lfo1','body-lfo2'].forEach(bid => {
+    const elBody = document.getElementById(bid);
+    if(elBody) elBody.innerHTML = '';
+  });
+  buildLFO('lfo1'); buildLFO('lfo2');
+  renderLegend();
+  saveModulusState();
+}
+
+/* Example patches. Each is a real, reasoned starting point rather than
+   filler — the point is that a first-time visitor has something to open. */
+const EXAMPLE_PRESETS = {
+  slowFilterSweep: {
+    label: 'Slow filter sweep',
+    sources: { lfo1: { enabled:true, shape:'triangle', rate:0.15, depth:70, phase:0, polarity:'bi' } },
+    routes: [{ id:1, source:'lfo1', dest:'cutoff', amount:70 }],
+  },
+  vibrato: {
+    label: 'Classic vibrato',
+    sources: { lfo1: { enabled:true, shape:'sine', rate:5.5, depth:12, phase:0, polarity:'bi' } },
+    routes: [{ id:1, source:'lfo1', dest:'pitch', amount:12 }],
+  },
+  pluckEnv: {
+    label: 'Plucked amp envelope',
+    sources: { env: { enabled:true, attack:2, decay:180, sustain:0, release:120, curve:'exp', looping:false } },
+    routes: [{ id:1, source:'env', dest:'amp', amount:100 }],
+  },
+  randomTexture: {
+    label: 'Random S&H texture',
+    sources: { rand: { enabled:true, mode:'sh', rate:3, chaos:65 } },
+    routes: [{ id:1, source:'rand', dest:'cutoff', amount:55 }],
+  },
+  twoLfoDrift: {
+    label: 'Two-LFO drift',
+    sources: {
+      lfo1: { enabled:true, shape:'sine', rate:0.08, depth:60, phase:0, polarity:'bi' },
+      lfo2: { enabled:true, shape:'triangle', rate:0.13, depth:45, phase:90, polarity:'bi' },
+    },
+    routes: [
+      { id:1, source:'lfo1', dest:'cutoff', amount:60 },
+      { id:2, source:'lfo2', dest:'cutoff', amount:40 },
+    ],
+  },
+};
+
+function loadExamplePreset(id){
+  const preset = EXAMPLE_PRESETS[id];
+  if(!preset) return;
+
+  // Start from a clean slate so an example never inherits leftovers from
+  // whatever was previously patched.
+  Object.keys(SOURCES).forEach(k => { SOURCES[k].enabled = false; });
+  Object.keys(preset.sources).forEach(k => {
+    if(SOURCES[k]) Object.assign(SOURCES[k], preset.sources[k]);
+  });
+  routes = preset.routes.map(r => ({ ...r }));
+  routeIdCounter = Math.max(1, ...routes.map(r => r.id || 0)) + 1;
+
+  ['body-lfo1','body-lfo2','body-env','body-perf','body-rand'].forEach(bid => {
+    const elBody = document.getElementById(bid);
+    if(elBody) elBody.innerHTML = '';
+  });
+  buildLFO('lfo1'); buildLFO('lfo2'); buildEnv(); buildPerf(); buildRand();
+  renderRoutes();
+  renderLegend();
+  saveModulusState();
+}
+
+/* Export the resulting curve, not just the patch. You could already export
+   the patch as JSON, but not the shape it produces — which is the thing you
+   might want to take to the hardware or into a wavetable. */
+function exportCurveCsv(){
+  const dest = focusSelect ? focusSelect.value : null;
+  const active = routes.filter(r => !dest || r.dest === dest);
+  if(active.length === 0){
+    alert('Route at least one source to a destination first — there\u2019s no curve to export yet.');
+    return;
+  }
+
+  const SAMPLES = 512;
+  const DURATION_SEC = 4;
+  const rows = ['time_seconds,value'];
+
+  for(let i = 0; i < SAMPLES; i++){
+    const t = (i / SAMPLES) * DURATION_SEC;
+    let sum = 0;
+    active.forEach(r => {
+      const src = SOURCES[r.source];
+      if(!src || !src.enabled) return;
+      sum += sampleSourceAt(src, t) * (r.amount / 100);
+    });
+    rows.push(t.toFixed(5) + ',' + Math.max(-1, Math.min(1, sum)).toFixed(6));
+  }
+
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'modulation-curve-' + (dest || 'output') + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* Analytic sample of a source at time t. Deliberately separate from the
+   live per-frame engine, which carries running phase state — an export has
+   to be reproducible and stateless, not dependent on when you clicked. */
+function sampleSourceAt(src, t){
+  const depth = (src.depth != null ? src.depth : 100) / 100;
+  if(src.shape !== undefined){
+    const phase = ((t * src.rate) + (src.phase || 0) / 360) % 1;
+    let v;
+    switch(src.shape){
+      case 'triangle': v = 1 - 4 * Math.abs(phase - 0.5); break;
+      case 'saw':      v = 1 - 2 * phase; break;
+      case 'ramp':     v = 2 * phase - 1; break;
+      case 'square':   v = phase < 0.5 ? 1 : -1; break;
+      case 'random':   v = Math.sin(Math.floor(phase * 8) * 127.1) ; break;
+      case 'sine':
+      default:         v = Math.sin(phase * Math.PI * 2);
+    }
+    if(src.polarity === 'uni') v = (v + 1) / 2;
+    return v * depth;
+  }
+  if(src.attack !== undefined){
+    const a = src.attack / 1000, d = src.decay / 1000, sLvl = src.sustain / 100;
+    if(t < a) return (t / a) * depth;
+    if(t < a + d) return (1 - (1 - sLvl) * ((t - a) / d)) * depth;
+    return sLvl * depth;
+  }
+  return 0;
+}
+
+/* Persistence */
+const modStore = window.TSStore ? window.TSStore.create('modulus-studio') : null;
+
+function saveModulusState(){
+  if(!modStore) return;
+  const clean = {};
+  Object.keys(SOURCES).forEach(k => {
+    const {_phase,_t,_level,_hold,_last,_lastStep, ...rest} = SOURCES[k];
+    clean[k] = rest;
+  });
+  const profileEl = document.getElementById('hardwareProfile');
+  modStore.set('patch', {
+    sources: clean,
+    routes,
+    profile: profileEl ? profileEl.value : 'generic',
+  });
+}
+
+function restoreModulusState(){
+  if(!modStore) return;
+  const saved = modStore.get('patch', null);
+  if(!saved) return;
+  Object.keys(saved.sources || {}).forEach(k => {
+    if(SOURCES[k]) Object.assign(SOURCES[k], saved.sources[k]);
+  });
+  if(Array.isArray(saved.routes)){
+    routes = saved.routes;
+    routeIdCounter = Math.max(1, ...routes.map(r => r.id || 0)) + 1;
+  }
+  const profileEl = document.getElementById('hardwareProfile');
+  if(profileEl && saved.profile) profileEl.value = saved.profile;
+
+  ['body-lfo1','body-lfo2','body-env','body-perf','body-rand'].forEach(bid => {
+    const elBody = document.getElementById(bid);
+    if(elBody) elBody.innerHTML = '';
+  });
+  buildLFO('lfo1'); buildLFO('lfo2'); buildEnv(); buildPerf(); buildRand();
+  renderRoutes();
+  renderLegend();
+}
+
+function wireModulusExtras(){
+  const profileEl = document.getElementById('hardwareProfile');
+  if(profileEl) profileEl.addEventListener('change', () => applyHardwareProfile(profileEl.value));
+
+  const exampleEl = document.getElementById('examplePreset');
+  if(exampleEl){
+    exampleEl.addEventListener('change', () => {
+      if(exampleEl.value) loadExamplePreset(exampleEl.value);
+      exampleEl.value = '';
+    });
+  }
+
+  const curveBtn = document.getElementById('exportCurveBtn');
+  if(curveBtn) curveBtn.addEventListener('click', exportCurveCsv);
+
+  restoreModulusState();
+  if(profileEl) applyHardwareProfile(profileEl.value);
+
+  // Any control change writes the patch back, debounced by the store.
+  document.addEventListener('change', saveModulusState);
+  document.addEventListener('pointerup', saveModulusState);
+
+  if(window.TSShortcuts){
+    window.TSShortcuts.register([
+      {keys:'e', group:'Patch', label:'Export the patch as JSON',
+       run:() => document.getElementById('exportBtn').click()},
+      {keys:'c', group:'Patch', label:'Export the modulation curve as CSV', run:exportCurveCsv},
+      {keys:'h', group:'Help', label:'Open the walkthrough',
+       run:() => document.getElementById('helpBtn').click()},
+      {keys:'?', group:'General', label:'Show this help'},
+    ]);
+  }
+}
+
+wireModulusExtras();
+
+</script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

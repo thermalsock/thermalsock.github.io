@@ -33,7 +33,6 @@ const els = {
   measFreq: document.getElementById('measFreq'),
   measPeriod: document.getElementById('measPeriod'),
   measPeakFreq: document.getElementById('measPeakFreq'),
-  modePill: document.getElementById('modePill'),
   heroLabel: document.getElementById('heroLabel'),
   heroValueNum: document.getElementById('heroValueNum'),
   heroUnit: document.getElementById('heroUnit'),
@@ -51,6 +50,37 @@ const els = {
   widthFill: document.getElementById('widthFill'),
   phaseReadout: document.getElementById('phaseReadout'),
   phaseNeedle: document.getElementById('phaseNeedle'),
+  timebase: document.getElementById('timebase'),
+  timePerDivReadout: document.getElementById('timePerDivReadout'),
+  windowSpanReadout: document.getElementById('windowSpanReadout'),
+  vScaleReadout: document.getElementById('vScaleReadout'),
+  triggerLevelReadout: document.getElementById('triggerLevelReadout'),
+  freezeBtn: document.getElementById('freezeBtn'),
+  exportPngBtn: document.getElementById('exportPngBtn'),
+  reopenGateBtn: document.getElementById('reopenGateBtn'),
+};
+
+// Settings persistence. Every reload used to reset theme, mode, trigger,
+// gain and timebase — mid-measurement that's genuinely costly.
+const store = window.TSStore ? window.TSStore.create('oscilloscope') : null;
+const saveSettings = () => {
+  if (!store) return;
+  store.set('settings', {
+    displayMode: els.displayMode.value,
+    theme: els.themeSelect.value,
+    chB: els.chBToggle.checked,
+    triggerMode: els.triggerMode.value,
+    triggerSlope: els.triggerSlope.value,
+    triggerLevel: els.triggerLevel.value,
+    vScale: els.vScale.value,
+    timebase: els.timebase.value,
+    cursors: els.cursorsToggle.checked,
+    overlayBlend: els.overlayBlendToggle.checked,
+    msMode: els.msModeToggle.checked,
+    chBDelay: els.chBDelay.value,
+    mathOp: els.mathOpSelect.value,
+    spectrumSource: els.spectrumSourceSelect.value,
+  });
 };
 
 const MODE_LABELS = {
@@ -114,6 +144,7 @@ populateThemes();
 
 els.themeSelect.addEventListener('change', () => {
   renderer.setTheme(themes[els.themeSelect.value]);
+  saveSettings();
 });
 
 // --- Math channel setup ---------------------------------------------------
@@ -199,12 +230,16 @@ els.startBtn.addEventListener('click', async () => {
     els.gate.hidden = true;
     els.app.hidden = false;
     els.startBtn.disabled = false;
-    els.startBtn.textContent = 'Start capture';
+    els.startBtn.textContent = 'Start listening';
     els.statusDot.classList.add('live');
     els.statusText.textContent = `Running \u2014 ${audioEngine.sampleRate} Hz, ${channelCount} ch`;
 
     renderer.resize();
     window.addEventListener('resize', () => renderer.resize());
+    // Now that sampleRate is known, clamp the timebase to the analyser and
+    // fill in the time/div readouts (which are meaningless before capture).
+    applyTimebase(parseInt(els.timebase.value, 10));
+    setFrozen(false);
     startLoop();
 
     // One-shot diagnostic: is channel B actually carrying different data
@@ -234,7 +269,7 @@ els.startBtn.addEventListener('click', async () => {
     console.error('[oscilloscope] Failed to start capture:', err.name, err.message, err);
     showError(friendlyErrorMessage(err));
     els.startBtn.disabled = false;
-    els.startBtn.textContent = 'Start capture';
+    els.startBtn.textContent = 'Start listening';
   }
 });
 
@@ -242,11 +277,23 @@ els.startBtn.addEventListener('click', async () => {
 
 els.displayMode.addEventListener('change', () => {
   displayMode = els.displayMode.value;
-  els.modePill.textContent = MODE_LABELS[displayMode] || displayMode;
+  // The mode control now lives in the topbar and is its own readout, so the
+  // separate #modePill it used to feed is gone.
+  saveSettings();
 });
-els.chBToggle.addEventListener('change', () => { showChannelB = els.chBToggle.checked; });
+els.chBToggle.addEventListener('change', () => {
+  showChannelB = els.chBToggle.checked;
+  saveSettings();
+});
 els.vScale.addEventListener('input', () => {
-  audioEngine.setGain(parseFloat(els.vScale.value));
+  const g = parseFloat(els.vScale.value);
+  audioEngine.setGain(g);
+  els.vScaleReadout.textContent = `${g.toFixed(1)}\u00d7`;
+  saveSettings();
+});
+els.timebase.addEventListener('change', () => {
+  applyTimebase(parseInt(els.timebase.value, 10));
+  saveSettings();
 });
 els.cursorsToggle.addEventListener('change', () => {
   showCursors = els.cursorsToggle.checked;
@@ -257,6 +304,7 @@ els.cursorsToggle.addEventListener('change', () => {
     cursors.hA = renderer.height * 0.3;
     cursors.hB = renderer.height * 0.7;
   }
+  saveSettings();
 });
 
 function canvasPos(evt) {
@@ -301,7 +349,10 @@ els.triggerSlope.addEventListener('change', () => {
   triggerEngine.slope = els.triggerSlope.value;
 });
 els.triggerLevel.addEventListener('input', () => {
-  triggerEngine.level = parseFloat(els.triggerLevel.value);
+  const lvl = parseFloat(els.triggerLevel.value);
+  triggerEngine.level = lvl;
+  els.triggerLevelReadout.textContent = lvl.toFixed(2);
+  saveSettings();
 });
 els.singleShotBtn.addEventListener('click', () => {
   // Force a capture regardless of whatever mode is currently selected —
@@ -314,7 +365,31 @@ els.singleShotBtn.addEventListener('click', () => {
 
 // --- Render loop -------------------------------------------------------
 
-const WINDOW_SIZE = 1024; // samples drawn per frame, independent of fftSize
+// Samples drawn per frame — the horizontal timebase. This was hardcoded at
+// 1024 with no UI, which meant the one control every oscilloscope has, this
+// one didn't. It's now driven by the Horizontal panel. Capped at the
+// analyser's fftSize since that's the most data available in a single pull.
+let WINDOW_SIZE = 1024;
+
+const GRID_DIVISIONS = 10; // renderer draws a 10-division horizontal grid
+
+function applyTimebase(samples) {
+  const max = audioEngine.fftSize || 4096;
+  WINDOW_SIZE = Math.max(64, Math.min(samples, max));
+  updateTimebaseReadout();
+}
+
+function updateTimebaseReadout() {
+  const sr = audioEngine.sampleRate;
+  if (!sr) {
+    els.timePerDivReadout.textContent = '--';
+    els.windowSpanReadout.textContent = '--';
+    return;
+  }
+  const spanMs = (WINDOW_SIZE / sr) * 1000;
+  els.timePerDivReadout.textContent = formatMs(spanMs / GRID_DIVISIONS);
+  els.windowSpanReadout.textContent = `${formatMs(spanMs)} \u00b7 ${WINDOW_SIZE} smp`;
+}
 
 function updateMeasurements(frameA) {
   if (!frameA) return;
@@ -439,7 +514,53 @@ function updateHeroCard(state) {
   els.heroSub.innerHTML = state.sub || '&nbsp;';
 }
 
+// Freeze holds the last acquired frame on screen. A scope without a hold
+// is hard to actually read a transient off — "Force Single Capture" was the
+// only thing close and it re-arms rather than holding what's already there.
+let frozen = false;
+
+function setFrozen(on) {
+  frozen = on;
+  if (els.freezeBtn) {
+    els.freezeBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    els.freezeBtn.textContent = on ? 'Frozen' : 'Freeze';
+  }
+  els.statusText.textContent = on
+    ? 'Frozen \u2014 display held'
+    : `Running \u2014 ${audioEngine.sampleRate} Hz`;
+  els.statusDot.classList.toggle('live', !on);
+}
+
+// Save the canvas exactly as drawn. Nothing on the site could export a
+// measurement before this, so a trace could only leave the app as a manual
+// screenshot.
+function exportPng() {
+  try {
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    els.canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `thermalsock-scope-${displayMode}-${stamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Revoke on the next tick so the click has definitely been serviced.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  } catch (err) {
+    console.error('[oscilloscope] PNG export failed:', err);
+  }
+}
+
 function frame() {
+  if (frozen) {
+    // Keep the loop alive so unfreezing is instant, but don't pull new data
+    // or repaint — the held frame stays exactly as captured.
+    rafId = requestAnimationFrame(frame);
+    return;
+  }
   const buffers = audioEngine.getTimeDomainData();
   const bufA = buffers[0];
   const bufB = buffers[1];
@@ -645,4 +766,96 @@ function frame() {
 function startLoop() {
   if (rafId) cancelAnimationFrame(rafId);
   frame();
+}
+
+// --- Restore saved settings, wire actions, register shortcuts --------------
+
+function restoreSettings() {
+  if (!store) return;
+  const cfg = store.get('settings', null);
+  if (!cfg) return;
+
+  const apply = (el, value, prop = 'value') => {
+    if (el && value != null) el[prop] = value;
+  };
+
+  apply(els.displayMode, cfg.displayMode);
+  apply(els.themeSelect, cfg.theme);
+  apply(els.triggerMode, cfg.triggerMode);
+  apply(els.triggerSlope, cfg.triggerSlope);
+  apply(els.triggerLevel, cfg.triggerLevel);
+  apply(els.vScale, cfg.vScale);
+  apply(els.timebase, cfg.timebase);
+  apply(els.chBDelay, cfg.chBDelay);
+  apply(els.mathOpSelect, cfg.mathOp);
+  apply(els.spectrumSourceSelect, cfg.spectrumSource);
+  apply(els.chBToggle, cfg.chB, 'checked');
+  apply(els.cursorsToggle, cfg.cursors, 'checked');
+  apply(els.overlayBlendToggle, cfg.overlayBlend, 'checked');
+  apply(els.msModeToggle, cfg.msMode, 'checked');
+
+  // Fire the change handlers so internal state matches the restored controls
+  // rather than only the DOM looking right.
+  ['displayMode', 'themeSelect', 'triggerMode', 'triggerSlope', 'timebase',
+   'mathOpSelect', 'spectrumSourceSelect', 'chBToggle', 'cursorsToggle',
+   'overlayBlendToggle', 'msModeToggle'].forEach((k) => {
+    if (els[k]) els[k].dispatchEvent(new Event('change'));
+  });
+  ['triggerLevel', 'vScale', 'chBDelay'].forEach((k) => {
+    if (els[k]) els[k].dispatchEvent(new Event('input'));
+  });
+}
+
+if (els.freezeBtn) {
+  els.freezeBtn.addEventListener('click', () => setFrozen(!frozen));
+}
+if (els.exportPngBtn) {
+  els.exportPngBtn.addEventListener('click', exportPng);
+}
+// Changing input device previously meant reloading the whole page.
+if (els.reopenGateBtn) {
+  els.reopenGateBtn.addEventListener('click', async () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    try { audioEngine.stop?.(); } catch (e) { /* engine may not expose stop */ }
+    els.app.hidden = true;
+    els.gate.hidden = false;
+    els.statusDot.classList.remove('live');
+    els.statusText.textContent = 'Not running';
+    await populateDevices();
+  });
+}
+
+restoreSettings();
+
+if (window.TSShortcuts) {
+  const cycle = (el, dir) => {
+    const opts = Array.from(el.options);
+    const i = (opts.findIndex((o) => o.value === el.value) + dir + opts.length) % opts.length;
+    el.value = opts[i].value;
+    el.dispatchEvent(new Event('change'));
+  };
+
+  window.TSShortcuts.register([
+    { keys: 'space', group: 'Acquisition', label: 'Freeze / unfreeze the display',
+      run: () => setFrozen(!frozen) },
+    { keys: 's', group: 'Acquisition', label: 'Save the current trace as a PNG',
+      run: exportPng },
+    { keys: 'n', group: 'Acquisition', label: 'Force a single capture',
+      run: () => els.singleShotBtn.click() },
+    { keys: 'm', group: 'Display', label: 'Next display mode',
+      run: () => cycle(els.displayMode, 1) },
+    { keys: 'b', group: 'Display', label: 'Previous display mode',
+      run: () => cycle(els.displayMode, -1) },
+    { keys: 't', group: 'Display', label: 'Next theme',
+      run: () => cycle(els.themeSelect, 1) },
+    { keys: 'c', group: 'Display', label: 'Toggle cursors',
+      run: () => { els.cursorsToggle.checked = !els.cursorsToggle.checked;
+                   els.cursorsToggle.dispatchEvent(new Event('change')); } },
+    { keys: 'left', group: 'Horizontal', label: 'Shorter window (faster timebase)',
+      run: () => cycle(els.timebase, -1) },
+    { keys: 'right', group: 'Horizontal', label: 'Longer window (slower timebase)',
+      run: () => cycle(els.timebase, 1) },
+    { keys: '?', group: 'General', label: 'Show this help' },
+  ]);
 }

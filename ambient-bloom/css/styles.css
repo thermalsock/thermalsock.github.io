@@ -1,3 +1,5 @@
+/* Header, brand lockup and status-pill rules live in
+   ../shared/chrome.css — do not redefine them here. */
 /* Design tokens ---------------------------------------------------------
    Field Notes: kraft-paper chassis, ink text, one rust accent thread
    running through every interactive/live element — matches the homepage
@@ -178,16 +180,6 @@ select {
   flex-direction: column;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  row-gap: 10px;
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--hairline);
-  background: linear-gradient(180deg, rgba(43, 38, 32, 0.03), transparent);
-}
 
 .brand {
   font-family: var(--sans);
@@ -198,31 +190,6 @@ select {
 .brand-home { color: inherit; text-decoration: none; }
 .brand-home:hover { color: var(--accent, #e8a33d); text-decoration: underline; }
 
-.brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  text-decoration: none;
-}
-.brand-mark { flex: none; display: block; }
-.brand-lockup-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-.brand-appname {
-  font-family: var(--sans);
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 0.01em;
-}
-.brand-sub {
-  font-family: var(--sans);
-  font-size: 10.5px;
-  color: var(--text-dim);
-  letter-spacing: 0.02em;
-}
-.brand-lockup:hover .brand-appname { filter: brightness(1.15); }
 
 .page-nav {
   display: flex;
@@ -249,11 +216,6 @@ select {
   font-weight: 600;
 }
 
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 .pill {
   display: inline-flex;
@@ -297,11 +259,21 @@ select {
   min-height: 0;
 }
 
+.stage-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
 /* --- Scope display --------------------------------------------------- */
 
 .scope-wrap {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--hairline);
@@ -316,14 +288,34 @@ select {
   display: block;
 }
 
+/* --- Bottom row: secondary/read-out cards, using the space below the scope
+   so the right sidebar never needs to scroll ---------------------------- */
+
+.bottom-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  flex-shrink: 0;
+}
+.bottom-row .card { padding: 14px; }
+.bottom-row .row { font-size: 12px; }
+@media (max-width: 1200px) {
+  .bottom-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+  .bottom-row { grid-template-columns: 1fr; }
+}
+
 /* --- Right panel ------------------------------------------------------ */
 
 .panel {
   width: 280px;
   flex-shrink: 0;
+  max-height: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  align-self: flex-start;
   gap: 14px;
 }
 
@@ -332,6 +324,103 @@ select {
   border: 1px solid var(--hairline);
   border-radius: 10px;
   padding: 16px;
+}
+
+/* --- Stereo Analysis meters --------------------------------------------- */
+
+.meter-row { margin-bottom: 14px; }
+.meter-row:last-child { margin-bottom: 0; }
+.meter-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+.meter-label-row span:last-child {
+  font-family: var(--mono);
+  color: var(--accent);
+  font-size: 12px;
+}
+.meter-track {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  overflow: hidden;
+}
+.meter-center-tick {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--hairline-strong);
+  z-index: 2;
+}
+.meter-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.05s linear, left 0.05s linear;
+}
+.meter-fill.width {
+  left: 0;
+  background: linear-gradient(90deg, var(--accent), var(--pink));
+}
+.meter-needle {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--text);
+  left: 50%;
+  transition: left 0.05s linear;
+}
+.meter-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: var(--text-dim);
+  opacity: 0.75;
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+
+.phase-dial {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin: 4px auto 0;
+  border-radius: 50%;
+  border: 1px solid var(--hairline-strong);
+  background: var(--panel-raised);
+}
+.phase-dial::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--hairline-strong);
+}
+.phase-dial-needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 24px;
+  margin-left: -1px;
+  transform-origin: 50% 0%;
+  background: var(--accent);
+  transition: transform 0.05s linear;
 }
 
 .panel-group h2 {
@@ -489,10 +578,80 @@ select {
    these connective-tissue elements -- the app's own interior chrome
    (buttons, panel labels, chips) keeps its established --sans/--mono
    system untouched. */
-.brand-appname {
-  font-family: var(--serif-display);
-  font-weight: 600;
-}
 .brand-sub, #legalBar, #legalBar a {
   font-family: var(--mono);
+}
+
+/* --- Topbar mode selector, action pills, readout rows ---------------------
+   Display mode used to live in a <select> in the right sidebar while its
+   readout (#modePill) sat in the topbar — the control and its own readout
+   in two different places. The control is now the readout. */
+
+.topbar-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar-mode-label {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.topbar-mode select {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 11.5px;
+  color: var(--text);
+  background: rgba(43, 38, 32, 0.05);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.topbar-mode select:hover { border-color: var(--accent); }
+
+.toggle-pill {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: rgba(43, 38, 32, 0.05);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.toggle-pill:hover { color: var(--text); border-color: var(--accent); }
+/* Freeze is a mode, not a momentary action — it has to look latched. */
+.toggle-pill[aria-pressed="true"] {
+  color: var(--accent-fg, #FDF8EF);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Sliders had no numeric readout at all, so you couldn't dial in a known
+   value. These rows pair each one with its number. */
+.readout-row {
+  justify-content: space-between;
+}
+.readout-name {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* Readout-only cards are reference, not controls — they recede a step so the
+   panels you actually operate read louder. */
+.card.readout {
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .topbar-mode-label { display: none; }
 }

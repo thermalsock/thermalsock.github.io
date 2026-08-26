@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="granulator">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thermalsock Labs — Granulator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
+  <meta name="description" content="A real-time granular processor in your browser. Freeze, scatter and stretch live input into evolving grain clouds.">
+  <link rel="canonical" href="https://thermalsocklabs.com/granulator/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#EDE6D6">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="Granulator — Thermalsock Labs">
+  <meta property="og:description" content="A real-time granular processor in your browser. Freeze, scatter and stretch live input into evolving grain clouds.">
+  <meta property="og:url" content="https://thermalsocklabs.com/granulator/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Granulator — Thermalsock Labs">
+  <meta name="twitter:description" content="A real-time granular processor in your browser. Freeze, scatter and stretch live input into evolving grain clouds.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
 </head>
 <body>
 
@@ -40,7 +55,7 @@
         </select>
       </label>
 
-      <button id="startBtn" class="btn-primary">Start engine</button>
+      <button id="startBtn" class="btn-primary">Start listening</button>
       <p id="gateError" class="gate-error" hidden></p>
     </div>
   </div>
@@ -56,30 +71,25 @@
           <line x1="30" y1="6.5" x2="39" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
-          <span class="brand-appname" style="color:#8B4A2B">Granulator</span>
+          <span class="brand-appname">Granulator</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
 
-      <nav class="page-nav" aria-label="Thermalsock Labs apps">
-        <a class="page-nav-link" href="../oscilloscope/index.html">Oscilloscope</a>
-        <a class="page-nav-link" href="../subharmonicon/index.html">Subharmonicon</a>
-        <a class="page-nav-link" href="../sound-design/index.html">Sound Design</a>
-        <a class="page-nav-link active" href="../granulator/index.html">Granulator</a>
-        <a class="page-nav-link" href="../spectral-mutation-lab/index.html">Spectral Lab</a>
-        <a class="page-nav-link" href="../loom/index.html">Loom</a>
-        <a class="page-nav-link" href="../ambient-bloom/index.html">Ambient Bloom</a>
-        <a class="page-nav-link" href="../illuminated-ear/index.html">Illuminated Ear</a>
-      </nav>
+      <nav class="page-nav" data-app-switcher="granulator" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
       <div class="topbar-right">
-        <span id="loadSampleBtn" class="pill toggle" title="Load an audio file directly into the buffer — you can also drag & drop onto the waveform">Load Sample</span>
+        <button id="loadSampleBtn" class="pill action" type="button" title="Load an audio file into the buffer (you can also drag &amp; drop onto the waveform)">Load Sample&hellip;</button>
         <input type="file" id="sampleFileInput" accept="audio/*" hidden />
+        <button id="undoBtn" class="pill action" type="button" disabled title="Undo the last patch change (Z)">Undo</button>
+        <button id="recordBtn" class="pill record" type="button" aria-pressed="false" title="Record output to a WAV file (R)">
+          <span class="rec-dot"></span><span id="recordLabel">Record</span>
+        </button>
         <span id="freezeToggle" class="pill toggle">
           <span class="status-dot"></span>
           <span>Freeze</span>
         </span>
-        <span id="randomiseBtn" class="pill toggle">Randomise</span>
+        <button id="randomiseBtn" class="pill action" type="button">Randomise</button>
         <span class="pill live">
           <span id="statusDot" class="status-dot live"></span>
           <span id="statusText">Running</span>
@@ -176,12 +186,13 @@
           </div>
         </section>
 
-        <section class="card panel-group performance-card">
+        <section class="card panel-group performance-card collapsible">
           <h2>
             <span class="chip violet" aria-hidden="true">
               <svg viewBox="0 0 16 16"><path d="M2 13 6 5l3 6 2-4 3 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
             Performance Controls
+            <button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse Performance Controls"></button>
           </h2>
 
           <div class="rack-panel">
@@ -190,13 +201,13 @@
               <div class="knob-row" id="macroBank"></div>
             </div>
 
-            <div class="rack-section" style="min-width:170px;">
+            <div class="rack-section" class="wide-select">
               <div class="rack-section-header neutral">XY Pad</div>
               <div class="xy-pad-wrap">
                 <div class="xy-pad" id="xyPad"><div class="xy-pad-dot" id="xyPadDot"></div></div>
                 <div class="xy-axis-selects">
-                  <select id="xyAxisX" class="rack-select" style="margin-bottom:0;"></select>
-                  <select id="xyAxisY" class="rack-select" style="margin-bottom:0;"></select>
+                  <select id="xyAxisX" class="rack-select" class="flush"></select>
+                  <select id="xyAxisY" class="rack-select" class="flush"></select>
                 </div>
               </div>
             </div>
@@ -211,12 +222,13 @@
           </div>
         </section>
 
-        <section class="card panel-group">
+        <section class="card panel-group collapsible">
           <h2>
             <span class="chip pink" aria-hidden="true">
               <svg viewBox="0 0 16 16"><rect x="2" y="5" width="12" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 5V3.5M11 5V3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
             </span>
             MIDI Panel
+            <button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse MIDI Panel"></button>
           </h2>
           <div class="midi-panel-row">
             <div class="midi-panel-col">
@@ -236,6 +248,39 @@
                 <span class="row-value" id="bpmReadout">120.0 BPM</span>
               </div>
               <div class="row">
+                <label for="syncDurationSelect">Duration sync</label>
+                <select id="syncDurationSelect">
+                  <option value="">Free</option>
+                  <option value="0.0625">1/64</option>
+                  <option value="0.125">1/32</option>
+                  <option value="0.25">1/16</option>
+                  <option value="0.5">1/8</option>
+                  <option value="0.75">1/8 dotted</option>
+                  <option value="1">1/4</option>
+                </select>
+              </div>
+              <div class="row">
+                <label for="syncDensitySelect">Density sync</label>
+                <select id="syncDensitySelect">
+                  <option value="">Free</option>
+                  <option value="0.25">1/16 (16ths)</option>
+                  <option value="0.3333">1/8 triplet</option>
+                  <option value="0.5">1/8 (8ths)</option>
+                  <option value="1">1/4 (beats)</option>
+                  <option value="2">1/2</option>
+                </select>
+              </div>
+              <div class="row">
+                <label for="syncScanSelect">Scan sync</label>
+                <select id="syncScanSelect">
+                  <option value="">Free</option>
+                  <option value="4">1 bar per buffer</option>
+                  <option value="8">2 bars per buffer</option>
+                  <option value="16">4 bars per buffer</option>
+                  <option value="32">8 bars per buffer</option>
+                </select>
+              </div>
+              <div class="row">
                 <label for="mpeToggle">MPE support</label>
                 <input type="checkbox" id="mpeToggle" />
               </div>
@@ -243,30 +288,32 @@
             <div class="midi-panel-col">
               <h3>CC Mappings</h3>
               <div class="cc-mapping-list" id="ccMappingList"></div>
-              <button id="learnCcBtn" class="btn-small" style="width:100%; margin-top:6px;">MIDI Learn — add CC mapping</button>
+              <button id="learnCcBtn" class="btn-small" class="full spaced">MIDI Learn — add CC mapping</button>
             </div>
           </div>
         </section>
 
         <div class="footer-strip">
-          <span>CPU <b id="footerCpu">--</b></span>
-          <span>Worklet <b id="footerWorklet">--</b></span>
-          <span>Buffer <b id="footerBuffer">--</b></span>
-          <span>Grains <b id="footerGrains">--</b></span>
-          <span>Sample rate <b id="footerSampleRate">--</b></span>
-          <span>Source <b id="footerSource">Live input</b></span>
-          <span style="margin-left:auto;">Thermalsock Granulator <b>v1.0.0</b></span>
+          <span class="stat-live">CPU <b id="footerCpu">--</b></span>
+          <span class="stat-live">Grains <b id="footerGrains">--</b></span>
+          <span class="stat-sep" aria-hidden="true"></span>
+          <span class="stat-static">Worklet <b id="footerWorklet">--</b></span>
+          <span class="stat-static">Buffer <b id="footerBuffer">--</b></span>
+          <span class="stat-static">Sample rate <b id="footerSampleRate">--</b></span>
+          <span class="stat-static">Source <b id="footerSource">Live input</b></span>
+          <span class="push-right">Thermalsock Granulator <b>v1.0.0</b></span>
         </div>
       </div>
 
       <aside class="panel">
 
-        <section class="card panel-group">
+        <section class="card panel-group collapsible">
           <h2>
             <span class="chip teal" aria-hidden="true">
               <svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="6" cy="4" r="1.6" fill="currentColor"/><circle cx="10" cy="8" r="1.6" fill="currentColor"/><circle cx="5" cy="12" r="1.6" fill="currentColor"/></svg>
             </span>
             Modulation Matrix
+            <button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse Modulation Matrix"></button>
           </h2>
           <canvas id="modMatrixCanvas"></canvas>
 
@@ -282,18 +329,19 @@
 
           <div class="route-list" id="routeList"></div>
 
-          <div class="row" style="margin-top:10px; gap:6px;">
-            <button id="addRouteBtn" class="btn-small" style="flex:1;">+ Add routing</button>
-            <button id="clearRoutesBtn" class="btn-small danger" style="flex:1;">Clear all</button>
+          <div class="row" class="row-tight">
+            <button id="addRouteBtn" class="btn-small" class="grow">+ Add routing</button>
+            <button id="clearRoutesBtn" class="btn-small danger" class="grow">Clear all</button>
           </div>
         </section>
 
-        <section class="card panel-group">
+        <section class="card panel-group collapsible">
           <h2>
             <span class="chip blue" aria-hidden="true">
               <svg viewBox="0 0 16 16"><path d="M8 1.5 14 5v6l-6 3.5L2 11V5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
             </span>
             Presets
+            <button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse Presets"></button>
           </h2>
           <div class="row">
             <label for="presetCategory">Category</label>
@@ -308,15 +356,15 @@
             <button id="savePresetBtn" class="btn-small">Save</button>
           </div>
           <div class="preset-row">
-            <button id="exportPresetBtn" class="btn-small" style="flex:1;">Export JSON</button>
-            <button id="exportBankBtn" class="btn-small" style="flex:1;">Export bank</button>
+            <button id="exportPresetBtn" class="btn-small" class="grow">Export JSON</button>
+            <button id="exportBankBtn" class="btn-small" class="grow">Export bank</button>
           </div>
           <div class="preset-row">
-            <label class="btn-small" style="flex:1; text-align:center; cursor:pointer;">
+            <label class="btn-small" class="grow centered clickable">
               Import JSON
               <input type="file" id="importPresetInput" accept="application/json" hidden />
             </label>
-            <button id="deletePresetBtn" class="btn-small danger" style="flex:1;">Delete</button>
+            <button id="deletePresetBtn" class="btn-small danger" class="grow">Delete</button>
           </div>
           <div class="snapshot-bank" id="snapshotBank"></div>
         </section>
@@ -330,12 +378,18 @@
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 40px !important;width: 145px !important;">
     </a>
   </div>
+  <div data-related data-base="../"></div>
   <div id="legalBar">
     <span>© 2026 Thermalsock Labs</span>
     <a href="../legal/privacy.html">Privacy</a>
     <a href="../legal/disclaimer.html">Disclaimer</a>
   </div>
 
+<script src="../shared/persist.js"></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/recorder.js"></script>
+<script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/main.js"></script>
+  <script src="../shared/app-switcher.js" defer></script>
 </body>
 </html>

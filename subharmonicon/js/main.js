@@ -107,17 +107,63 @@ els.skipBtn.addEventListener('click', () => {
   enterApp();
 });
 
+// ---------------- Persistence ----------------
+
+// Detected roots, chosen divisors and the Combined interval all reset on
+// reload before this — painful mid-tuning-session.
+const subStore = window.TSStore ? window.TSStore.create('subharmonicon') : null;
+
+function saveSubState() {
+  if (!subStore) return;
+  subStore.set('state', {
+    osc1: { rootFreq: osc[1].rootFreq, sub1N: osc[1].sub1N, sub2N: osc[1].sub2N },
+    osc2: { rootFreq: osc[2].rootFreq, sub1N: osc[2].sub1N, sub2N: osc[2].sub2N },
+    interval: els.combinedIntervalSelect ? els.combinedIntervalSelect.value : null,
+  });
+}
+
 // ---------------- View tabs ----------------
 
 document.querySelectorAll('.view-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
+    if (tab.dataset.view !== 'both') restoreOscViews();
     document.querySelectorAll('.view-tab').forEach((t) => t.classList.remove('active'));
     document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById(`view-${tab.dataset.view}`).classList.add('active');
     if (tab.dataset.view === 'combined') renderCombined();
+    if (tab.dataset.view === 'both') showBothView();
+    if (subStore) subStore.set('activeTab', tab.dataset.view);
   });
 });
+
+/* Side-by-side view. Rather than duplicating the whole oscillator UI, this
+ * physically moves the two existing built views into a two-column grid and
+ * moves them back when you leave — so there's exactly one set of controls
+ * and one set of element IDs, and no risk of the two copies drifting. */
+function showBothView() {
+  const c1 = document.getElementById('bothCol1');
+  const c2 = document.getElementById('bothCol2');
+  const v1 = document.getElementById('view-osc1');
+  const v2 = document.getElementById('view-osc2');
+  if (!c1 || !c2 || !v1 || !v2) return;
+  c1.appendChild(v1);
+  c2.appendChild(v2);
+  v1.classList.add('active');
+  v2.classList.add('active');
+}
+
+/* Put the oscillator views back where they belong before showing either one
+ * on its own. */
+function restoreOscViews() {
+  const stage = document.querySelector('main.stage');
+  const both = document.getElementById('view-both');
+  const v1 = document.getElementById('view-osc1');
+  const v2 = document.getElementById('view-osc2');
+  if (!stage || !v1 || !v2 || !both) return;
+  if (v1.parentElement !== stage) stage.insertBefore(v1, both);
+  if (v2.parentElement !== stage) stage.insertBefore(v2, both);
+}
 
 // ---------------- Oscillator tab (built once per oscillator, reused) ----------------
 
@@ -292,13 +338,36 @@ function stopDetecting() {
   detectingOsc = null;
 }
 
+/**
+ * Pick the louder of the two input channels, per frame.
+ *
+ * This can only ever match or beat reading one fixed channel, and unlike
+ * averaging it has no cancellation risk, because the two are never combined.
+ * Mono/single-channel devices fall through unaffected.
+ */
+function pickLouderChannel(timeData) {
+  if (!timeData || timeData.length === 0) return { buf: null, index: 0 };
+  if (timeData.length === 1) return { buf: timeData[0], index: 0 };
+  const a = timeData[0], b = timeData[1];
+  if (!b) return { buf: a, index: 0 };
+  let sumA = 0, sumB = 0;
+  for (let i = 0; i < a.length; i++) { sumA += a[i] * a[i]; sumB += b[i] * b[i]; }
+  return sumB > sumA ? { buf: b, index: 1 } : { buf: a, index: 0 };
+}
+
 function tickDetect(n) {
   if (!captureRunning || !audioEngine.isRunning) {
     stopDetecting();
     return;
   }
   const timeData = audioEngine.getTimeDomainData();
-  const buf = timeData[0];
+  // Read whichever channel actually carries the signal. Reading channel 0
+  // unconditionally meant the app saw silence any time the interface routed
+  // the instrument to the other input — the exact bug that made Ambient
+  // Bloom look dead while the synth was audibly loud. Never average the two:
+  // correlated-but-imperfectly-phased channels can cancel to near nothing.
+  const { buf } = pickLouderChannel(timeData);
+  if (!buf) return;
   const db = levelDb(buf);
   const local = oscEls[n];
 
@@ -535,3 +604,147 @@ function renderLibraryDetail() {
     </div>
   `;
 }
+
+/* =========================================================================
+   AUDIBLE REFERENCE, PERSISTENCE, SHORTCUTS
+
+   The app told you which settings to dial in but never played the target,
+   so you were tuning against a number rather than a sound. Closing that
+   loop is the whole point of a tuning aid.
+   ========================================================================= */
+
+let refCtx = null;
+let refVoices = [];
+
+function refAudioCtx() {
+  if (!refCtx) refCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (refCtx.state === 'suspended') refCtx.resume();
+  return refCtx;
+}
+
+function stopReference() {
+  const ctx = refCtx;
+  if (!ctx) return;
+  refVoices.forEach(({ osc, gain }) => {
+    try {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08);
+      osc.stop(ctx.currentTime + 0.12);
+    } catch (e) { /* already stopped */ }
+  });
+  refVoices = [];
+  const btn = document.getElementById('playRefBtn');
+  if (btn) { btn.textContent = '\u25b6 Hear this chord'; btn.setAttribute('aria-pressed', 'false'); }
+}
+
+/**
+ * Play the six voices the app is currently prescribing (Osc1 + its two subs,
+ * Osc2 + its two subs) so you can hear the target before dialling it in.
+ * Square-ish triangle tone, deliberately quiet — this is a reference, not
+ * an instrument, and six simultaneous voices clip fast at full level.
+ */
+function playReference(frequencies) {
+  stopReference();
+  const freqs = frequencies.filter((f) => f && isFinite(f) && f > 20 && f < 5000);
+  if (freqs.length === 0) return;
+
+  const ctx = refAudioCtx();
+  const now = ctx.currentTime + 0.05;
+  const perVoice = 0.16 / Math.sqrt(freqs.length);
+
+  freqs.forEach((f) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = f;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    gain.gain.linearRampToValueAtTime(perVoice, now + 0.04);
+    refVoices.push({ osc, gain });
+  });
+
+  const btn = document.getElementById('playRefBtn');
+  if (btn) { btn.textContent = '\u25a0 Stop'; btn.setAttribute('aria-pressed', 'true'); }
+}
+
+function currentSixVoices() {
+  const out = [];
+  [1, 2].forEach((n) => {
+    const root = osc[n].rootFreq;
+    if (!root) return;
+    out.push(root);
+    if (osc[n].sub1N) out.push(root / osc[n].sub1N);
+    if (osc[n].sub2N) out.push(root / osc[n].sub2N);
+  });
+  return out;
+}
+
+function toggleReference() {
+  if (refVoices.length > 0) { stopReference(); return; }
+  playReference(currentSixVoices());
+}
+
+function restoreSubState() {
+  if (!subStore) return;
+  const saved = subStore.get('state', null);
+  if (saved) {
+    [1, 2].forEach((n) => {
+      const src = saved[`osc${n}`];
+      if (!src) return;
+      if (src.rootFreq) osc[n].rootFreq = src.rootFreq;
+      if (src.sub1N) osc[n].sub1N = src.sub1N;
+      if (src.sub2N) osc[n].sub2N = src.sub2N;
+      if (typeof renderOscRoot === 'function') renderOscRoot(n);
+    });
+    if (saved.interval && els.combinedIntervalSelect) {
+      els.combinedIntervalSelect.value = saved.interval;
+    }
+  }
+
+  // Reopen on the tab you were last using.
+  const tabId = subStore.get('activeTab', null);
+  if (tabId) {
+    const tab = document.querySelector(`.view-tab[data-view="${tabId}"]`);
+    if (tab) tab.click();
+  }
+}
+
+function wireSubExtras() {
+  const bar = document.createElement('div');
+  bar.className = 'reference-bar';
+  bar.innerHTML = '<button id="playRefBtn" class="btn-inline" type="button" aria-pressed="false">\u25b6 Hear this chord</button>' +
+                  '<span class="hint">Plays the six voices you\u2019re currently aiming for, so you can tune against a sound rather than a number.</span>';
+  const combined = document.getElementById('view-combined');
+  if (combined) combined.insertBefore(bar, combined.firstChild);
+
+  const btn = document.getElementById('playRefBtn');
+  if (btn) btn.addEventListener('click', toggleReference);
+
+  // Persist whenever a divisor or interval changes.
+  document.addEventListener('change', (e) => {
+    if (e.target && /Sub[12]Select|combinedIntervalSelect/.test(e.target.id || '')) saveSubState();
+  });
+
+  restoreSubState();
+
+  if (window.TSShortcuts) {
+    const goTab = (view) => {
+      const t = document.querySelector(`.view-tab[data-view="${view}"]`);
+      if (t) t.click();
+    };
+    window.TSShortcuts.register([
+      { keys: 'space', group: 'Reference', label: 'Play / stop the target chord', run: toggleReference },
+      { keys: '1', group: 'Views', label: 'Osc 1', run: () => goTab('osc1') },
+      { keys: '2', group: 'Views', label: 'Osc 2', run: () => goTab('osc2') },
+      { keys: '3', group: 'Views', label: 'Both, side by side', run: () => goTab('both') },
+      { keys: '4', group: 'Views', label: 'Combined', run: () => goTab('combined') },
+      { keys: '5', group: 'Views', label: 'Ratio Library', run: () => goTab('library') },
+      { keys: '?', group: 'General', label: 'Show this help' },
+    ]);
+  }
+}
+
+wireSubExtras();

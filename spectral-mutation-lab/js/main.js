@@ -412,10 +412,254 @@ function applyState(state) {
 // Render loop
 // ---------------------------------------------------------------------------
 
-function loop() {
+function loop(nowMs) {
   if (spectrogramView) {
     spectrogramView.draw();
     $('footerWorklet').textContent = audioEngine.isRunning ? 'running' : 'suspended';
   }
+  // Advance the modulation LFOs. rAF supplies the timestamp; fall back to
+  // performance.now() for the very first frame, which is called directly.
+  tickLfos(typeof nowMs === 'number' ? nowMs : performance.now());
   requestAnimationFrame(loop);
 }
+
+/* =========================================================================
+   MODULATION — two free-running LFOs
+   Granulator has a full mod matrix; this app had only mod wheel and
+   aftertouch, one target each. Freeze, morph and smear are exactly the
+   parameters that want slow automatic movement rather than a hand on a knob.
+   ========================================================================= */
+
+const lfos = [
+  { id: 1, target: '', rate: 0.15, depth: 0, shape: 'sine', phase: 0, sh: 0, shClock: 0 },
+  { id: 2, target: '', rate: 0.40, depth: 0, shape: 'sine', phase: 0, sh: 0, shClock: 0 },
+];
+
+function lfoValue(lfo, dt) {
+  lfo.phase += dt * lfo.rate;
+  if (lfo.phase > 1) lfo.phase -= Math.floor(lfo.phase);
+  switch (lfo.shape) {
+    case 'triangle':
+      // 0 -> -1, 0.5 -> +1, 1 -> -1
+      return 1 - 4 * Math.abs(lfo.phase - 0.5);
+    case 'ramp':
+      return lfo.phase * 2 - 1;
+    case 'random':
+      // Sample & hold: reroll once per cycle rather than every frame,
+      // otherwise it's just noise rather than a modulation source.
+      lfo.shClock += dt * lfo.rate;
+      if (lfo.shClock >= 1) { lfo.shClock -= Math.floor(lfo.shClock); lfo.sh = Math.random() * 2 - 1; }
+      return lfo.sh;
+    case 'sine':
+    default:
+      return Math.sin(lfo.phase * Math.PI * 2);
+  }
+}
+
+let lastLfoTime = 0;
+
+function tickLfos(nowMs) {
+  if (!lastLfoTime) { lastLfoTime = nowMs; return; }
+  // Clamp dt so a backgrounded tab doesn't jump the phase on return.
+  const dt = Math.min(0.1, (nowMs - lastLfoTime) / 1000);
+  lastLfoTime = nowMs;
+
+  for (const lfo of lfos) {
+    if (!lfo.target || lfo.depth <= 0) continue;
+    const t = TARGETS.find((x) => x.id === lfo.target);
+    if (!t) continue;
+    const bipolar = lfoValue(lfo, dt);
+    const mid = (t.min + t.max) / 2;
+    const halfRange = (t.max - t.min) / 2;
+    const v = mid + bipolar * halfRange * lfo.depth;
+    audioEngine.setParamImmediate(lfo.target, v);
+    setKnobValue(lfo.target, v);
+  }
+}
+
+function wireModulationPanel() {
+  lfos.forEach((lfo) => {
+    const sel = $(`lfo${lfo.id}Target`);
+    const none = document.createElement('option');
+    none.value = ''; none.textContent = '(none)';
+    sel.appendChild(none);
+    for (const t of TARGETS) {
+      const o = document.createElement('option');
+      o.value = t.id; o.textContent = t.label;
+      sel.appendChild(o);
+    }
+    sel.addEventListener('change', () => { lfo.target = sel.value; });
+
+    const rate = $(`lfo${lfo.id}Rate`);
+    const rateOut = $(`lfo${lfo.id}RateReadout`);
+    rate.addEventListener('input', () => {
+      lfo.rate = parseFloat(rate.value);
+      rateOut.textContent = `${lfo.rate.toFixed(2)} Hz`;
+    });
+
+    const depth = $(`lfo${lfo.id}Depth`);
+    const depthOut = $(`lfo${lfo.id}DepthReadout`);
+    depth.addEventListener('input', () => {
+      lfo.depth = parseFloat(depth.value);
+      depthOut.textContent = `${Math.round(lfo.depth * 100)}%`;
+    });
+
+    const shape = $(`lfo${lfo.id}Shape`);
+    shape.addEventListener('change', () => { lfo.shape = shape.value; });
+  });
+}
+
+/* =========================================================================
+   RECORDING, SAMPLE LOADING, STAGE BYPASS, MAXIMISED VIEW, SHORTCUTS
+   ========================================================================= */
+
+let recorder = null;
+let recordTimer = null;
+
+function updateRecordUi(on) {
+  const btn = $('recordBtn');
+  if (!btn) return;
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (!on) {
+    $('recordLabel').textContent = 'Record';
+    if (recordTimer) { clearInterval(recordTimer); recordTimer = null; }
+  }
+}
+
+function toggleRecording() {
+  if (recorder && recorder.recording) {
+    recorder.stop();
+    if (!recorder.download('spectral-lab')) {
+      console.warn('[spectral-mutation-lab] nothing captured — recording was too short');
+    }
+    recorder = null;
+    updateRecordUi(false);
+    return;
+  }
+  if (!window.TSRecorder || !audioEngine.workletNode) return;
+  recorder = window.TSRecorder.create(audioEngine.audioCtx, audioEngine.workletNode);
+  recorder.start().then(() => {
+    updateRecordUi(true);
+    recordTimer = setInterval(() => {
+      const secs = recorder.durationSeconds();
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      $('recordLabel').textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }, 250);
+  }).catch((err) => {
+    console.error('[spectral-mutation-lab] could not start recording:', err);
+    updateRecordUi(false);
+  });
+}
+
+async function loadSampleFile(file) {
+  if (!audioEngine.audioCtx) return;
+  const status = $('statusText');
+  const previous = status.textContent;
+  status.textContent = 'Decoding\u2026';
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const audioBuffer = await audioEngine.audioCtx.decodeAudioData(arrayBuffer);
+    audioEngine.playSample(audioBuffer);
+    status.textContent = `Sample: ${file.name.slice(0, 24)}`;
+    $('footerSource') && ($('footerSource').textContent = file.name);
+  } catch (err) {
+    console.error('[spectral-mutation-lab] sample decode failed:', err);
+    status.textContent = previous;
+  }
+}
+
+function wireSpectralExtras() {
+  const recBtn = $('recordBtn');
+  if (recBtn) recBtn.addEventListener('click', toggleRecording);
+
+  const loadBtn = $('loadSampleBtn');
+  if (loadBtn) loadBtn.addEventListener('click', () => $('sampleFileInput').click());
+  const fileInput = $('sampleFileInput');
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) loadSampleFile(file);
+      e.target.value = '';
+    });
+  }
+
+  // Drag & drop onto the spectrogram, same affordance Granulator has.
+  const wrap = $('spectrogramWrap');
+  if (wrap) {
+    let depth = 0;
+    wrap.addEventListener('dragenter', (e) => { e.preventDefault(); depth++; wrap.classList.add('drag-over'); });
+    wrap.addEventListener('dragover', (e) => e.preventDefault());
+    wrap.addEventListener('dragleave', (e) => {
+      e.preventDefault(); depth = Math.max(0, depth - 1);
+      if (depth === 0) wrap.classList.remove('drag-over');
+    });
+    wrap.addEventListener('drop', (e) => {
+      e.preventDefault(); depth = 0; wrap.classList.remove('drag-over');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) loadSampleFile(file);
+    });
+  }
+
+  // Per-stage bypass. Remembers the knob value so un-bypassing restores it
+  // rather than leaving the stage silently at zero.
+  const STAGE_PARAMS = {
+    freezeStage: ['freezeMix'],
+    shiftStage: ['shiftSemi'],
+    reverseStage: ['reverseAmt'],
+    smearStage: ['smearAmt'],
+    scatterStage: ['scatterAmt'],
+  };
+  const stashed = {};
+  document.querySelectorAll('.stage-bypass').forEach((btn) => {
+    const stageId = btn.getAttribute('data-stage-toggle');
+    btn.addEventListener('click', () => {
+      const section = document.querySelector(`[data-stage="${stageId}"]`);
+      const bypassed = btn.getAttribute('aria-pressed') !== 'true';
+      btn.setAttribute('aria-pressed', bypassed ? 'true' : 'false');
+      if (section) section.setAttribute('data-bypassed', bypassed ? 'true' : 'false');
+      (STAGE_PARAMS[stageId] || []).forEach((param) => {
+        if (bypassed) {
+          stashed[param] = getKnobValue(param);
+          audioEngine.setParamImmediate(param, 0);
+        } else if (stashed[param] !== undefined) {
+          audioEngine.setParamImmediate(param, stashed[param]);
+          setKnobValue(param, stashed[param]);
+        }
+      });
+    });
+  });
+
+  // Maximise the spectrogram — it's the whole point of the app.
+  const expandBtn = $('expandViewBtn');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+      const on = document.body.getAttribute('data-maximised') !== 'true';
+      document.body.setAttribute('data-maximised', on ? 'true' : 'false');
+      expandBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      expandBtn.textContent = on ? 'Restore' : 'Maximise';
+      if (spectrogramView && spectrogramView.resize) spectrogramView.resize();
+    });
+  }
+
+  if (window.TSShortcuts) {
+    window.TSShortcuts.register([
+      { keys: 'a', group: 'Performance', label: 'Capture / release Freeze A',
+        run: () => $('freezeAToggle').click() },
+      { keys: 's', group: 'Performance', label: 'Capture / release Freeze B',
+        run: () => $('freezeBToggle').click() },
+      { keys: 'c', group: 'Performance', label: 'Clear the frozen spectrum',
+        run: () => $('clearFreezeBtn').click() },
+      { keys: 'r', group: 'Performance', label: 'Start / stop recording to WAV',
+        run: toggleRecording },
+      { keys: 'v', group: 'Display', label: 'Maximise / restore the spectrogram',
+        run: () => $('expandViewBtn') && $('expandViewBtn').click() },
+      { keys: 'l', group: 'Source', label: 'Load a sample to mutate',
+        run: () => $('loadSampleBtn').click() },
+      { keys: '?', group: 'General', label: 'Show this help' },
+    ]);
+  }
+}
+
+wireModulationPanel();
+wireSpectralExtras();

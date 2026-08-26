@@ -1,3 +1,5 @@
+/* Header, brand lockup and status-pill rules live in
+   ../shared/chrome.css — do not redefine them here. */
 /* Design tokens ---------------------------------------------------------
    Shared Thermalsock Labs house style — same tokens as every sibling app.
 ------------------------------------------------------------------------- */
@@ -98,29 +100,12 @@ select {
 
 /* --- Topbar --------------------------------------------------------------- */
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  row-gap: 10px;
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--hairline);
-  background: linear-gradient(180deg, rgba(43, 38, 32, 0.03), transparent);
-}
-.brand-lockup { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-.brand-mark { flex: none; display: block; }
-.brand-lockup-text { display: flex; flex-direction: column; line-height: 1.2; }
-.brand-appname { font-family: var(--serif-display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
-.brand-sub { font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.02em; }
-.brand-lockup:hover .brand-appname { filter: brightness(1.15); }
 
 .page-nav { display: flex; gap: 4px; background: rgba(43, 38, 32, 0.04); border: 1px solid var(--hairline); border-radius: 999px; padding: 3px; flex-wrap: wrap; }
 .page-nav-link { font-family: var(--sans); font-size: 11px; letter-spacing: 0.04em; text-decoration: none; color: var(--text-dim); padding: 6px 12px; border-radius: 999px; }
 .page-nav-link:hover { color: var(--text); }
 .page-nav-link.active { color: var(--accent-fg); background: var(--accent); font-weight: 600; }
 
-.topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pill {
   display: inline-flex;
   align-items: center;
@@ -221,6 +206,156 @@ select {
 .tonic-readout { margin-left: auto; font-size: 12.5px; color: var(--text-dim); font-family: var(--mono); }
 .tonic-readout strong { color: var(--accent); }
 
+/* --- Mode tabs ------------------------------------------------------------- */
+
+.mode-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  margin-bottom: 4px;
+}
+.mode-tab {
+  background: var(--panel-raised);
+  color: var(--text-dim);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+.mode-tab:hover { border-color: var(--accent); color: var(--text); }
+.mode-tab.active { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+
+/* --- Stage / lesson navigation --------------------------------------------- */
+
+.stage-list { display: flex; flex-direction: column; gap: 18px; }
+.stage-group h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 4px;
+}
+.stage-group .stage-desc { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin: 0 0 10px; }
+.lesson-list { display: flex; flex-direction: column; gap: 6px; }
+.lesson-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.lesson-card:hover { border-color: var(--accent); }
+.lesson-card .lc-name { font-size: 13px; font-weight: 600; }
+.lesson-card .lc-sub { font-size: 11.5px; color: var(--text-dim); }
+.lesson-card .lc-check { margin-left: auto; font-size: 14px; color: var(--good); }
+
+/* --- Lesson content -------------------------------------------------------- */
+
+.lesson-header h2 { margin-bottom: 2px; }
+.lesson-subtitle { font-size: 13px; color: var(--text-dim); margin: 0 0 18px; }
+.lesson-section { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--hairline); }
+.lesson-section:last-child { border-bottom: none; margin-bottom: 0; }
+.lesson-section h4 {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+.lesson-text { font-size: 13.5px; line-height: 1.65; color: var(--text); margin: 0 0 12px; }
+.example-list { display: flex; flex-direction: column; gap: 8px; }
+.example-row { display: flex; align-items: center; gap: 10px; }
+.example-label { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+.lesson-play-btn {
+  flex-shrink: 0;
+  background: var(--panel);
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  border-radius: 5px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+.lesson-play-btn:hover { background: var(--accent); color: var(--accent-fg); }
+
+/* --- Try exercise ---------------------------------------------------------- */
+
+.try-status { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 10px; letter-spacing: 0.05em; }
+.try-prompt { font-size: 13px; color: var(--text); margin: 10px 0; }
+.try-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.try-choice-btn {
+  background: var(--panel-raised);
+  color: var(--text);
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 80px;
+  text-align: center;
+}
+.try-choice-btn:hover { border-color: var(--accent); }
+.try-choice-btn.correct { background: rgba(63, 122, 79, 0.18); border-color: var(--good); color: var(--good); }
+.try-choice-btn.wrong { background: rgba(184, 64, 42, 0.12); border-color: var(--danger); color: var(--danger); }
+.try-feedback { font-size: 13px; line-height: 1.5; min-height: 20px; padding: 8px 0; }
+.try-feedback.fb-correct { color: var(--good); }
+.try-feedback.fb-wrong { color: var(--danger); }
+.try-btn-row { display: flex; gap: 10px; margin-top: 10px; }
+
+.game-round-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+.game-round-header h2 { margin: 0; font-size: 16px; }
+.game-note-display {
+  font-family: var(--serif-display);
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  padding: 18px 0 12px;
+  letter-spacing: 0.04em;
+  transition: color 0.15s;
+}
+.game-note-display.pressed-correct { color: var(--good); }
+.game-note-display.pressed-wrong { color: var(--danger); }
+.game-note-display.pressed-miss { color: var(--text-dim); opacity: 0.6; }
+.game-summary {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  text-align: center;
+}
+.game-summary .gs-score { font-family: var(--serif-display); font-size: 28px; font-weight: 600; color: var(--accent); }
+.game-summary .gs-detail { font-size: 13px; color: var(--text-dim); margin: 6px 0 14px; }
+.game-summary .gs-xp { font-family: var(--mono); font-size: 12px; color: var(--amber); }
+
+/* --- Progress summary ------------------------------------------------------ */
+
+.progress-summary { display: flex; flex-direction: column; gap: 10px; }
+.progress-stage { font-size: 12px; }
+.progress-stage .ps-name { font-weight: 600; color: var(--text); display: block; margin-bottom: 3px; }
+.progress-stage .ps-bar { height: 5px; background: var(--panel-raised); border: 1px solid var(--hairline-strong); border-radius: 3px; overflow: hidden; }
+.progress-stage .ps-bar-fill { height: 100%; background: var(--good); transition: width 0.3s; }
+.progress-stage .ps-count { font-family: var(--mono); font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
 /* --- Support widget & legal bar -------------------------------------------- */
 
 #supportWidget { position: fixed; left: 14px; bottom: 34px; z-index: 10; }
@@ -241,3 +376,44 @@ select {
   .stage { flex-direction: column; }
   .panel { width: 100%; }
 }
+
+/* --- Progress totals, actions, playback speed ---------------------------- */
+.progress-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+.pt-label {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.pt-value {
+  font-family: var(--serif-display, Fraunces, Georgia, serif);
+  font-size: 15px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-actions { display: flex; gap: 8px; margin-top: 12px; }
+.mini-btn {
+  flex: 1;
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 7px 8px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+}
+.mini-btn:hover { color: var(--text); border-color: var(--accent); }
+.mini-btn.danger:hover { color: #b8402a; border-color: #b8402a; }
