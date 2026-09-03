@@ -1,2 +1,0 @@
-# Thermalsock Labs — site
-
