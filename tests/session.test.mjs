@@ -1,67 +1,107 @@
-// Exercise the session module's real logic with a minimal DOM/localStorage stub.
 let store = {};
+
 globalThis.localStorage = {
-  getItem: k => (k in store ? store[k] : null),
-  setItem: (k, v) => { store[k] = String(v); },
-  removeItem: k => { delete store[k]; },
+  getItem: k => k in store ? store[k] : null,
+  setItem: (k, v) => {
+    store[k] = String(v);
+  },
+  removeItem: k => {
+    delete store[k];
+  }
 };
-Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true, writable: true });
+
+Object.defineProperty(globalThis, "navigator", {
+  value: {},
+  configurable: true,
+  writable: true
+});
+
 globalThis.document = {
-  readyState: 'complete',
-  documentElement: { getAttribute: () => 'oscilloscope' },
+  readyState: "complete",
+  documentElement: {
+    getAttribute: () => "oscilloscope"
+  },
   querySelectorAll: () => [],
   getElementById: () => null,
   querySelector: () => null,
   addEventListener: () => {},
-  createElement: () => ({ style:{}, classList:{add(){},remove(){}}, appendChild(){}, addEventListener(){}, remove(){}, set innerHTML(v){}, set textContent(v){} }),
+  createElement: () => ({
+    style: {},
+    classList: {
+      add() {},
+      remove() {}
+    },
+    appendChild() {},
+    addEventListener() {},
+    remove() {},
+    set innerHTML(v) {},
+    set textContent(v) {}
+  })
 };
+
 globalThis.window = globalThis;
 
-const fs = await import('node:fs');
-const src = fs.readFileSync(new URL('../shared/session.js', import.meta.url), 'utf8');
+const fs = await (import("node:fs"));
+
+const src = fs.readFileSync(new URL("../shared/session.js", import.meta.url), "utf8");
+
 new Function(src)();
+
 const S = globalThis.TSSession;
 
 let fails = 0;
+
 const check = (label, got, want) => {
   const ok = JSON.stringify(got) === JSON.stringify(want);
   if (!ok) fails++;
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}: ${JSON.stringify(got)}${ok ? '' : ` (want ${JSON.stringify(want)})`}`);
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ${JSON.stringify(got)}${ok ? "" : ` (want ${JSON.stringify(want)})`}`);
 };
 
-check('nothing saved initially', S.getInputDevice(), null);
+check("nothing saved initially", S.getInputDevice(), null);
 
-S.setInputDevice('abc123', 'MiniFuse 4');
-check('device round-trips', S.getInputDevice(), { deviceId: 'abc123', label: 'MiniFuse 4' });
+S.setInputDevice("abc123", "MiniFuse 4");
 
-// the key is site-wide, not namespaced per app — that is the whole point
-check('stored under a site-wide key', Object.keys(store), ['thermalsock.session']);
-
-// a select that still lists the device gets it pre-selected
-const mkSelect = (values) => ({
-  options: values.map(v => ({ value: v, textContent: v })),
-  value: null,
+check("device round-trips", S.getInputDevice(), {
+  deviceId: "abc123",
+  label: "MiniFuse 4"
 });
-let sel = mkSelect(['other', 'abc123']);
-check('applies to a matching select', S.applyToDeviceSelect(sel), 'MiniFuse 4');
-check('select value was set', sel.value, 'abc123');
 
-// device unplugged: must not select something arbitrary
-sel = mkSelect(['someone-else', 'another']);
-check('no match returns null', S.applyToDeviceSelect(sel), null);
-check('select left untouched', sel.value, null);
+check("stored under a site-wide key", Object.keys(store), [ "thermalsock.session" ]);
+
+const mkSelect = values => ({
+  options: values.map(v => ({
+    value: v,
+    textContent: v
+  })),
+  value: null
+});
+
+let sel = mkSelect([ "other", "abc123" ]);
+
+check("applies to a matching select", S.applyToDeviceSelect(sel), "MiniFuse 4");
+
+check("select value was set", sel.value, "abc123");
+
+sel = mkSelect([ "someone-else", "another" ]);
+
+check("no match returns null", S.applyToDeviceSelect(sel), null);
+
+check("select left untouched", sel.value, null);
 
 S.clearInputDevice();
-check('cleared', S.getInputDevice(), null);
-check('clearing leaves the key present but empty', typeof store['thermalsock.session'], 'string');
 
-// corrupt storage must not throw
-store['thermalsock.session'] = '{not json';
-check('survives corrupt storage', S.getInputDevice(), null);
+check("cleared", S.getInputDevice(), null);
 
-// permission check must resolve false (not throw) when the API is absent
+check("clearing leaves the key present but empty", typeof store["thermalsock.session"], "string");
+
+store["thermalsock.session"] = "{not json";
+
+check("survives corrupt storage", S.getInputDevice(), null);
+
 const granted = await S.micPermissionGranted();
-check('missing Permissions API resolves false', granted, false);
 
-console.log(fails === 0 ? '\n✓ all session tests passed' : `\n✗ ${fails} failure(s)`);
+check("missing Permissions API resolves false", granted, false);
+
+console.log(fails === 0 ? "\n✓ all session tests passed" : `\n✗ ${fails} failure(s)`);
+
 process.exit(fails === 0 ? 0 : 1);

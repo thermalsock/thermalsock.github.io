@@ -9,257 +9,737 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="../shared/chrome.css">
 <style>
-  /* Header and brand rules live in ../shared/chrome.css. */
-
-  :root{
-    --chassis: #0B0D12;
-    --panel: #0F1118;
-    --panel-raised: #161A22;
-    --hairline: rgba(138,160,184,0.16);
-    --hairline-strong: rgba(138,160,184,0.30);
-    --text: #E7F4FF;
-    --text-dim: #8AA0B8;
-    --text-faint: #5E6A7A;
-    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
-    --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --serif-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
-    --accent-fg: #04222C;
-
-    --accent: #00C8FF;
-    --accent-hi: #6FE0FF;
-    --danger: #FF5A6E;
-    --violet: #A98CFF;
-    --amber: #FFB454;
-    --cyan: #6FA8FF;
+:root {
+  --chassis: #0B0D12;
+  --panel: #0F1118;
+  --panel-raised: #161A22;
+  --hairline: rgba(138,160,184,0.16);
+  --hairline-strong: rgba(138,160,184,0.30);
+  --text: #E7F4FF;
+  --text-dim: #8AA0B8;
+  --text-faint: #5E6A7A;
+  --mono: 'JetBrains Mono',ui-monospace,'SF Mono','Cascadia Code',Consolas,monospace;
+  --sans: 'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --serif-display: 'Space Grotesk',-apple-system,system-ui,sans-serif;
+  --accent-fg: #04222C;
+  --accent: #00C8FF;
+  --accent-hi: #6FE0FF;
+  --danger: #FF5A6E;
+  --violet: #A98CFF;
+  --amber: #FFB454;
+  --cyan: #6FA8FF
+}
+* {
+  box-sizing: border-box
+}
+body,
+html {
+  height: 100%
+}
+body {
+  margin: 0;
+  background: var(--chassis);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden
+}
+a {
+  color: inherit
+}
+button,
+input,
+select {
+  font-family: inherit
+}
+.page-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  background: rgba(138,160,184,.05);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 3px
+}
+.page-nav-link {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-decoration: none;
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 999px
+}
+.page-nav-link:hover {
+  color: var(--text)
+}
+.page-nav-link.active {
+  color: var(--accent-fg);
+  background: var(--accent);
+  font-weight: 600
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .03em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline-strong);
+  color: var(--text-dim);
+  background: var(--panel);
+  cursor: default
+}
+.pill.help-btn {
+  cursor: pointer
+}
+.pill.help-btn:hover {
+  color: var(--text);
+  border-color: var(--accent)
+}
+.pill.live {
+  color: var(--accent);
+  border-color: rgba(62,207,207,.35)
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent)
+}
+.stage {
+  display: flex;
+  gap: 16px;
+  padding: 16px 18px;
+  height: calc(100vh - 49px);
+  min-height: 0
+}
+.sidebar {
+  width: 330px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 4px
+}
+.chip.violet {
+  background: rgba(167,139,250,.15);
+  color: var(--violet)
+}
+.chip.pink {
+  background: rgba(163,74,114,.15);
+  color: #a34a72
+}
+.chip.cyan {
+  background: rgba(47,122,176,.15);
+  color: var(--cyan)
+}
+select {
+  width: 100%;
+  background: var(--panel-raised);
+  color: var(--text);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 8px 9px;
+  font-size: 12.5px
+}
+.mode-desc {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 6px;
+  line-height: 1.5
+}
+.slider-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  float: right
+}
+.gen-btn {
+  width: 100%;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: none;
+  border-radius: 8px;
+  padding: 13px;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  letter-spacing: .01em
+}
+.gen-btn:hover {
+  filter: brightness(1.08)
+}
+.sidebar > .gen-btn {
+  margin-bottom: 18px
+}
+.mode-desc {
+  min-height: 2.6em
+}
+.row-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px
+}
+.row-inline label[for] {
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: .04em
+}
+.row-inline select {
+  flex: 1
+}
+.cb-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-dim)
+}
+#nextChordBtn,
+#prevChordBtn {
+  min-width: 38px;
+  padding-left: 10px;
+  padding-right: 10px;
+  background: 0 0;
+  color: var(--text-dim)
+}
+#nextChordBtn:hover:not(:disabled),
+#prevChordBtn:hover:not(:disabled) {
+  color: var(--accent)
+}
+#nextChordBtn:disabled,
+#prevChordBtn:disabled {
+  opacity: .3;
+  cursor: default
+}
+.suggestion-box[hidden] {
+  display: block!important;
+  visibility: hidden
+}
+.io-row {
+  display: flex;
+  gap: 10px
+}
+.io-btn {
+  flex: 1;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  cursor: pointer
+}
+.io-btn:hover {
+  color: var(--text);
+  border-color: var(--accent)
+}
+.io-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed
+}
+.io-btn:disabled:hover {
+  color: var(--text-dim);
+  border-color: var(--hairline-strong)
+}
+.midi-detected {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5
+}
+.midi-detected strong {
+  color: var(--text)
+}
+.midi-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px
+}
+.midi-suggestion-chip {
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 7px 9px
+}
+.midi-suggestion-chip .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: 2px
+}
+.midi-suggestion-chip .value {
+  color: var(--accent-hi);
+  font-family: var(--mono);
+  font-size: 11.5px
+}
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto
+}
+.transport {
+  flex: none;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap
+}
+.transport-btn {
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 9px 18px;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer
+}
+.transport-btn.playing {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg)
+}
+.transport-tempo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px
+}
+.transport-tempo label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-dim);
+  white-space: nowrap
+}
+.transport-status {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint)
+}
+.progression {
+  flex: 1;
+  min-height: 0;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 18px;
+  overflow-y: auto
+}
+.progression-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px
+}
+.progression-head h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-dim)
+}
+.progression-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint)
+}
+.chord-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 12px
+}
+@media (max-width:900px) {
+  .chord-grid {
+    grid-template-columns: repeat(2,1fr)
   }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{
-    margin:0; background:var(--chassis); color:var(--text);
-    font-family:var(--sans); overflow:hidden;
-  }
-  a{color:inherit;}
-  input,select,button{font-family:inherit;}
-  .page-nav{ display:flex; gap:4px; flex-wrap:wrap; background:rgba(138,160,184,0.05); border:1px solid var(--hairline); border-radius:999px; padding:3px; }
-  .page-nav-link{ font-family:var(--sans); font-size:11px; letter-spacing:0.04em; text-decoration:none; color:var(--text-dim); padding:6px 14px; border-radius:999px; }
-  .page-nav-link:hover{ color:var(--text); }
-  .page-nav-link.active{ color:var(--accent-fg); background:var(--accent); font-weight:600; }
-  .pill{
-    display:inline-flex; align-items:center; gap:6px;
-    font-family:var(--mono); font-size:11px; letter-spacing:0.03em;
-    padding:5px 11px; border-radius:999px; border:1px solid var(--hairline-strong);
-    color:var(--text-dim); background:var(--panel); cursor:default;
-  }
-  .pill.help-btn{ cursor:pointer; }
-  .pill.help-btn:hover{ color:var(--text); border-color:var(--accent); }
-  .pill.live{ color:var(--accent); border-color:rgba(62,207,207,0.35); }
-  .status-dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); }
-
-  .stage{ display:flex; gap:16px; padding:16px 18px; height:calc(100vh - 49px); min-height:0; }
-
-  .sidebar{ width:330px; flex:none; display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding-right:4px; }
-  .chip.violet{ background:rgba(167,139,250,0.15); color:var(--violet); }
-  .chip.pink{ background:rgba(163,74,114,0.15); color:#a34a72; }
-  .chip.cyan{ background:rgba(47,122,176,0.15); color:var(--cyan); }
-  select{
-    width:100%; background:var(--panel-raised); color:var(--text); border:1px solid var(--hairline-strong);
-    border-radius:6px; padding:8px 9px; font-size:12.5px;
-  }
-  .mode-desc{ font-size:11px; color:var(--text-faint); margin-top:6px; line-height:1.5; }
-
-
-  /* Matches .readout-line in chrome.css: mono, accented, right-aligned, so a
-     slider's current value reads the same here as a live value anywhere else. */
-  .slider-val{ font-family:var(--mono); font-size:12px; color:var(--accent); float:right; }
-
-  .gen-btn{
-    width:100%; background:var(--accent); color:var(--accent-fg); border:none; border-radius:8px;
-    padding:13px; font-family:var(--sans); font-weight:700; font-size:14px; cursor:pointer;
-    letter-spacing:0.01em;
-  }
-  .gen-btn:hover{ filter:brightness(1.08); }
-  /* Generate now leads the sidebar rather than sitting between cards five
-     and six, so it needs breathing room beneath it. */
-  .sidebar > .gen-btn{ margin-bottom:18px; }
-
-  /* Descriptions used to appear/change under each select, so the sidebar
-     height jumped as you browsed modes. Reserving two lines stops that. */
-  .mode-desc{ min-height:2.6em; }
-
-  .row-inline{ display:flex; align-items:center; gap:8px; margin-top:8px; }
-  .row-inline label[for]{ font-size:11px; color:var(--text-faint); letter-spacing:0.04em; }
-  .row-inline select{ flex:1; }
-  .cb-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-dim); }
-
-  /* Step buttons flank Play; they're secondary to it. */
-  #prevChordBtn, #nextChordBtn{
-    min-width:38px; padding-left:10px; padding-right:10px;
-    background:transparent; color:var(--text-dim);
-  }
-  #prevChordBtn:hover:not(:disabled), #nextChordBtn:hover:not(:disabled){ color:var(--accent); }
-  #prevChordBtn:disabled, #nextChordBtn:disabled{ opacity:0.3; cursor:default; }
-
-  /* The suggestion box toggled display, shifting everything below it. */
-  .suggestion-box[hidden]{ display:block !important; visibility:hidden; }
-
-  .io-row{ display:flex; gap:10px; }
-  .io-btn{
-    flex:1; background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text-dim);
-    border-radius:6px; padding:8px; font-family:var(--mono); font-size:10.5px; cursor:pointer;
-  }
-  .io-btn:hover{ color:var(--text); border-color:var(--accent); }
-  .io-btn:disabled{ opacity:0.45; cursor:not-allowed; }
-  .io-btn:disabled:hover{ color:var(--text-dim); border-color:var(--hairline-strong); }
-
-  .midi-detected{ font-size:12px; color:var(--text-dim); line-height:1.5; }
-  .midi-detected strong{ color:var(--text); }
-  .midi-suggestions{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-  .midi-suggestion-chip{ background:var(--panel-raised); border:1px solid var(--hairline-strong); border-radius:6px; padding:7px 9px; }
-  .midi-suggestion-chip .label{ font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-faint); display:block; margin-bottom:2px; }
-  .midi-suggestion-chip .value{ color:var(--accent-hi); font-family:var(--mono); font-size:11.5px; }
-
-  .main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:14px; overflow-y:auto; }
-
-  .transport{
-    flex:none; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:14px 18px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  }
-  .transport-btn{
-    background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text);
-    border-radius:7px; padding:9px 18px; font-family:var(--sans); font-weight:700; font-size:13px; cursor:pointer;
-  }
-  .transport-btn.playing{ background:var(--accent); border-color:var(--accent); color:var(--accent-fg); }
-  .transport-tempo{ display:flex; align-items:center; gap:10px; flex:1; min-width:200px; }
-  .transport-tempo label{ font-family:var(--mono); font-size:10.5px; color:var(--text-dim); white-space:nowrap; }
-  .transport-status{ font-family:var(--mono); font-size:11px; color:var(--text-faint); }
-
-  .progression{
-    flex:1; min-height:0; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:18px; overflow-y:auto;
-  }
-  .progression-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
-  .progression-head h2{ margin:0; font-family:var(--mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); }
-  .progression-meta{ font-family:var(--mono); font-size:11px; color:var(--text-faint); }
-
-  .chord-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
-  @media (max-width:900px){ .chord-grid{ grid-template-columns:repeat(2, 1fr); } }
-
-  .chord-card{
-    background:var(--panel-raised); border:1px solid var(--hairline-strong); border-radius:9px;
-    padding:14px 14px 12px 14px; position:relative; transition:border-color 0.15s ease, transform 0.15s ease;
-  }
-  .chord-card.now-playing{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 16px rgba(62,207,207,0.25); }
-  .chord-card .deg{
-    font-family:var(--mono); font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint);
-    margin-bottom:6px;
-  }
-  .chord-card .root{ font-size:19px; font-weight:700; color:var(--text); margin-bottom:8px; }
-  .chord-card .notes{ font-family:var(--mono); font-size:11.5px; color:var(--accent-hi); line-height:1.7; }
-  .chord-card{ cursor:pointer; }
-  .chord-card.previewing{ border-color:var(--accent-hi); }
-  .chord-card.cadence{ border-color:var(--amber); box-shadow:0 0 0 1px rgba(154,106,31,0.35); }
-  .chord-card.emphasized .deg{ color:var(--amber); }
-  .dur-bar{ height:3px; background:var(--hairline-strong); border-radius:2px; margin-top:10px; overflow:hidden; }
-  .dur-bar-fill{ height:100%; background:var(--accent); border-radius:2px; }
-
-  .keybed-section{ margin-top:22px; padding-top:18px; border-top:1px solid var(--hairline); }
-  .keybed-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
-  .keybed-head h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
-  .keybed-hint{ font-family:var(--mono); font-size:10.5px; color:var(--text-faint); margin:0; }
-  #keybedScroll{
-    overflow-x:auto; background:var(--panel-raised); border:1px solid var(--hairline-strong);
-    border-radius:8px; display:flex; justify-content:center;
-  }
-  #keybedWrap{
-    position:relative; height:120px; flex:none;
-  }
-  .pkey{
-    position:absolute; top:0; bottom:0; box-sizing:border-box;
-    border-right:1px solid rgba(0,0,0,0.5);
-    display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px;
-    transition:background 0.12s ease;
-  }
-  .pkey.white{ background:var(--paper-deep); z-index:1; }
-  .pkey.white .pkey-label{ color:var(--text-dim); }
-  .pkey.black{ background:#4A4030; z-index:2; height:60%; border-radius:0 0 3px 3px; border:1px solid var(--text); }
-  .pkey.black .pkey-label{ color:var(--panel-raised); }
-  .pkey-label{ font-family:var(--mono); font-size:9.5px; font-weight:700; opacity:0; transition:opacity 0.12s ease; pointer-events:none; }
-  .pkey.active{ background:var(--accent) !important; }
-  .pkey.active .pkey-label{ opacity:1; color:var(--accent-fg); }
-  .pkey.white.active{ box-shadow:inset 0 -4px 0 var(--accent-hi); }
-  .pkey.black.active{ box-shadow:0 0 8px var(--accent); }
-
-  .suggestion-box{
-    flex:none; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:16px 18px;
-  }
-  .suggestion-box h3{ margin:0 0 8px 0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
-  .suggestion-box p{ margin:0; font-size:13px; color:var(--text-dim); line-height:1.6; }
-  .suggestion-box strong{ color:var(--text); }
-
-  .empty-state{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    height:100%; color:var(--text-faint); font-size:13px; text-align:center; gap:8px;
-  }
-  .empty-state .big{ font-size:34px; }
-
-  #legalBar{
-    position:fixed; left:0; right:0; bottom:0; z-index:9;
-    display:flex; align-items:center; justify-content:center; gap:14px;
-    padding:4px 12px; font-size:10px; color:var(--text-faint);
-    background:rgba(11,13,18,0.92); border-top:1px solid var(--hairline);
-    font-family:var(--mono);
-  }
-  #legalBar a{ color:var(--text-faint); text-decoration:none; }
-  #legalBar a:hover{ color:var(--text); }
-
-  #supportWidget{ position:fixed; right:14px; bottom:30px; z-index:10; }
-  #supportWidget img{ display:block; border-radius:6px; }
-
-  /* Tutorial modal - matches Modulus Studio's pattern */
-  #tutorialOverlay{
-    position:fixed; inset:0; z-index:50;
-    background:rgba(6,7,12,0.72);
-    display:none; align-items:center; justify-content:center;
-    backdrop-filter:blur(2px);
-  }
-  #tutorialOverlay.show{ display:flex; }
-  #tutorialBox{
-    width:min(560px, 92vw); max-height:86vh; overflow-y:auto;
-    background:var(--panel); border:1px solid var(--hairline-strong);
-    border-radius:12px; box-shadow:0 24px 50px rgba(138, 160, 184,0.22);
-    position:relative;
-  }
-  #tutorialAccent{ height:4px; width:100%; border-radius:12px 12px 0 0; background:var(--accent); }
-  #tutorialInner{ padding:26px 28px 24px 28px; }
-  #tutorialClose{
-    position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:7px;
-    background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text-dim);
-    font-family:var(--mono); font-size:14px; cursor:pointer; line-height:1;
-  }
-  #tutorialClose:hover{ color:var(--text); border-color:var(--accent); }
-  #tutorialStepTag{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:8px; }
-  #tutorialTitle{ font-family:var(--serif-display); font-size:21px; font-weight:600; margin:0 0 12px 0; color:var(--text); }
-  #tutorialBody{ font-size:14px; line-height:1.65; color:var(--text-dim); }
-  #tutorialBody p{ margin:0 0 12px 0; }
-  #tutorialBody strong{ color:var(--text); }
-  #tutorialBody ul{ margin:0 0 12px 0; padding-left:20px; }
-  #tutorialBody li{ margin-bottom:7px; }
-  #tutorialFoot{ display:flex; align-items:center; justify-content:space-between; margin-top:22px; padding-top:16px; border-top:1px solid var(--hairline); }
-  #tutorialDots{ display:flex; gap:6px; }
-  #tutorialDots span{ width:6px; height:6px; border-radius:50%; background:var(--hairline-strong); }
-  #tutorialDots span.active{ background:var(--accent); }
-  #tutorialNavBtns{ display:flex; gap:8px; }
-  .tut-btn{
-    font-family:var(--mono); font-size:11.5px; padding:8px 15px; border-radius:7px; cursor:pointer;
-    border:1px solid var(--hairline-strong); background:var(--panel-raised); color:var(--text-dim);
-  }
-  .tut-btn:hover{ color:var(--text); border-color:var(--accent); }
-  .tut-btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-fg); font-weight:700; }
-  .tut-skip{ font-family:var(--mono); font-size:11px; color:var(--text-faint); background:none; border:none; cursor:pointer; padding:8px 4px; }
-
-  ::-webkit-scrollbar{ width:8px; }
-  ::-webkit-scrollbar-thumb{ background:var(--hairline-strong); border-radius:4px; }
+}
+.chord-card {
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 9px;
+  padding: 14px 14px 12px 14px;
+  position: relative;
+  transition: border-color .15s ease,transform .15s ease
+}
+.chord-card.now-playing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent),0 0 16px rgba(62,207,207,.25)
+}
+.chord-card .deg {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px
+}
+.chord-card .root {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px
+}
+.chord-card .notes {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--accent-hi);
+  line-height: 1.7
+}
+.chord-card {
+  cursor: pointer
+}
+.chord-card.previewing {
+  border-color: var(--accent-hi)
+}
+.chord-card.cadence {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 1px rgba(154,106,31,.35)
+}
+.chord-card.emphasized .deg {
+  color: var(--amber)
+}
+.dur-bar {
+  height: 3px;
+  background: var(--hairline-strong);
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden
+}
+.dur-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px
+}
+.keybed-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline)
+}
+.keybed-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px
+}
+.keybed-head h3 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-dim)
+}
+.keybed-hint {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin: 0
+}
+#keybedScroll {
+  overflow-x: auto;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center
+}
+#keybedWrap {
+  position: relative;
+  height: 120px;
+  flex: none
+}
+.pkey {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  border-right: 1px solid rgba(0,0,0,.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+  transition: background .12s ease
+}
+.pkey.white {
+  background: var(--paper-deep);
+  z-index: 1
+}
+.pkey.white .pkey-label {
+  color: var(--text-dim)
+}
+.pkey.black {
+  background: #4a4030;
+  z-index: 2;
+  height: 60%;
+  border-radius: 0 0 3px 3px;
+  border: 1px solid var(--text)
+}
+.pkey.black .pkey-label {
+  color: var(--panel-raised)
+}
+.pkey-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity .12s ease;
+  pointer-events: none
+}
+.pkey.active {
+  background: var(--accent)!important
+}
+.pkey.active .pkey-label {
+  opacity: 1;
+  color: var(--accent-fg)
+}
+.pkey.white.active {
+  box-shadow: inset 0 -4px 0 var(--accent-hi)
+}
+.pkey.black.active {
+  box-shadow: 0 0 8px var(--accent)
+}
+.suggestion-box {
+  flex: none;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 16px 18px
+}
+.suggestion-box h3 {
+  margin: 0 0 8px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-dim)
+}
+.suggestion-box p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6
+}
+.suggestion-box strong {
+  color: var(--text)
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-faint);
+  font-size: 13px;
+  text-align: center;
+  gap: 8px
+}
+.empty-state .big {
+  font-size: 34px
+}
+#legalBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px;
+  font-size: 10px;
+  color: var(--text-faint);
+  background: rgba(11,13,18,.92);
+  border-top: 1px solid var(--hairline);
+  font-family: var(--mono)
+}
+#legalBar a {
+  color: var(--text-faint);
+  text-decoration: none
+}
+#legalBar a:hover {
+  color: var(--text)
+}
+#supportWidget {
+  position: fixed;
+  right: 14px;
+  bottom: 30px;
+  z-index: 10
+}
+#supportWidget img {
+  display: block;
+  border-radius: 6px
+}
+#tutorialOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(6,7,12,.72);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px)
+}
+#tutorialOverlay.show {
+  display: flex
+}
+#tutorialBox {
+  width: min(560px,92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 12px;
+  box-shadow: 0 24px 50px rgba(138,160,184,.22);
+  position: relative
+}
+#tutorialAccent {
+  height: 4px;
+  width: 100%;
+  border-radius: 12px 12px 0 0;
+  background: var(--accent)
+}
+#tutorialInner {
+  padding: 26px 28px 24px 28px
+}
+#tutorialClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--panel-raised);
+  border: 1px solid var(--hairline-strong);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1
+}
+#tutorialClose:hover {
+  color: var(--text);
+  border-color: var(--accent)
+}
+#tutorialStepTag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px
+}
+#tutorialTitle {
+  font-family: var(--serif-display);
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--text)
+}
+#tutorialBody {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-dim)
+}
+#tutorialBody p {
+  margin: 0 0 12px 0
+}
+#tutorialBody strong {
+  color: var(--text)
+}
+#tutorialBody ul {
+  margin: 0 0 12px 0;
+  padding-left: 20px
+}
+#tutorialBody li {
+  margin-bottom: 7px
+}
+#tutorialFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline)
+}
+#tutorialDots {
+  display: flex;
+  gap: 6px
+}
+#tutorialDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hairline-strong)
+}
+#tutorialDots span.active {
+  background: var(--accent)
+}
+#tutorialNavBtns {
+  display: flex;
+  gap: 8px
+}
+.tut-btn {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 8px 15px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid var(--hairline-strong);
+  background: var(--panel-raised);
+  color: var(--text-dim)
+}
+.tut-btn:hover {
+  color: var(--text);
+  border-color: var(--accent)
+}
+.tut-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 700
+}
+.tut-skip {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  background: 0 0;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px
+}
+::-webkit-scrollbar {
+  width: 8px
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: 4px
+}
 </style>
   <link rel="canonical" href="https://thermalsocklabs.com/loom/">
   <meta name="theme-color" content="#0B0D12">
@@ -455,585 +935,655 @@
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
 <script>
-(function(){
-'use strict';
-
-/* =========================================================================
-   MUSIC THEORY DATA
-   ========================================================================= */
-
-const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-
-const MODES = [
-  { id:'dorian', name:'Dorian', intervals:[0,2,3,5,7,9,10], desc:'Warm minor with a bright 6th - the default ambient/psybient mode.' },
-  { id:'phrygian', name:'Phrygian', intervals:[0,1,3,5,7,8,10], desc:'Dark, tense half-step pull from the root. Good for hauntology work.' },
-  { id:'lydian', name:'Lydian', intervals:[0,2,4,6,7,9,11], desc:'Floating, unresolved brightness. Never quite lands.' },
-  { id:'mixolydian', name:'Mixolydian', intervals:[0,2,4,5,7,9,10], desc:'Major but softened - open, folky, less final than Ionian.' },
-  { id:'aeolian', name:'Aeolian (natural minor)', intervals:[0,2,3,5,7,8,10], desc:'Plain natural minor. A safe, melancholic home base.' },
-  { id:'locrian', name:'Locrian', intervals:[0,1,3,5,6,8,10], desc:'Unstable, rarely used - genuinely unsettled and alien.' },
-  { id:'harmonicMinor', name:'Harmonic Minor', intervals:[0,2,3,5,7,8,11], desc:'Exotic tension from the raised 7th, without resolving into it.' },
-  { id:'melodicMinor', name:'Melodic Minor', intervals:[0,2,3,5,7,9,11], desc:'Minor-major hybrid, smoother and more ambiguous than harmonic minor.' },
-  { id:'phrygianDominant', name:'Phrygian Dominant', intervals:[0,1,4,5,7,8,10], desc:'Middle Eastern / Spanish flavor. Strong, immediate tension.' },
-  { id:'insen', name:'Insen (Japanese, 5-note)', intervals:[0,1,5,7,10], desc:'Austere and spacious. Very few notes, a lot of room.' },
-  { id:'hirajoshi', name:'Hirajoshi (Japanese, 5-note)', intervals:[0,2,3,7,8], desc:'Melancholic, koto-like pentatonic.' },
-  { id:'kumoi', name:'Kumoi (Japanese, 5-note)', intervals:[0,2,3,7,9], desc:'Softer, more consonant cousin of Hirajoshi.' },
-];
-
-/* =========================================================================
-   MODAL FUNCTION RULES - each mode has real tendencies, and "Modal
-   Wandering" (and every other movement style) should actually know them
-   rather than treating every scale degree as equally likely. All indices
-   are 0-based scale degrees (degree "1"/the tonic = index 0).
-
-     emphasize          - degrees this mode should land on more often
-     avoid               - degrees this mode should land on less often
-     avoidTransitions    - [from,to] degree pairs to suppress (a move this
-                            mode's character argues against)
-     preferTransitions   - [from,to] degree pairs to favor
-     cadence             - the degree the "cadential gesture" (see rhythm
-                            engine) should prefer landing the phrase on,
-                            when it isn't just the tonic
-
-   The five modes called out specifically:
-     Dorian      - emphasise 6, avoid tonic
-     Lydian      - emphasise #4, avoid V-I
-     Mixolydian  - emphasise b7, favor plagal (IV-I) motion
-     Phrygian    - emphasise b2, avoid the leading-tone pull into tonic
-     Aeolian     - emphasise b6, avoid a functional (major-V-feeling) V-I
-
-   The remaining modes get lighter-touch rules in the same spirit rather
-   than being left with no modal awareness at all.
-   ========================================================================= */
-const MODAL_RULES = {
-  dorian:          { emphasize:[5], avoid:[0] },
-  phrygian:        { emphasize:[1], avoidTransitions:[[6,0]] },
-  lydian:          { emphasize:[3], avoidTransitions:[[4,0]] },
-  mixolydian:      { emphasize:[6], preferTransitions:[[3,0]] },
-  aeolian:         { emphasize:[5], avoidTransitions:[[4,0]] },
-  locrian:         { emphasize:[1,4], avoid:[0], cadence:4 },
-  harmonicMinor:   { emphasize:[6] },
-  melodicMinor:    { emphasize:[5,6] },
-  phrygianDominant:{ emphasize:[1,2], avoidTransitions:[[6,0]] },
-  insen:           { emphasize:[1] },
-  hirajoshi:       { emphasize:[2,4] },
-  kumoi:           { emphasize:[2] },
-};
-
-// Weighted-random pick: `weights` sums to any positive total, doesn't need
-// to be normalized first.
-function weightedChoice(candidates, weights){
-  const total = weights.reduce((a,b) => a+b, 0);
-  if(total <= 0) return choice(candidates);
-  let r = Math.random() * total;
-  for(let i=0;i<candidates.length;i++){
-    r -= weights[i];
-    if(r <= 0) return candidates[i];
-  }
-  return candidates[candidates.length-1];
-}
-
-function degreeWeight(rules, degree){
-  let w = 1;
-  if(rules.emphasize && rules.emphasize.includes(degree)) w *= 2.6;
-  if(rules.avoid && rules.avoid.includes(degree)) w *= 0.22;
-  return w;
-}
-
-function transitionWeight(rules, from, to){
-  let w = 1;
-  if(rules.avoidTransitions && rules.avoidTransitions.some(([a,b]) => a===from && b===to)) w *= 0.12;
-  if(rules.preferTransitions && rules.preferTransitions.some(([a,b]) => a===from && b===to)) w *= 2.8;
-  return w;
-}
-
-
-const VOICINGS = [
-  { id:'tertian', name:'Tertian (stacked 3rds)', steps:[0,2,4], desc:'Ordinary chord-tone stacking - the most "resolved-sounding" option here.' },
-  { id:'extended', name:'Extended (9ths/11ths/13ths)', steps:[0,2,4,6,8,10], desc:'Keeps stacking thirds past the 7th into a dense, colorful cluster.' },
-  { id:'quartal', name:'Quartal / Quintal', steps:[0,3,6], desc:'Stacked 4ths instead of 3rds - the classic open, ambiguous pad chord.' },
-  { id:'cluster', name:'Cluster', steps:[0,1,2], desc:'Adjacent scale tones close together. Textural, not harmonic.' },
-  { id:'sus', name:'Suspended', steps:[0,3,4], desc:'The 3rd replaced by a 4th - unresolved by definition.' },
-];
-
-const MOVEMENTS = [
-  { id:'wander', name:'Modal Wandering', desc:'A loose random walk across the scale, avoiding the tonic and any obvious resolution.' },
-  { id:'cycle', name:'Slow-Motion Cycle', desc:'A short fixed pattern that repeats, evolving very slowly rather than resolving.' },
-  { id:'nonresolving', name:'Non-Resolving Loop', desc:'Deliberately avoids landing back on the tonic - the loop point itself stays unresolved.' },
-  { id:'drift', name:'Generative Drift', desc:'A tighter random walk, mostly single scale-steps, for very smooth, gradual movement.' },
-  { id:'eternal', name:'Eternal Loop', desc:'A very short 2-3 chord cell, repeated - built to loop indefinitely without fatigue.' },
-];
-
-/* =========================================================================
-   CHORD-BUILDING ENGINE
-   ========================================================================= */
-
-// Given a scale (array of semitone offsets from tonic) and a 0-based root
-// scale-degree, plus a list of scale-step offsets (from the voicing style),
-// returns semitone offsets from the tonic -- these naturally spread across
-// octaves as stepOffset grows past the scale length, which is what gives
-// every voicing here its open/spread pad character for free.
-function stepsToSemitones(scaleIntervals, rootDegree, stepOffsets){
-  const L = scaleIntervals.length;
-  return stepOffsets.map(stepOffset => {
-    const totalStep = rootDegree + stepOffset;
-    const octave = Math.floor(totalStep / L);
-    const idx = ((totalStep % L) + L) % L;
-    return scaleIntervals[idx] + octave*12;
-  });
-}
-
-function midiToName(midi){
-  const name = NOTE_NAMES[((midi%12)+12)%12];
-  const octave = Math.floor(midi/12) - 1;
-  return name + octave;
-}
-
-function midiToFreq(midi){
-  return 440 * Math.pow(2, (midi-69)/12);
-}
-
-/* =========================================================================
-   MOVEMENT ALGORITHMS - each returns an array of 0-based scale-degree
-   indices (length 8), given the scale length L.
-   ========================================================================= */
-
-function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function choice(arr){ return arr[randInt(0, arr.length-1)]; }
-
-function genWander(L, n, rules){
-  rules = rules || {};
-  const seq = [randInt(1, L-1)];
-  for(let i=1;i<n;i++){
-    const candidates = [];
-    for(let step=-2; step<=2; step++){
-      if(step===0) continue;
-      candidates.push(((seq[i-1]+step) % L + L) % L);
+(function() {
+  "use strict";
+  const NOTE_NAMES = [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ];
+  const MODES = [ {
+    id: "dorian",
+    name: "Dorian",
+    intervals: [ 0, 2, 3, 5, 7, 9, 10 ],
+    desc: "Warm minor with a bright 6th - the default ambient/psybient mode."
+  }, {
+    id: "phrygian",
+    name: "Phrygian",
+    intervals: [ 0, 1, 3, 5, 7, 8, 10 ],
+    desc: "Dark, tense half-step pull from the root. Good for hauntology work."
+  }, {
+    id: "lydian",
+    name: "Lydian",
+    intervals: [ 0, 2, 4, 6, 7, 9, 11 ],
+    desc: "Floating, unresolved brightness. Never quite lands."
+  }, {
+    id: "mixolydian",
+    name: "Mixolydian",
+    intervals: [ 0, 2, 4, 5, 7, 9, 10 ],
+    desc: "Major but softened - open, folky, less final than Ionian."
+  }, {
+    id: "aeolian",
+    name: "Aeolian (natural minor)",
+    intervals: [ 0, 2, 3, 5, 7, 8, 10 ],
+    desc: "Plain natural minor. A safe, melancholic home base."
+  }, {
+    id: "locrian",
+    name: "Locrian",
+    intervals: [ 0, 1, 3, 5, 6, 8, 10 ],
+    desc: "Unstable, rarely used - genuinely unsettled and alien."
+  }, {
+    id: "harmonicMinor",
+    name: "Harmonic Minor",
+    intervals: [ 0, 2, 3, 5, 7, 8, 11 ],
+    desc: "Exotic tension from the raised 7th, without resolving into it."
+  }, {
+    id: "melodicMinor",
+    name: "Melodic Minor",
+    intervals: [ 0, 2, 3, 5, 7, 9, 11 ],
+    desc: "Minor-major hybrid, smoother and more ambiguous than harmonic minor."
+  }, {
+    id: "phrygianDominant",
+    name: "Phrygian Dominant",
+    intervals: [ 0, 1, 4, 5, 7, 8, 10 ],
+    desc: "Middle Eastern / Spanish flavor. Strong, immediate tension."
+  }, {
+    id: "insen",
+    name: "Insen (Japanese, 5-note)",
+    intervals: [ 0, 1, 5, 7, 10 ],
+    desc: "Austere and spacious. Very few notes, a lot of room."
+  }, {
+    id: "hirajoshi",
+    name: "Hirajoshi (Japanese, 5-note)",
+    intervals: [ 0, 2, 3, 7, 8 ],
+    desc: "Melancholic, koto-like pentatonic."
+  }, {
+    id: "kumoi",
+    name: "Kumoi (Japanese, 5-note)",
+    intervals: [ 0, 2, 3, 7, 9 ],
+    desc: "Softer, more consonant cousin of Hirajoshi."
+  } ];
+  const MODAL_RULES = {
+    dorian: {
+      emphasize: [ 5 ],
+      avoid: [ 0 ]
+    },
+    phrygian: {
+      emphasize: [ 1 ],
+      avoidTransitions: [ [ 6, 0 ] ]
+    },
+    lydian: {
+      emphasize: [ 3 ],
+      avoidTransitions: [ [ 4, 0 ] ]
+    },
+    mixolydian: {
+      emphasize: [ 6 ],
+      preferTransitions: [ [ 3, 0 ] ]
+    },
+    aeolian: {
+      emphasize: [ 5 ],
+      avoidTransitions: [ [ 4, 0 ] ]
+    },
+    locrian: {
+      emphasize: [ 1, 4 ],
+      avoid: [ 0 ],
+      cadence: 4
+    },
+    harmonicMinor: {
+      emphasize: [ 6 ]
+    },
+    melodicMinor: {
+      emphasize: [ 5, 6 ]
+    },
+    phrygianDominant: {
+      emphasize: [ 1, 2 ],
+      avoidTransitions: [ [ 6, 0 ] ]
+    },
+    insen: {
+      emphasize: [ 1 ]
+    },
+    hirajoshi: {
+      emphasize: [ 2, 4 ]
+    },
+    kumoi: {
+      emphasize: [ 2 ]
     }
-    const weights = candidates.map(c => degreeWeight(rules, c) * transitionWeight(rules, seq[i-1], c));
-    seq.push(weightedChoice(candidates, weights));
-  }
-  return seq;
-}
-
-function genCycle(L, n, rules){
-  rules = rules || {};
-  // Build a 4-degree cell once, weighting toward this mode's emphasized
-  // degree and preferred transitions (e.g. Mixolydian's plagal IV-I favors
-  // a cell that actually visits degree 4 -> degree 1), then repeat it -
-  // still a fixed, recognizable pattern, just one that fits the mode
-  // instead of the same [0,2,0,4] shape regardless of what mode is active.
-  const candidatesFor = (from) => {
-    const opts = [];
-    for(let d=0; d<L; d++) if(d !== from) opts.push(d);
-    return opts;
   };
-  const cell = [0];
-  for(let i=1;i<4;i++){
-    const cands = candidatesFor(cell[i-1]);
-    const weights = cands.map(c => degreeWeight(rules, c) * transitionWeight(rules, cell[i-1], c));
-    cell.push(weightedChoice(cands, weights));
-  }
-  const seq = [];
-  for(let i=0;i<n;i++) seq.push(cell[i%cell.length] % L);
-  return seq;
-}
-
-function genNonResolving(L, n, rules){
-  const seq = genWander(L, n, rules);
-  if(seq[seq.length-1] === 0) seq[seq.length-1] = Math.min(1, L-1) || 1;
-  return seq;
-}
-
-function genDrift(L, n, rules){
-  rules = rules || {};
-  const seq = [randInt(1, L-1)];
-  for(let i=1;i<n;i++){
-    const smallSteps = [-1,1], bigSteps = [-2,2];
-    const candidates = [...smallSteps, ...smallSteps, ...smallSteps, ...smallSteps, ...bigSteps]
-      .map(step => ((seq[i-1]+step) % L + L) % L);
-    const weights = candidates.map(c => degreeWeight(rules, c) * transitionWeight(rules, seq[i-1], c));
-    seq.push(weightedChoice(candidates, weights));
-  }
-  return seq;
-}
-
-function genEternal(L, n, rules, cellLen){
-  rules = rules || {};
-  cellLen = cellLen || randInt(2,3);
-  const cell = [];
-  for(let i=0;i<cellLen;i++){
-    const cands = Array.from({length:L}, (_, d) => d);
-    const prev = cell.length ? cell[cell.length-1] : null;
-    const weights = cands.map(c => degreeWeight(rules, c) * (prev===null ? 1 : transitionWeight(rules, prev, c)));
-    cell.push(weightedChoice(cands, weights));
-  }
-  const seq = [];
-  for(let i=0;i<n;i++) seq.push(cell[i%cellLen]);
-  return seq;
-}
-
-const MOVEMENT_FNS = { wander:genWander, cycle:genCycle, nonresolving:genNonResolving, drift:genDrift, eternal:genEternal };
-
-/* =========================================================================
-   RHYTHM / PHRASING - Loom used to output 8 chords of identical length with
-   no dynamic shape, which read as a list rather than a phrase. Every
-   movement style gets its own duration/accent shape here, and every phrase
-   (regardless of style) ends with a cadential gesture: the last chord gets
-   real extra time and full accent - a purely rhythmic/dynamic "arrival,"
-   not a harmonic one, which is what keeps this honest about never landing
-   on a functional resolution while still giving the loop point a felt
-   sense of weight. Returns {durations, accents}, both length n, as
-   multipliers against the base "seconds / chord" tempo value - not raw
-   seconds - so re-touching the tempo slider after generating still works
-   without needing to regenerate.
-   ========================================================================= */
-function buildPhrase(movementId, n, eternalCellLen){
-  const durations = new Array(n).fill(1);
-  const accents = new Array(n).fill(0.85);
-
-  if(movementId === 'eternal'){
-    // Short, mostly-uniform durations - the repetition itself is the
-    // point (see the texture suggestion for this movement). A light pulse
-    // on the first chord of every cell repeat keeps it from reading as
-    // completely flat.
-    for(let i=0;i<n;i++){
-      durations[i] = 0.72;
-      accents[i] = (i % eternalCellLen === 0) ? 0.95 : 0.75;
+  function weightedChoice(candidates, weights) {
+    const total = weights.reduce((a, b) => a + b, 0);
+    if (total <= 0) return choice(candidates);
+    let r = Math.random() * total;
+    for (let i = 0; i < candidates.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return candidates[i];
     }
-  } else if(movementId === 'cycle'){
-    // Metrical feel: strong-weak-medium-weak, matching the 4-chord cell,
-    // repeated across however many cycles fit in n chords.
-    const pattern = [ {d:1.15,a:1.0}, {d:0.8,a:0.72}, {d:1.0,a:0.88}, {d:0.85,a:0.72} ];
-    for(let i=0;i<n;i++){
-      const p = pattern[i % pattern.length];
-      durations[i] = p.d; accents[i] = p.a;
+    return candidates[candidates.length - 1];
+  }
+  function degreeWeight(rules, degree) {
+    let w = 1;
+    if (rules.emphasize && rules.emphasize.includes(degree)) w *= 2.6;
+    if (rules.avoid && rules.avoid.includes(degree)) w *= .22;
+    return w;
+  }
+  function transitionWeight(rules, from, to) {
+    let w = 1;
+    if (rules.avoidTransitions && rules.avoidTransitions.some(([a, b]) => a === from && b === to)) w *= .12;
+    if (rules.preferTransitions && rules.preferTransitions.some(([a, b]) => a === from && b === to)) w *= 2.8;
+    return w;
+  }
+  const VOICINGS = [ {
+    id: "tertian",
+    name: "Tertian (stacked 3rds)",
+    steps: [ 0, 2, 4 ],
+    desc: 'Ordinary chord-tone stacking - the most "resolved-sounding" option here.'
+  }, {
+    id: "extended",
+    name: "Extended (9ths/11ths/13ths)",
+    steps: [ 0, 2, 4, 6, 8, 10 ],
+    desc: "Keeps stacking thirds past the 7th into a dense, colorful cluster."
+  }, {
+    id: "quartal",
+    name: "Quartal / Quintal",
+    steps: [ 0, 3, 6 ],
+    desc: "Stacked 4ths instead of 3rds - the classic open, ambiguous pad chord."
+  }, {
+    id: "cluster",
+    name: "Cluster",
+    steps: [ 0, 1, 2 ],
+    desc: "Adjacent scale tones close together. Textural, not harmonic."
+  }, {
+    id: "sus",
+    name: "Suspended",
+    steps: [ 0, 3, 4 ],
+    desc: "The 3rd replaced by a 4th - unresolved by definition."
+  } ];
+  const MOVEMENTS = [ {
+    id: "wander",
+    name: "Modal Wandering",
+    desc: "A loose random walk across the scale, avoiding the tonic and any obvious resolution."
+  }, {
+    id: "cycle",
+    name: "Slow-Motion Cycle",
+    desc: "A short fixed pattern that repeats, evolving very slowly rather than resolving."
+  }, {
+    id: "nonresolving",
+    name: "Non-Resolving Loop",
+    desc: "Deliberately avoids landing back on the tonic - the loop point itself stays unresolved."
+  }, {
+    id: "drift",
+    name: "Generative Drift",
+    desc: "A tighter random walk, mostly single scale-steps, for very smooth, gradual movement."
+  }, {
+    id: "eternal",
+    name: "Eternal Loop",
+    desc: "A very short 2-3 chord cell, repeated - built to loop indefinitely without fatigue."
+  } ];
+  function stepsToSemitones(scaleIntervals, rootDegree, stepOffsets) {
+    const L = scaleIntervals.length;
+    return stepOffsets.map(stepOffset => {
+      const totalStep = rootDegree + stepOffset;
+      const octave = Math.floor(totalStep / L);
+      const idx = (totalStep % L + L) % L;
+      return scaleIntervals[idx] + octave * 12;
+    });
+  }
+  function midiToName(midi) {
+    const name = NOTE_NAMES[(midi % 12 + 12) % 12];
+    const octave = Math.floor(midi / 12) - 1;
+    return name + octave;
+  }
+  function midiToFreq(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  function choice(arr) {
+    return arr[randInt(0, arr.length - 1)];
+  }
+  function genWander(L, n, rules) {
+    rules = rules || {};
+    const seq = [ randInt(1, L - 1) ];
+    for (let i = 1; i < n; i++) {
+      const candidates = [];
+      for (let step = -2; step <= 2; step++) {
+        if (step === 0) continue;
+        candidates.push(((seq[i - 1] + step) % L + L) % L);
+      }
+      const weights = candidates.map(c => degreeWeight(rules, c) * transitionWeight(rules, seq[i - 1], c));
+      seq.push(weightedChoice(candidates, weights));
     }
-  } else if(movementId === 'nonresolving'){
-    // Deliberately irregular durations, matching the unmoored character -
-    // the loop point still gets marked rhythmically (see cadence below)
-    // even though it's never marked harmonically.
-    for(let i=0;i<n;i++){
-      durations[i] = 0.75 + Math.random()*0.6;
-      accents[i] = 0.7 + Math.random()*0.25;
+    return seq;
+  }
+  function genCycle(L, n, rules) {
+    rules = rules || {};
+    const candidatesFor = from => {
+      const opts = [];
+      for (let d = 0; d < L; d++) if (d !== from) opts.push(d);
+      return opts;
+    };
+    const cell = [ 0 ];
+    for (let i = 1; i < 4; i++) {
+      const cands = candidatesFor(cell[i - 1]);
+      const weights = cands.map(c => degreeWeight(rules, c) * transitionWeight(rules, cell[i - 1], c));
+      cell.push(weightedChoice(cands, weights));
     }
-  } else {
-    // wander / drift: a gentle rise-and-settle arc across the phrase.
-    for(let i=0;i<n;i++){
-      const t = n>1 ? i/(n-1) : 0;
-      durations[i] = 0.9 + 0.35*Math.sin(t*Math.PI*0.85);
-      accents[i] = 0.78 + 0.15*Math.sin(t*Math.PI);
+    const seq = [];
+    for (let i = 0; i < n; i++) seq.push(cell[i % cell.length] % L);
+    return seq;
+  }
+  function genNonResolving(L, n, rules) {
+    const seq = genWander(L, n, rules);
+    if (seq[seq.length - 1] === 0) seq[seq.length - 1] = Math.min(1, L - 1) || 1;
+    return seq;
+  }
+  function genDrift(L, n, rules) {
+    rules = rules || {};
+    const seq = [ randInt(1, L - 1) ];
+    for (let i = 1; i < n; i++) {
+      const smallSteps = [ -1, 1 ], bigSteps = [ -2, 2 ];
+      const candidates = [ ...smallSteps, ...smallSteps, ...smallSteps, ...smallSteps, ...bigSteps ].map(step => ((seq[i - 1] + step) % L + L) % L);
+      const weights = candidates.map(c => degreeWeight(rules, c) * transitionWeight(rules, seq[i - 1], c));
+      seq.push(weightedChoice(candidates, weights));
     }
+    return seq;
   }
-
-  durations[n-1] *= 1.55; // the cadential gesture
-  accents[n-1] = 1.0;
-
-  return { durations, accents };
-}
-
-/* =========================================================================
-   TEXTURE SUGGESTIONS - a small set of canned, genuinely useful blurbs,
-   picked based on the chosen movement + voicing so it's not just random.
-   ========================================================================= */
-
-function buildSuggestion(movementId, voicingId, droneOn){
-  const bits = [];
-  if(movementId === 'eternal'){
-    bits.push('Since this is a short repeating cell, let it loop several times before touching anything - the repetition is the point, and changing FX too early undercuts it.');
-  } else if(movementId === 'nonresolving'){
-    bits.push('This loop is built to never quite land - a long reverb tail across the loop point will blur exactly where one cycle ends and the next begins, which is the goal.');
-  } else if(movementId === 'cycle'){
-    bits.push('The fixed pattern gives you a stable frame to automate against - try a slow filter sweep or panning move timed to the full 4-chord cycle rather than per chord.');
-  } else {
-    bits.push('With this much harmonic drift, keep the FX chain relatively static so the ear has one stable thing (the space) against the moving thing (the chords).');
+  function genEternal(L, n, rules, cellLen) {
+    rules = rules || {};
+    cellLen = cellLen || randInt(2, 3);
+    const cell = [];
+    for (let i = 0; i < cellLen; i++) {
+      const cands = Array.from({
+        length: L
+      }, (_, d) => d);
+      const prev = cell.length ? cell[cell.length - 1] : null;
+      const weights = cands.map(c => degreeWeight(rules, c) * (prev === null ? 1 : transitionWeight(rules, prev, c)));
+      cell.push(weightedChoice(cands, weights));
+    }
+    const seq = [];
+    for (let i = 0; i < n; i++) seq.push(cell[i % cellLen]);
+    return seq;
   }
-  if(voicingId === 'cluster'){
-    bits.push('Cluster voicings get harsh fast under bright reverb - favor a darker plate or room over anything shimmer-heavy.');
-  } else if(voicingId === 'quartal'){
-    bits.push('Quartal chords already sound open on their own - a subtle chorus or slow LFO on pitch is usually enough width, no need to over-effect it.');
-  } else if(voicingId === 'extended'){
-    bits.push('These are dense - roll off some low-mid content on the pad voice itself so the extensions read as color rather than mud.');
-  }
-  if(droneOn){
-    bits.push('Keep the drone quieter than feels natural at first - it should anchor the chords without competing for attention against them.');
-  }
-  return bits.join(' ');
-}
-
-/* =========================================================================
-   UI SETUP
-   ========================================================================= */
-
-function el(tag, attrs, children){
-  const e = document.createElement(tag);
-  if(attrs) for(const k in attrs){
-    if(k==='class') e.className = attrs[k];
-    else if(k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
-    else e.setAttribute(k, attrs[k]);
-  }
-  (children||[]).forEach(c => e.appendChild(typeof c==='string' ? document.createTextNode(c) : c));
-  return e;
-}
-
-const rootSelect = document.getElementById('rootSelect');
-NOTE_NAMES.forEach((n, i) => rootSelect.appendChild(el('option', {value:i}, [n])));
-rootSelect.value = 0;
-
-const modeSelect = document.getElementById('modeSelect');
-MODES.forEach(m => modeSelect.appendChild(el('option', {value:m.id}, [m.name])));
-const modeDesc = document.getElementById('modeDesc');
-function updateModeDesc(){ modeDesc.textContent = MODES.find(m=>m.id===modeSelect.value).desc; }
-modeSelect.addEventListener('change', updateModeDesc);
-updateModeDesc();
-
-const movementSelect = document.getElementById('movementSelect');
-MOVEMENTS.forEach(m => movementSelect.appendChild(el('option', {value:m.id}, [m.name])));
-const movementDesc = document.getElementById('movementDesc');
-function updateMovementDesc(){ movementDesc.textContent = MOVEMENTS.find(m=>m.id===movementSelect.value).desc; }
-movementSelect.addEventListener('change', updateMovementDesc);
-updateMovementDesc();
-
-const voicingSelect = document.getElementById('voicingSelect');
-VOICINGS.forEach(v => voicingSelect.appendChild(el('option', {value:v.id}, [v.name])));
-const voicingDesc = document.getElementById('voicingDesc');
-function updateVoicingDesc(){ voicingDesc.textContent = VOICINGS.find(v=>v.id===voicingSelect.value).desc; }
-voicingSelect.addEventListener('change', updateVoicingDesc);
-updateVoicingDesc();
-
-const droneOctSlider = document.getElementById('droneOctSlider');
-const droneOctVal = document.getElementById('droneOctVal');
-droneOctSlider.addEventListener('input', () => droneOctVal.textContent = droneOctSlider.value);
-
-const tempoSlider = document.getElementById('tempoSlider');
-const tempoVal = document.getElementById('tempoVal');
-tempoSlider.addEventListener('input', () => tempoVal.textContent = tempoSlider.value + 's');
-
-/* =========================================================================
-   GENERATE
-   ========================================================================= */
-
-let currentProgression = null; // {rootIdx, modeId, scale, movementId, voicingId, chords:[{degree, semitones:[..]}], droneOn, droneOctave}
-
-function generateProgression(){
-  const rootIdx = parseInt(rootSelect.value, 10);
-  const mode = MODES.find(m => m.id === modeSelect.value);
-  const voicing = VOICINGS.find(v => v.id === voicingSelect.value);
-  const movementId = movementSelect.value;
-  const L = mode.intervals.length;
-  const N = 8;
-
-  const modeRules = MODAL_RULES[mode.id] || {};
-  const eternalCellLen = randInt(2,3); // chosen once, shared with buildPhrase so the accent pulse lines up with the actual harmonic repeat
-  const degrees = MOVEMENT_FNS[movementId](L, N, modeRules, eternalCellLen);
-  const doubleRoot = document.getElementById('doubleRootCb').checked;
-  const { durations, accents } = buildPhrase(movementId, N, eternalCellLen);
-
-  const chords = degrees.map((degree, i) => {
-    let semis = stepsToSemitones(mode.intervals, degree, voicing.steps);
-    if(doubleRoot) semis = [semis[0]-12, ...semis];
-    return { degree, semis, durationMult: durations[i], accent: accents[i], isCadence: i === degrees.length-1 };
-  });
-
-  currentProgression = {
-    rootIdx, modeId: mode.id, modeName: mode.name, intervals: mode.intervals,
-    movementId, voicingId: voicing.id, chords, modeRules,
-    droneOn: document.getElementById('droneCb').checked,
-    droneOctave: parseInt(droneOctSlider.value, 10),
+  const MOVEMENT_FNS = {
+    wander: genWander,
+    cycle: genCycle,
+    nonresolving: genNonResolving,
+    drift: genDrift,
+    eternal: genEternal
   };
-
-  renderProgression();
-  // Reveal without changing display, so the reserved space stays reserved
-  // and nothing below it shifts.
-  document.getElementById('suggestionBox').hidden = false;
-  document.getElementById('suggestionText').textContent = buildSuggestion(movementId, voicing.id, currentProgression.droneOn);
-  document.getElementById('transportStatus').textContent = 'Ready - ' + N + ' chords generated';
-  stopPlayback();
-}
-
-function renderProgression(){
-  const wrap = document.getElementById('progressionWrap');
-  wrap.innerHTML = '';
-
-  const head = el('div', {class:'progression-head'});
-  head.appendChild(el('h2', {}, ['Generated Progression']));
-  head.appendChild(el('div', {class:'progression-meta'}, [
-    NOTE_NAMES[currentProgression.rootIdx] + ' ' + currentProgression.modeName + ' - ' +
-    MOVEMENTS.find(m=>m.id===currentProgression.movementId).name
-  ]));
-  wrap.appendChild(head);
-
-  const grid = el('div', {class:'chord-grid', id:'chordGrid'});
-  currentProgression.chords.forEach((chord, i) => {
-    const rootMidi = 48 + currentProgression.rootIdx + chord.semis[0];
-    const isEmphasized = (currentProgression.modeRules.emphasize||[]).includes(chord.degree);
-    const cardClass = 'chord-card' + (chord.isCadence ? ' cadence' : '') + (isEmphasized ? ' emphasized' : '');
-    const card = el('div', {class:cardClass, id:'chordCard'+i, onclick: () => previewChord(i)});
-    const degRow = el('div', {class:'deg'}, ['Step ' + (i+1) + ' - degree ' + (chord.degree+1) + (isEmphasized ? ' *' : '') + (chord.isCadence ? ' - cadence' : '')]);
-    card.appendChild(degRow);
-    card.appendChild(el('div', {class:'root'}, [midiToName(rootMidi).replace(/[0-9-]+$/,'')]));
-    const noteNames = chord.semis.map(s => midiToName(48 + currentProgression.rootIdx + s));
-    card.appendChild(el('div', {class:'notes'}, [noteNames.join('  -  ')]));
-    // Duration bar - relative length of this chord within the phrase, so
-    // the rhythmic shape is visible at a glance, not just audible.
-    const durBar = el('div', {class:'dur-bar'});
-    const durFill = el('div', {class:'dur-bar-fill'});
-    durFill.style.width = Math.min(100, (chord.durationMult/1.6)*100) + '%';
-    durFill.style.opacity = 0.4 + chord.accent*0.6;
-    durBar.appendChild(durFill);
-    card.appendChild(durBar);
-    grid.appendChild(card);
-  });
-  wrap.appendChild(grid);
-
-  const keybedSection = el('div', {class:'keybed-section'});
-  const keybedHead = el('div', {class:'keybed-head'});
-  keybedHead.appendChild(el('h3', {}, ['Keybed']));
-  keybedHead.appendChild(el('p', {class:'keybed-hint'}, ['Highlighted keys are the chord in view - click a card above to preview it here, play along on your MIDI keyboard.']));
-  keybedSection.appendChild(keybedHead);
-  keybedSection.appendChild(el('div', {id:'keybedScroll'}, [el('div', {id:'keybedWrap'})]));
-  wrap.appendChild(keybedSection);
-
-  buildKeybed();
-  previewChord(0);
-}
-
-document.getElementById('generateBtn').addEventListener('click', generateProgression);
-
-/* =========================================================================
-   KEYBED - a real piano keyboard, sized to fit every note across the whole
-   generated progression (not just the current chord) so it doesn't resize
-   or jump as playback steps through chords. Highlights follow either
-   playback or a clicked chord card.
-   ========================================================================= */
-
-const BLACK_KEY_POS = {1:0.62, 3:1.65, 6:3.58, 8:4.6, 10:5.62};
-const WHITE_OFFSETS = [0,2,4,5,7,9,11];
-let keybedRange = null; // {startC, endB}
-
-function computeKeybedRange(){
-  let allMidis = [];
-  currentProgression.chords.forEach(chord => {
-    chord.semis.forEach(s => allMidis.push(48 + currentProgression.rootIdx + s));
-  });
-  const minM = Math.min(...allMidis), maxM = Math.max(...allMidis);
-  const startC = Math.floor(minM/12)*12;
-  const endB = Math.ceil((maxM+1)/12)*12 - 1;
-  return {startC, endB};
-}
-
-const WHITE_KEY_W = 25; // px -- fixed, realistic piano proportions (not stretched to fill the panel)
-
-function buildKeybed(){
-  keybedRange = computeKeybedRange();
-  const { startC, endB } = keybedRange;
-  const totalOctaves = (endB - startC + 1) / 12;
-  const totalWhiteKeys = totalOctaves * 7;
-  const wrap = document.getElementById('keybedWrap');
-  wrap.innerHTML = '';
-  wrap.style.width = (totalWhiteKeys * WHITE_KEY_W) + 'px';
-
-  let whiteIndex = 0;
-  for(let midi = startC; midi <= endB; midi++){
-    const semiInOctave = ((midi % 12) + 12) % 12;
-    const octaveIndex = Math.floor((midi - startC) / 12);
-    const isWhite = WHITE_OFFSETS.includes(semiInOctave);
-    if(isWhite){
-      const key = el('div', {
-        class:'pkey white', 'data-midi':midi,
-        style:`left:${whiteIndex*WHITE_KEY_W}px; width:${WHITE_KEY_W}px;`
-      });
-      key.appendChild(el('span', {class:'pkey-label'}, ['']));
-      wrap.appendChild(key);
-      whiteIndex++;
-    }
-  }
-  whiteIndex = 0;
-  for(let midi = startC; midi <= endB; midi++){
-    const semiInOctave = ((midi % 12) + 12) % 12;
-    const octaveIndex = Math.floor((midi - startC) / 12);
-    const isWhite = WHITE_OFFSETS.includes(semiInOctave);
-    if(!isWhite){
-      const posUnits = octaveIndex*7 + BLACK_KEY_POS[semiInOctave];
-      const key = el('div', {
-        class:'pkey black', 'data-midi':midi,
-        style:`left:${posUnits*WHITE_KEY_W}px; width:${WHITE_KEY_W*0.6}px;`
-      });
-      key.appendChild(el('span', {class:'pkey-label'}, ['']));
-      wrap.appendChild(key);
+  function buildPhrase(movementId, n, eternalCellLen) {
+    const durations = new Array(n).fill(1);
+    const accents = new Array(n).fill(.85);
+    if (movementId === "eternal") {
+      for (let i = 0; i < n; i++) {
+        durations[i] = .72;
+        accents[i] = i % eternalCellLen === 0 ? .95 : .75;
+      }
+    } else if (movementId === "cycle") {
+      const pattern = [ {
+        d: 1.15,
+        a: 1
+      }, {
+        d: .8,
+        a: .72
+      }, {
+        d: 1,
+        a: .88
+      }, {
+        d: .85,
+        a: .72
+      } ];
+      for (let i = 0; i < n; i++) {
+        const p = pattern[i % pattern.length];
+        durations[i] = p.d;
+        accents[i] = p.a;
+      }
+    } else if (movementId === "nonresolving") {
+      for (let i = 0; i < n; i++) {
+        durations[i] = .75 + Math.random() * .6;
+        accents[i] = .7 + Math.random() * .25;
+      }
     } else {
-      whiteIndex++;
+      for (let i = 0; i < n; i++) {
+        const t = n > 1 ? i / (n - 1) : 0;
+        durations[i] = .9 + .35 * Math.sin(t * Math.PI * .85);
+        accents[i] = .78 + .15 * Math.sin(t * Math.PI);
+      }
+    }
+    durations[n - 1] *= 1.55;
+    accents[n - 1] = 1;
+    return {
+      durations: durations,
+      accents: accents
+    };
+  }
+  function buildSuggestion(movementId, voicingId, droneOn) {
+    const bits = [];
+    if (movementId === "eternal") {
+      bits.push("Since this is a short repeating cell, let it loop several times before touching anything - the repetition is the point, and changing FX too early undercuts it.");
+    } else if (movementId === "nonresolving") {
+      bits.push("This loop is built to never quite land - a long reverb tail across the loop point will blur exactly where one cycle ends and the next begins, which is the goal.");
+    } else if (movementId === "cycle") {
+      bits.push("The fixed pattern gives you a stable frame to automate against - try a slow filter sweep or panning move timed to the full 4-chord cycle rather than per chord.");
+    } else {
+      bits.push("With this much harmonic drift, keep the FX chain relatively static so the ear has one stable thing (the space) against the moving thing (the chords).");
+    }
+    if (voicingId === "cluster") {
+      bits.push("Cluster voicings get harsh fast under bright reverb - favor a darker plate or room over anything shimmer-heavy.");
+    } else if (voicingId === "quartal") {
+      bits.push("Quartal chords already sound open on their own - a subtle chorus or slow LFO on pitch is usually enough width, no need to over-effect it.");
+    } else if (voicingId === "extended") {
+      bits.push("These are dense - roll off some low-mid content on the pad voice itself so the extensions read as color rather than mud.");
+    }
+    if (droneOn) {
+      bits.push("Keep the drone quieter than feels natural at first - it should anchor the chords without competing for attention against them.");
+    }
+    return bits.join(" ");
+  }
+  function el(tag, attrs, children) {
+    const e = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      if (k === "class") e.className = attrs[k]; else if (k.startsWith("on")) e.addEventListener(k.slice(2), attrs[k]); else e.setAttribute(k, attrs[k]);
+    }
+    (children || []).forEach(c => e.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+    return e;
+  }
+  const rootSelect = document.getElementById("rootSelect");
+  NOTE_NAMES.forEach((n, i) => rootSelect.appendChild(el("option", {
+    value: i
+  }, [ n ])));
+  rootSelect.value = 0;
+  const modeSelect = document.getElementById("modeSelect");
+  MODES.forEach(m => modeSelect.appendChild(el("option", {
+    value: m.id
+  }, [ m.name ])));
+  const modeDesc = document.getElementById("modeDesc");
+  function updateModeDesc() {
+    modeDesc.textContent = MODES.find(m => m.id === modeSelect.value).desc;
+  }
+  modeSelect.addEventListener("change", updateModeDesc);
+  updateModeDesc();
+  const movementSelect = document.getElementById("movementSelect");
+  MOVEMENTS.forEach(m => movementSelect.appendChild(el("option", {
+    value: m.id
+  }, [ m.name ])));
+  const movementDesc = document.getElementById("movementDesc");
+  function updateMovementDesc() {
+    movementDesc.textContent = MOVEMENTS.find(m => m.id === movementSelect.value).desc;
+  }
+  movementSelect.addEventListener("change", updateMovementDesc);
+  updateMovementDesc();
+  const voicingSelect = document.getElementById("voicingSelect");
+  VOICINGS.forEach(v => voicingSelect.appendChild(el("option", {
+    value: v.id
+  }, [ v.name ])));
+  const voicingDesc = document.getElementById("voicingDesc");
+  function updateVoicingDesc() {
+    voicingDesc.textContent = VOICINGS.find(v => v.id === voicingSelect.value).desc;
+  }
+  voicingSelect.addEventListener("change", updateVoicingDesc);
+  updateVoicingDesc();
+  const droneOctSlider = document.getElementById("droneOctSlider");
+  const droneOctVal = document.getElementById("droneOctVal");
+  droneOctSlider.addEventListener("input", () => droneOctVal.textContent = droneOctSlider.value);
+  const tempoSlider = document.getElementById("tempoSlider");
+  const tempoVal = document.getElementById("tempoVal");
+  tempoSlider.addEventListener("input", () => tempoVal.textContent = tempoSlider.value + "s");
+  let currentProgression = null;
+  function generateProgression() {
+    const rootIdx = parseInt(rootSelect.value, 10);
+    const mode = MODES.find(m => m.id === modeSelect.value);
+    const voicing = VOICINGS.find(v => v.id === voicingSelect.value);
+    const movementId = movementSelect.value;
+    const L = mode.intervals.length;
+    const N = 8;
+    const modeRules = MODAL_RULES[mode.id] || {};
+    const eternalCellLen = randInt(2, 3);
+    const degrees = MOVEMENT_FNS[movementId](L, N, modeRules, eternalCellLen);
+    const doubleRoot = document.getElementById("doubleRootCb").checked;
+    const {durations: durations, accents: accents} = buildPhrase(movementId, N, eternalCellLen);
+    const chords = degrees.map((degree, i) => {
+      let semis = stepsToSemitones(mode.intervals, degree, voicing.steps);
+      if (doubleRoot) semis = [ semis[0] - 12, ...semis ];
+      return {
+        degree: degree,
+        semis: semis,
+        durationMult: durations[i],
+        accent: accents[i],
+        isCadence: i === degrees.length - 1
+      };
+    });
+    currentProgression = {
+      rootIdx: rootIdx,
+      modeId: mode.id,
+      modeName: mode.name,
+      intervals: mode.intervals,
+      movementId: movementId,
+      voicingId: voicing.id,
+      chords: chords,
+      modeRules: modeRules,
+      droneOn: document.getElementById("droneCb").checked,
+      droneOctave: parseInt(droneOctSlider.value, 10)
+    };
+    renderProgression();
+    document.getElementById("suggestionBox").hidden = false;
+    document.getElementById("suggestionText").textContent = buildSuggestion(movementId, voicing.id, currentProgression.droneOn);
+    document.getElementById("transportStatus").textContent = "Ready - " + N + " chords generated";
+    stopPlayback();
+  }
+  function renderProgression() {
+    const wrap = document.getElementById("progressionWrap");
+    wrap.innerHTML = "";
+    const head = el("div", {
+      class: "progression-head"
+    });
+    head.appendChild(el("h2", {}, [ "Generated Progression" ]));
+    head.appendChild(el("div", {
+      class: "progression-meta"
+    }, [ NOTE_NAMES[currentProgression.rootIdx] + " " + currentProgression.modeName + " - " + MOVEMENTS.find(m => m.id === currentProgression.movementId).name ]));
+    wrap.appendChild(head);
+    const grid = el("div", {
+      class: "chord-grid",
+      id: "chordGrid"
+    });
+    currentProgression.chords.forEach((chord, i) => {
+      const rootMidi = 48 + currentProgression.rootIdx + chord.semis[0];
+      const isEmphasized = (currentProgression.modeRules.emphasize || []).includes(chord.degree);
+      const cardClass = "chord-card" + (chord.isCadence ? " cadence" : "") + (isEmphasized ? " emphasized" : "");
+      const card = el("div", {
+        class: cardClass,
+        id: "chordCard" + i,
+        onclick: () => previewChord(i)
+      });
+      const degRow = el("div", {
+        class: "deg"
+      }, [ "Step " + (i + 1) + " - degree " + (chord.degree + 1) + (isEmphasized ? " *" : "") + (chord.isCadence ? " - cadence" : "") ]);
+      card.appendChild(degRow);
+      card.appendChild(el("div", {
+        class: "root"
+      }, [ midiToName(rootMidi).replace(/[0-9-]+$/, "") ]));
+      const noteNames = chord.semis.map(s => midiToName(48 + currentProgression.rootIdx + s));
+      card.appendChild(el("div", {
+        class: "notes"
+      }, [ noteNames.join("  -  ") ]));
+      const durBar = el("div", {
+        class: "dur-bar"
+      });
+      const durFill = el("div", {
+        class: "dur-bar-fill"
+      });
+      durFill.style.width = Math.min(100, chord.durationMult / 1.6 * 100) + "%";
+      durFill.style.opacity = .4 + chord.accent * .6;
+      durBar.appendChild(durFill);
+      card.appendChild(durBar);
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+    const keybedSection = el("div", {
+      class: "keybed-section"
+    });
+    const keybedHead = el("div", {
+      class: "keybed-head"
+    });
+    keybedHead.appendChild(el("h3", {}, [ "Keybed" ]));
+    keybedHead.appendChild(el("p", {
+      class: "keybed-hint"
+    }, [ "Highlighted keys are the chord in view - click a card above to preview it here, play along on your MIDI keyboard." ]));
+    keybedSection.appendChild(keybedHead);
+    keybedSection.appendChild(el("div", {
+      id: "keybedScroll"
+    }, [ el("div", {
+      id: "keybedWrap"
+    }) ]));
+    wrap.appendChild(keybedSection);
+    buildKeybed();
+    previewChord(0);
+  }
+  document.getElementById("generateBtn").addEventListener("click", generateProgression);
+  const BLACK_KEY_POS = {
+    1: .62,
+    3: 1.65,
+    6: 3.58,
+    8: 4.6,
+    10: 5.62
+  };
+  const WHITE_OFFSETS = [ 0, 2, 4, 5, 7, 9, 11 ];
+  let keybedRange = null;
+  function computeKeybedRange() {
+    let allMidis = [];
+    currentProgression.chords.forEach(chord => {
+      chord.semis.forEach(s => allMidis.push(48 + currentProgression.rootIdx + s));
+    });
+    const minM = Math.min(...allMidis), maxM = Math.max(...allMidis);
+    const startC = Math.floor(minM / 12) * 12;
+    const endB = Math.ceil((maxM + 1) / 12) * 12 - 1;
+    return {
+      startC: startC,
+      endB: endB
+    };
+  }
+  const WHITE_KEY_W = 25;
+  function buildKeybed() {
+    keybedRange = computeKeybedRange();
+    const {startC: startC, endB: endB} = keybedRange;
+    const totalOctaves = (endB - startC + 1) / 12;
+    const totalWhiteKeys = totalOctaves * 7;
+    const wrap = document.getElementById("keybedWrap");
+    wrap.innerHTML = "";
+    wrap.style.width = totalWhiteKeys * WHITE_KEY_W + "px";
+    let whiteIndex = 0;
+    for (let midi = startC; midi <= endB; midi++) {
+      const semiInOctave = (midi % 12 + 12) % 12;
+      const octaveIndex = Math.floor((midi - startC) / 12);
+      const isWhite = WHITE_OFFSETS.includes(semiInOctave);
+      if (isWhite) {
+        const key = el("div", {
+          class: "pkey white",
+          "data-midi": midi,
+          style: `left:${whiteIndex * WHITE_KEY_W}px; width:${WHITE_KEY_W}px;`
+        });
+        key.appendChild(el("span", {
+          class: "pkey-label"
+        }, [ "" ]));
+        wrap.appendChild(key);
+        whiteIndex++;
+      }
+    }
+    whiteIndex = 0;
+    for (let midi = startC; midi <= endB; midi++) {
+      const semiInOctave = (midi % 12 + 12) % 12;
+      const octaveIndex = Math.floor((midi - startC) / 12);
+      const isWhite = WHITE_OFFSETS.includes(semiInOctave);
+      if (!isWhite) {
+        const posUnits = octaveIndex * 7 + BLACK_KEY_POS[semiInOctave];
+        const key = el("div", {
+          class: "pkey black",
+          "data-midi": midi,
+          style: `left:${posUnits * WHITE_KEY_W}px; width:${WHITE_KEY_W * .6}px;`
+        });
+        key.appendChild(el("span", {
+          class: "pkey-label"
+        }, [ "" ]));
+        wrap.appendChild(key);
+      } else {
+        whiteIndex++;
+      }
     }
   }
-}
-
-function highlightKeybed(chord){
-  document.querySelectorAll('.pkey').forEach(k => {
-    k.classList.remove('active');
-    k.querySelector('.pkey-label').textContent = '';
-  });
-  chord.semis.forEach(s => {
-    const midi = 48 + currentProgression.rootIdx + s;
-    const key = document.querySelector('.pkey[data-midi="'+midi+'"]');
-    if(key){
-      key.classList.add('active');
-      key.querySelector('.pkey-label').textContent = midiToName(midi).replace(/-?\d+$/,'');
-    }
-  });
-}
-
-function previewChord(i){
-  if(!currentProgression) return;
-  document.querySelectorAll('.chord-card').forEach(c => c.classList.remove('previewing'));
-  const card = document.getElementById('chordCard'+i);
-  if(card) card.classList.add('previewing');
-  highlightKeybed(currentProgression.chords[i]);
-}
-
-/* =========================================================================
-   AUDIO ENGINE - a simple ambient pad voice (one oscillator per chord
-   tone, slow attack/release) plus an optional sustained drone.
-   ========================================================================= */
-
-let audioCtx = null;
-let activeVoices = [];
-let droneVoice = null;
-let playTimer = null;
-let playStep = 0;
-let isPlaying = false;
-
-function ensureAudioCtx(){
-  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if(audioCtx.state === 'suspended') audioCtx.resume();
-}
-
-function fadeOutVoice(voice, releaseTime){
-  const now = audioCtx.currentTime;
-  voice.gain.gain.cancelScheduledValues(now);
-  voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
-  voice.gain.gain.linearRampToValueAtTime(0, now + releaseTime);
-  voice.osc.stop(now + releaseTime + 0.05);
-}
-
-function playChordAtStep(stepIndex){
-  const chord = currentProgression.chords[stepIndex];
-  const stepDurSec = parseFloat(tempoSlider.value) * (chord.durationMult || 1);
-  const attack = Math.min(2.6, stepDurSec * 0.5); // longer (e.g. cadential) chords get a slower, more graceful swell rather than the same fixed attack regardless of duration
-  const release = attack;
-  const accent = chord.accent != null ? chord.accent : 0.85;
-
-  activeVoices.forEach(v => fadeOutVoice(v, release));
-  activeVoices = [];
-
-  // Mirror the chord to the MIDI output, if one is selected.
-  midiOutSendChord(chord.semis.map(semi => 48 + currentProgression.rootIdx + semi));
-
-  const muteLocal = localSynthMuted();
-
-  chord.semis.forEach(semi => {
-    const midi = 48 + currentProgression.rootIdx + semi;
-    if (muteLocal) return;   // hardware is carrying the sound instead
+  function highlightKeybed(chord) {
+    document.querySelectorAll(".pkey").forEach(k => {
+      k.classList.remove("active");
+      k.querySelector(".pkey-label").textContent = "";
+    });
+    chord.semis.forEach(s => {
+      const midi = 48 + currentProgression.rootIdx + s;
+      const key = document.querySelector('.pkey[data-midi="' + midi + '"]');
+      if (key) {
+        key.classList.add("active");
+        key.querySelector(".pkey-label").textContent = midiToName(midi).replace(/-?\d+$/, "");
+      }
+    });
+  }
+  function previewChord(i) {
+    if (!currentProgression) return;
+    document.querySelectorAll(".chord-card").forEach(c => c.classList.remove("previewing"));
+    const card = document.getElementById("chordCard" + i);
+    if (card) card.classList.add("previewing");
+    highlightKeybed(currentProgression.chords[i]);
+  }
+  let audioCtx = null;
+  let activeVoices = [];
+  let droneVoice = null;
+  let playTimer = null;
+  let playStep = 0;
+  let isPlaying = false;
+  function ensureAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext);
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  }
+  function fadeOutVoice(voice, releaseTime) {
+    const now = audioCtx.currentTime;
+    voice.gain.gain.cancelScheduledValues(now);
+    voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+    voice.gain.gain.linearRampToValueAtTime(0, now + releaseTime);
+    voice.osc.stop(now + releaseTime + .05);
+  }
+  function playChordAtStep(stepIndex) {
+    const chord = currentProgression.chords[stepIndex];
+    const stepDurSec = parseFloat(tempoSlider.value) * (chord.durationMult || 1);
+    const attack = Math.min(2.6, stepDurSec * .5);
+    const release = attack;
+    const accent = chord.accent != null ? chord.accent : .85;
+    activeVoices.forEach(v => fadeOutVoice(v, release));
+    activeVoices = [];
+    midiOutSendChord(chord.semis.map(semi => 48 + currentProgression.rootIdx + semi));
+    const muteLocal = localSynthMuted();
+    chord.semis.forEach(semi => {
+      const midi = 48 + currentProgression.rootIdx + semi;
+      if (muteLocal) return;
+      const osc = audioCtx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.value = midiToFreq(midi);
+      const gain = audioCtx.createGain();
+      gain.gain.value = 0;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      const now = audioCtx.currentTime;
+      const targetVol = .09 / Math.sqrt(chord.semis.length) * accent;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(targetVol, now + attack);
+      activeVoices.push({
+        osc: osc,
+        gain: gain
+      });
+    });
+    document.querySelectorAll(".chord-card").forEach(c => c.classList.remove("now-playing"));
+    const card = document.getElementById("chordCard" + stepIndex);
+    if (card) card.classList.add("now-playing");
+    previewChord(stepIndex);
+  }
+  function startDrone() {
+    if (!currentProgression.droneOn) return;
+    const midi = 48 + currentProgression.rootIdx + currentProgression.droneOctave * 12;
     const osc = audioCtx.createOscillator();
-    osc.type = 'triangle';
+    osc.type = "sine";
     osc.frequency.value = midiToFreq(midi);
     const gain = audioCtx.createGain();
     gain.gain.value = 0;
@@ -1041,733 +1591,725 @@ function playChordAtStep(stepIndex){
     gain.connect(audioCtx.destination);
     osc.start();
     const now = audioCtx.currentTime;
-    const targetVol = (0.09 / Math.sqrt(chord.semis.length)) * accent;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(targetVol, now + attack);
-    activeVoices.push({osc, gain});
-  });
-
-  // Highlight the currently-playing card, and follow it on the keybed
-  document.querySelectorAll('.chord-card').forEach(c => c.classList.remove('now-playing'));
-  const card = document.getElementById('chordCard'+stepIndex);
-  if(card) card.classList.add('now-playing');
-  previewChord(stepIndex);
-}
-
-function startDrone(){
-  if(!currentProgression.droneOn) return;
-  const midi = 48 + currentProgression.rootIdx + currentProgression.droneOctave*12;
-  const osc = audioCtx.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.value = midiToFreq(midi);
-  const gain = audioCtx.createGain();
-  gain.gain.value = 0;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  const now = audioCtx.currentTime;
-  gain.gain.linearRampToValueAtTime(0.07, now + 2.5);
-  droneVoice = {osc, gain};
-}
-
-function stopDrone(){
-  if(!droneVoice) return;
-  fadeOutVoice(droneVoice, 1.5);
-  droneVoice = null;
-}
-
-function startPlayback(){
-  if(!currentProgression) return;
-  ensureAudioCtx();
-  isPlaying = true;
-  playStep = 0;
-  const playBtn = document.getElementById('playBtn');
-  playBtn.textContent = 'Stop';
-  playBtn.classList.add('playing');
-  document.getElementById('transportStatus').textContent = 'Playing - loops continuously';
-
-  startDrone();
-  playChordAtStep(playStep);
-  scheduleNextStep();
-}
-
-// Each chord has its own duration now (see buildPhrase), so playback can't
-// be a fixed-interval loop anymore - it self-schedules, reading whatever
-// the *current* chord's duration is right before waiting for it, so a
-// mid-playback tempo-slider change takes effect on the very next step
-// rather than needing a restart.
-function scheduleNextStep(){
-  if(!isPlaying || !currentProgression) return;
-  const chord = currentProgression.chords[playStep];
-  const stepMs = parseFloat(tempoSlider.value) * (chord.durationMult || 1) * 1000;
-  playTimer = setTimeout(() => {
-    if(!isPlaying) return;
-    playStep = (playStep + 1) % currentProgression.chords.length;
+    gain.gain.linearRampToValueAtTime(.07, now + 2.5);
+    droneVoice = {
+      osc: osc,
+      gain: gain
+    };
+  }
+  function stopDrone() {
+    if (!droneVoice) return;
+    fadeOutVoice(droneVoice, 1.5);
+    droneVoice = null;
+  }
+  function startPlayback() {
+    if (!currentProgression) return;
+    ensureAudioCtx();
+    isPlaying = true;
+    playStep = 0;
+    const playBtn = document.getElementById("playBtn");
+    playBtn.textContent = "Stop";
+    playBtn.classList.add("playing");
+    document.getElementById("transportStatus").textContent = "Playing - loops continuously";
+    startDrone();
     playChordAtStep(playStep);
     scheduleNextStep();
-  }, stepMs);
-}
-
-function stopPlayback(){
-  midiOutAllOff();
-  isPlaying = false;
-  if(playTimer){ clearTimeout(playTimer); playTimer = null; }
-  if(audioCtx){
-    activeVoices.forEach(v => fadeOutVoice(v, 1.2));
-    activeVoices = [];
-    stopDrone();
   }
-  document.querySelectorAll('.chord-card').forEach(c => c.classList.remove('now-playing'));
-  const playBtn = document.getElementById('playBtn');
-  playBtn.textContent = 'Play';
-  playBtn.classList.remove('playing');
-  if(currentProgression) document.getElementById('transportStatus').textContent = 'Ready - ' + currentProgression.chords.length + ' chords generated';
-}
-
-document.getElementById('playBtn').addEventListener('click', () => {
-  if(!currentProgression){ return; }
-  isPlaying ? stopPlayback() : startPlayback();
-});
-
-/* =========================================================================
-   EXPORT
-   ========================================================================= */
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-  if(!currentProgression){ alert('Generate a progression first.'); return; }
-  const data = {
-    kind: 'loom-progression', version: 2,
-    // Raw control values, so an import can restore the exact settings.
-    // v1 exported display names only, which couldn't round-trip.
-    settings: {
-      root: document.getElementById('rootSelect').value,
-      mode: document.getElementById('modeSelect').value,
-      movement: document.getElementById('movementSelect').value,
-      voicing: document.getElementById('voicingSelect').value,
-      doubleRoot: document.getElementById('doubleRootCb').checked,
-      drone: document.getElementById('droneCb').checked,
-      droneOctave: document.getElementById('droneOctSlider').value,
-      tempo: document.getElementById('tempoSlider').value,
-    },
-    root: NOTE_NAMES[currentProgression.rootIdx],
-    mode: currentProgression.modeName,
-    movement: MOVEMENTS.find(m=>m.id===currentProgression.movementId).name,
-    voicing: VOICINGS.find(v=>v.id===currentProgression.voicingId).name,
-    drone: currentProgression.droneOn,
-    chords: currentProgression.chords.map((c,i) => ({
-      step: i+1, degree: c.degree+1,
-      notes: c.semis.map(s => midiToName(48 + currentProgression.rootIdx + s))
-    })),
-  };
-  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'loom-progression.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-/* =========================================================================
-   MIDI INPUT - analyse chords you play, suggest modal alternatives (reusing
-   the same weighted degree/transition logic the movement engine uses),
-   harmonise single melody notes, build a fresh progression rooted around
-   whatever you just played, and play your keyboard live through the same
-   pad-voice synth used for progression playback.
-   ========================================================================= */
-
-const CHORD_SHAPES = [
-  // Checked most-specific-first. `ivs` = semitone intervals from an
-  // assumed root, including the root itself (0).
-  { name:'maj7', ivs:[0,4,7,11] },
-  { name:'m7',   ivs:[0,3,7,10] },
-  { name:'7',    ivs:[0,4,7,10] },
-  { name:'m7b5', ivs:[0,3,6,10] },
-  { name:'dim7', ivs:[0,3,6,9] },
-  { name:'maj',  ivs:[0,4,7] },
-  { name:'min',  ivs:[0,3,7] },
-  { name:'dim',  ivs:[0,3,6] },
-  { name:'aug',  ivs:[0,4,8] },
-  { name:'sus4', ivs:[0,5,7] },
-  { name:'sus2', ivs:[0,2,7] },
-  { name:'5',    ivs:[0,7] },
-];
-
-// Tries every held pitch class as a candidate root, checking whether the
-// resulting interval set matches a known chord shape. Returns
-// {rootPc, name} for the first (most specific) match, or null if the held
-// notes don't form a recognizable triad/seventh shape - in which case the
-// caller just lists the raw note names instead of guessing wrong.
-function detectChord(midiNotes){
-  if(midiNotes.length < 2) return null;
-  const pcs = [...new Set(midiNotes.map(m => ((m%12)+12)%12))];
-  for(const rootPc of pcs){
-    const rel = new Set(pcs.map(pc => ((pc - rootPc)+12)%12));
-    for(const shape of CHORD_SHAPES){
-      if(shape.ivs.length !== rel.size) continue;
-      if(shape.ivs.every(iv => rel.has(iv))) return { rootPc, name: shape.name };
+  function scheduleNextStep() {
+    if (!isPlaying || !currentProgression) return;
+    const chord = currentProgression.chords[playStep];
+    const stepMs = parseFloat(tempoSlider.value) * (chord.durationMult || 1) * 1e3;
+    playTimer = setTimeout(() => {
+      if (!isPlaying) return;
+      playStep = (playStep + 1) % currentProgression.chords.length;
+      playChordAtStep(playStep);
+      scheduleNextStep();
+    }, stepMs);
+  }
+  function stopPlayback() {
+    midiOutAllOff();
+    isPlaying = false;
+    if (playTimer) {
+      clearTimeout(playTimer);
+      playTimer = null;
+    }
+    if (audioCtx) {
+      activeVoices.forEach(v => fadeOutVoice(v, 1.2));
+      activeVoices = [];
+      stopDrone();
+    }
+    document.querySelectorAll(".chord-card").forEach(c => c.classList.remove("now-playing"));
+    const playBtn = document.getElementById("playBtn");
+    playBtn.textContent = "Play";
+    playBtn.classList.remove("playing");
+    if (currentProgression) document.getElementById("transportStatus").textContent = "Ready - " + currentProgression.chords.length + " chords generated";
+  }
+  document.getElementById("playBtn").addEventListener("click", () => {
+    if (!currentProgression) {
+      return;
+    }
+    isPlaying ? stopPlayback() : startPlayback();
+  });
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    if (!currentProgression) {
+      alert("Generate a progression first.");
+      return;
+    }
+    const data = {
+      kind: "loom-progression",
+      version: 2,
+      settings: {
+        root: document.getElementById("rootSelect").value,
+        mode: document.getElementById("modeSelect").value,
+        movement: document.getElementById("movementSelect").value,
+        voicing: document.getElementById("voicingSelect").value,
+        doubleRoot: document.getElementById("doubleRootCb").checked,
+        drone: document.getElementById("droneCb").checked,
+        droneOctave: document.getElementById("droneOctSlider").value,
+        tempo: document.getElementById("tempoSlider").value
+      },
+      root: NOTE_NAMES[currentProgression.rootIdx],
+      mode: currentProgression.modeName,
+      movement: MOVEMENTS.find(m => m.id === currentProgression.movementId).name,
+      voicing: VOICINGS.find(v => v.id === currentProgression.voicingId).name,
+      drone: currentProgression.droneOn,
+      chords: currentProgression.chords.map((c, i) => ({
+        step: i + 1,
+        degree: c.degree + 1,
+        notes: c.semis.map(s => midiToName(48 + currentProgression.rootIdx + s))
+      }))
+    };
+    const blob = new Blob([ JSON.stringify(data, null, 2) ], {
+      type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "loom-progression.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+  const CHORD_SHAPES = [ {
+    name: "maj7",
+    ivs: [ 0, 4, 7, 11 ]
+  }, {
+    name: "m7",
+    ivs: [ 0, 3, 7, 10 ]
+  }, {
+    name: "7",
+    ivs: [ 0, 4, 7, 10 ]
+  }, {
+    name: "m7b5",
+    ivs: [ 0, 3, 6, 10 ]
+  }, {
+    name: "dim7",
+    ivs: [ 0, 3, 6, 9 ]
+  }, {
+    name: "maj",
+    ivs: [ 0, 4, 7 ]
+  }, {
+    name: "min",
+    ivs: [ 0, 3, 7 ]
+  }, {
+    name: "dim",
+    ivs: [ 0, 3, 6 ]
+  }, {
+    name: "aug",
+    ivs: [ 0, 4, 8 ]
+  }, {
+    name: "sus4",
+    ivs: [ 0, 5, 7 ]
+  }, {
+    name: "sus2",
+    ivs: [ 0, 2, 7 ]
+  }, {
+    name: "5",
+    ivs: [ 0, 7 ]
+  } ];
+  function detectChord(midiNotes) {
+    if (midiNotes.length < 2) return null;
+    const pcs = [ ...new Set(midiNotes.map(m => (m % 12 + 12) % 12)) ];
+    for (const rootPc of pcs) {
+      const rel = new Set(pcs.map(pc => (pc - rootPc + 12) % 12));
+      for (const shape of CHORD_SHAPES) {
+        if (shape.ivs.length !== rel.size) continue;
+        if (shape.ivs.every(iv => rel.has(iv))) return {
+          rootPc: rootPc,
+          name: shape.name
+        };
+      }
+    }
+    return null;
+  }
+  function chordLabel(midiNotes) {
+    const det = detectChord(midiNotes);
+    if (det) return NOTE_NAMES[det.rootPc] + det.name;
+    return midiNotes.map(m => midiToName(m).replace(/-?\d+$/, "")).join(" ");
+  }
+  function nearestScaleDegree(midiNote, mode, rootIdx) {
+    const pc = (midiNote % 12 + 12) % 12;
+    const relPc = (pc - rootIdx + 12) % 12;
+    let best = 0, bestDist = 99;
+    mode.intervals.forEach((iv, i) => {
+      const dist = Math.min(Math.abs(iv - relPc), 12 - Math.abs(iv - relPc));
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    return best;
+  }
+  function weightedIndex(weights) {
+    const total = weights.reduce((a, b) => a + b, 0);
+    if (total <= 0) return randInt(0, weights.length - 1);
+    let r = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return i;
+    }
+    return weights.length - 1;
+  }
+  function suggestModalAlternatives(fromDegree, mode, rules, voicing, rootIdx, count) {
+    const L = mode.intervals.length;
+    const pool = [], poolW = [];
+    for (let d = 0; d < L; d++) {
+      if (d === fromDegree) continue;
+      pool.push(d);
+      poolW.push(degreeWeight(rules, d) * transitionWeight(rules, fromDegree, d));
+    }
+    const picked = [];
+    for (let k = 0; k < count && pool.length; k++) {
+      const idx = weightedIndex(poolW);
+      picked.push(pool[idx]);
+      pool.splice(idx, 1);
+      poolW.splice(idx, 1);
+    }
+    return picked.map(degree => {
+      const semis = stepsToSemitones(mode.intervals, degree, voicing.steps);
+      const rootMidi = 48 + rootIdx + semis[0];
+      return {
+        degree: degree,
+        label: midiToName(rootMidi).replace(/-?\d+$/, "") + " (degree " + (degree + 1) + ")"
+      };
+    });
+  }
+  function buildSuggestionChip(label, value) {
+    const chip = el("div", {
+      class: "midi-suggestion-chip"
+    });
+    chip.appendChild(el("span", {
+      class: "label"
+    }, [ label ]));
+    chip.appendChild(el("span", {
+      class: "value"
+    }, [ value ]));
+    return chip;
+  }
+  const heldNotes = new Set;
+  const midiVoices = new Map;
+  let midiPlayThroughEnabled = true;
+  let lastMidiRootIdx = null;
+  function updateMidiDetection() {
+    const notesArr = [ ...heldNotes ].sort((a, b) => a - b);
+    const detectedEl = document.getElementById("midiDetected");
+    const suggestEl = document.getElementById("midiSuggestions");
+    const buildBtn = document.getElementById("midiBuildBtn");
+    if (notesArr.length === 0) {
+      detectedEl.textContent = "Play something on your MIDI keyboard, or click the keybed below once a progression exists.";
+      suggestEl.innerHTML = "";
+      buildBtn.disabled = true;
+      lastMidiRootIdx = null;
+      return;
+    }
+    buildBtn.disabled = false;
+    const mode = MODES.find(m => m.id === modeSelect.value);
+    const rules = MODAL_RULES[mode.id] || {};
+    const voicing = VOICINGS.find(v => v.id === voicingSelect.value);
+    const rootIdx = parseInt(rootSelect.value, 10);
+    suggestEl.innerHTML = "";
+    if (notesArr.length === 1) {
+      const midiNote = notesArr[0];
+      const degree = nearestScaleDegree(midiNote, mode, rootIdx);
+      lastMidiRootIdx = (midiNote % 12 + 12) % 12;
+      detectedEl.innerHTML = "<strong>" + midiToName(midiNote).replace(/-?\d+$/, "") + "</strong> - single note (nearest scale degree " + (degree + 1) + ")";
+      const harmSemis = stepsToSemitones(mode.intervals, degree, voicing.steps);
+      const harmLabel = harmSemis.map(s => midiToName(48 + rootIdx + s).replace(/-?\d+$/, "")).join(" - ");
+      suggestEl.appendChild(buildSuggestionChip("Harmonize with", harmLabel));
+    } else {
+      const label = chordLabel(notesArr);
+      const det = detectChord(notesArr);
+      detectedEl.innerHTML = "<strong>" + label + "</strong> - " + notesArr.length + " notes held";
+      lastMidiRootIdx = det ? det.rootPc : (notesArr[0] % 12 + 12) % 12;
+      const fromDegree = nearestScaleDegree(notesArr[0], mode, rootIdx);
+      const alts = suggestModalAlternatives(fromDegree, mode, rules, voicing, rootIdx, 3);
+      alts.forEach(a => suggestEl.appendChild(buildSuggestionChip("Try next (in " + mode.name + ")", a.label)));
     }
   }
-  return null;
-}
-
-function chordLabel(midiNotes){
-  const det = detectChord(midiNotes);
-  if(det) return NOTE_NAMES[det.rootPc] + det.name;
-  return midiNotes.map(m => midiToName(m).replace(/-?\d+$/,'')).join(' ');
-}
-
-// Which scale degree (0-based, in the *currently selected* root+mode) has
-// a pitch class closest to the given MIDI note - used both for melody
-// harmonization (what degree is this melody note nearest to?) and for
-// rooting modal suggestions off a played chord.
-function nearestScaleDegree(midiNote, mode, rootIdx){
-  const pc = ((midiNote % 12) + 12) % 12;
-  const relPc = ((pc - rootIdx) + 12) % 12;
-  let best = 0, bestDist = 99;
-  mode.intervals.forEach((iv, i) => {
-    const dist = Math.min(Math.abs(iv-relPc), 12-Math.abs(iv-relPc));
-    if(dist < bestDist){ bestDist = dist; best = i; }
+  function midiNoteOn(midiNote, velocity) {
+    heldNotes.add(midiNote);
+    updateMidiDetection();
+    if (!midiPlayThroughEnabled) return;
+    ensureAudioCtx();
+    if (midiVoices.has(midiNote)) return;
+    const osc = audioCtx.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.value = midiToFreq(midiNote);
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    const now = audioCtx.currentTime;
+    const vol = .11 * Math.max(.3, velocity / 127);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + .025);
+    midiVoices.set(midiNote, {
+      osc: osc,
+      gain: gain
+    });
+  }
+  function midiNoteOff(midiNote) {
+    heldNotes.delete(midiNote);
+    updateMidiDetection();
+    const v = midiVoices.get(midiNote);
+    if (v) {
+      fadeOutVoice(v, .35);
+      midiVoices.delete(midiNote);
+    }
+  }
+  document.getElementById("midiPlayThroughCb").addEventListener("change", e => {
+    midiPlayThroughEnabled = e.target.checked;
+    if (!midiPlayThroughEnabled) {
+      midiVoices.forEach(v => fadeOutVoice(v, .2));
+      midiVoices.clear();
+    }
   });
-  return best;
-}
-
-function weightedIndex(weights){
-  const total = weights.reduce((a,b) => a+b, 0);
-  if(total <= 0) return randInt(0, weights.length-1);
-  let r = Math.random() * total;
-  for(let i=0;i<weights.length;i++){ r -= weights[i]; if(r <= 0) return i; }
-  return weights.length-1;
-}
-
-// Reuses the exact same degree/transition weighting the movement engine
-// runs on - so "suggest modal alternatives" isn't a separate, disconnected
-// feature, it's the same modal-tendency model applied to a real chord you
-// just played instead of to a randomly-generated one.
-function suggestModalAlternatives(fromDegree, mode, rules, voicing, rootIdx, count){
-  const L = mode.intervals.length;
-  const pool = [], poolW = [];
-  for(let d=0; d<L; d++){
-    if(d === fromDegree) continue;
-    pool.push(d);
-    poolW.push(degreeWeight(rules, d) * transitionWeight(rules, fromDegree, d));
-  }
-  const picked = [];
-  for(let k=0; k<count && pool.length; k++){
-    const idx = weightedIndex(poolW);
-    picked.push(pool[idx]);
-    pool.splice(idx,1); poolW.splice(idx,1);
-  }
-  return picked.map(degree => {
-    const semis = stepsToSemitones(mode.intervals, degree, voicing.steps);
-    const rootMidi = 48 + rootIdx + semis[0];
-    return { degree, label: midiToName(rootMidi).replace(/-?\d+$/,'') + ' (degree ' + (degree+1) + ')' };
+  document.getElementById("midiBuildBtn").addEventListener("click", () => {
+    if (lastMidiRootIdx == null) return;
+    rootSelect.value = lastMidiRootIdx;
+    generateProgression();
   });
-}
-
-function buildSuggestionChip(label, value){
-  const chip = el('div', {class:'midi-suggestion-chip'});
-  chip.appendChild(el('span', {class:'label'}, [label]));
-  chip.appendChild(el('span', {class:'value'}, [value]));
-  return chip;
-}
-
-const heldNotes = new Set();
-const midiVoices = new Map(); // midi note -> {osc, gain}, separate from progression playback's activeVoices
-let midiPlayThroughEnabled = true;
-let lastMidiRootIdx = null; // pitch class to root a fresh progression on, via "Build progression around this"
-
-function updateMidiDetection(){
-  const notesArr = [...heldNotes].sort((a,b) => a-b);
-  const detectedEl = document.getElementById('midiDetected');
-  const suggestEl = document.getElementById('midiSuggestions');
-  const buildBtn = document.getElementById('midiBuildBtn');
-
-  if(notesArr.length === 0){
-    detectedEl.textContent = 'Play something on your MIDI keyboard, or click the keybed below once a progression exists.';
-    suggestEl.innerHTML = '';
-    buildBtn.disabled = true;
-    lastMidiRootIdx = null;
-    return;
+  function handleMidiMessage(e) {
+    const [status, d1, d2] = e.data;
+    const type = status & 240;
+    if (type === 144 && d2 > 0) midiNoteOn(d1, d2); else if (type === 128 || type === 144 && d2 === 0) midiNoteOff(d1);
   }
-
-  buildBtn.disabled = false;
-  const mode = MODES.find(m => m.id === modeSelect.value);
-  const rules = MODAL_RULES[mode.id] || {};
-  const voicing = VOICINGS.find(v => v.id === voicingSelect.value);
-  const rootIdx = parseInt(rootSelect.value, 10);
-  suggestEl.innerHTML = '';
-
-  if(notesArr.length === 1){
-    const midiNote = notesArr[0];
-    const degree = nearestScaleDegree(midiNote, mode, rootIdx);
-    lastMidiRootIdx = ((midiNote%12)+12)%12;
-    detectedEl.innerHTML = '<strong>' + midiToName(midiNote).replace(/-?\d+$/,'') + '</strong> - single note (nearest scale degree ' + (degree+1) + ')';
-    const harmSemis = stepsToSemitones(mode.intervals, degree, voicing.steps);
-    const harmLabel = harmSemis.map(s => midiToName(48+rootIdx+s).replace(/-?\d+$/,'')).join(' - ');
-    suggestEl.appendChild(buildSuggestionChip('Harmonize with', harmLabel));
-  } else {
-    const label = chordLabel(notesArr);
-    const det = detectChord(notesArr);
-    detectedEl.innerHTML = '<strong>' + label + '</strong> - ' + notesArr.length + ' notes held';
-    lastMidiRootIdx = det ? det.rootPc : (((notesArr[0]%12)+12)%12);
-    const fromDegree = nearestScaleDegree(notesArr[0], mode, rootIdx);
-    const alts = suggestModalAlternatives(fromDegree, mode, rules, voicing, rootIdx, 3);
-    alts.forEach(a => suggestEl.appendChild(buildSuggestionChip('Try next (in ' + mode.name + ')', a.label)));
+  function refreshMidiInputs(midiAccess) {
+    const inputs = [ ...midiAccess.inputs.values() ];
+    const statusEl = document.getElementById("midiStatus");
+    statusEl.textContent = inputs.length === 0 ? "No MIDI devices connected" : inputs.map(i => i.name).join(", ") + " - connected";
+    inputs.forEach(input => {
+      input.onmidimessage = handleMidiMessage;
+    });
   }
-}
-
-function midiNoteOn(midiNote, velocity){
-  heldNotes.add(midiNote);
-  updateMidiDetection();
-  if(!midiPlayThroughEnabled) return;
-  ensureAudioCtx();
-  if(midiVoices.has(midiNote)) return;
-  const osc = audioCtx.createOscillator();
-  osc.type = 'triangle';
-  osc.frequency.value = midiToFreq(midiNote);
-  const gain = audioCtx.createGain();
-  gain.gain.value = 0;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  const now = audioCtx.currentTime;
-  const vol = 0.11 * Math.max(0.3, velocity/127);
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(vol, now + 0.025);
-  midiVoices.set(midiNote, {osc, gain});
-}
-
-function midiNoteOff(midiNote){
-  heldNotes.delete(midiNote);
-  updateMidiDetection();
-  const v = midiVoices.get(midiNote);
-  if(v){ fadeOutVoice(v, 0.35); midiVoices.delete(midiNote); }
-}
-
-document.getElementById('midiPlayThroughCb').addEventListener('change', (e) => {
-  midiPlayThroughEnabled = e.target.checked;
-  if(!midiPlayThroughEnabled){
-    midiVoices.forEach(v => fadeOutVoice(v, 0.2));
-    midiVoices.clear();
+  function initMidi() {
+    const statusEl = document.getElementById("midiStatus");
+    if (!navigator.requestMIDIAccess) {
+      statusEl.textContent = "Web MIDI isn't supported in this browser (try Chrome or Edge)";
+      return;
+    }
+    navigator.requestMIDIAccess({
+      sysex: false
+    }).then(access => {
+      refreshMidiInputs(access);
+      populateMidiOutputs(access);
+      access.onstatechange = () => {
+        refreshMidiInputs(access);
+        populateMidiOutputs(access);
+      };
+    }).catch(() => {
+      statusEl.textContent = "MIDI access was denied";
+    });
   }
-});
-
-document.getElementById('midiBuildBtn').addEventListener('click', () => {
-  if(lastMidiRootIdx == null) return;
-  rootSelect.value = lastMidiRootIdx;
-  generateProgression();
-});
-
-function handleMidiMessage(e){
-  const [status, d1, d2] = e.data;
-  const type = status & 0xf0;
-  if(type === 0x90 && d2 > 0) midiNoteOn(d1, d2);
-  else if(type === 0x80 || (type === 0x90 && d2 === 0)) midiNoteOff(d1);
-}
-
-function refreshMidiInputs(midiAccess){
-  const inputs = [...midiAccess.inputs.values()];
-  const statusEl = document.getElementById('midiStatus');
-  statusEl.textContent = inputs.length === 0
-    ? 'No MIDI devices connected'
-    : inputs.map(i => i.name).join(', ') + ' - connected';
-  inputs.forEach(input => { input.onmidimessage = handleMidiMessage; });
-}
-
-function initMidi(){
-  const statusEl = document.getElementById('midiStatus');
-  if(!navigator.requestMIDIAccess){
-    statusEl.textContent = 'Web MIDI isn\'t supported in this browser (try Chrome or Edge)';
-    return;
+  initMidi();
+  const TUTORIAL_STEPS = [ {
+    tag: "Welcome",
+    title: "A harmonic idea engine, not a chord dictionary",
+    body: `\n      <p>Loom generates ambient/drone-appropriate chord progressions - modal, open-voiced, and deliberately non-functional. It won't give you I-V-vi-IV. That's on purpose.</p>\n      <p>Pick a <strong>mode</strong>, a <strong>movement style</strong> (how the chords move over time), and a <strong>voicing style</strong> (how each chord is built), then hit Generate. You'll get 8 chords you can read, hear, or export.</p>\n    `
+  }, {
+    tag: "Step 1 of 4",
+    title: "Mode - the harmonic color",
+    body: `\n      <p>These aren't major/minor in the pop sense - each mode has its own character. Dorian is the friendly default; Phrygian and Phrygian Dominant lean dark and tense; Lydian floats without resolving; the three Japanese pentatonics (Insen, Hirajoshi, Kumoi) are sparse and spacious with very few notes to work with.</p>\n      <p>There's no wrong choice here - try a few and listen for which mood you're after.</p>\n    `
+  }, {
+    tag: "Step 2 of 4",
+    title: "Movement - how chords move over time",
+    body: `\n      <p>This is what replaces functional harmony. <strong>Modal Wandering</strong> and <strong>Generative Drift</strong> are both random walks (drift is smoother, smaller steps). <strong>Slow-Motion Cycle</strong> repeats a fixed 4-chord pattern. <strong>Non-Resolving Loop</strong> is built specifically to never land back on the tonic. <strong>Eternal Loop</strong> repeats a very short 2-3 chord cell, meant to run for a long time without feeling stale.</p>\n    `
+  }, {
+    tag: "Step 3 of 4",
+    title: "Voicing - how each chord is built",
+    body: `\n      <p><strong>Tertian</strong> is the ordinary stacked-3rds chord. <strong>Extended</strong> keeps stacking past the 7th into 9ths/11ths/13ths for a denser color. <strong>Quartal</strong> stacks 4ths instead of 3rds - the classic open, ambiguous ambient pad chord. <strong>Cluster</strong> and <strong>Suspended</strong> lean more textural than harmonic.</p>\n      <p>Every voicing here spreads naturally across octaves - that's not a separate setting, it's just how the chord-tone math works once you stack more than a couple of steps.</p>\n    `
+  }, {
+    tag: "Try it",
+    title: "Hear it, not just read it",
+    body: `\n      <p>Hit <strong>Play</strong> to actually hear the progression - a simple pad voice steps through your 8 chords on a loop, crossfading between them at whatever tempo you set. Turn on the <strong>Drone</strong> to layer a sustained root note underneath, which is often what actually makes a modal progression feel "ambient" rather than just slow.</p>\n      <p><strong>Export JSON</strong> saves the chord list (root notes per step) if you want to bring it into a synth or just keep a record of something you liked.</p>\n    `
+  } ];
+  let tutStep = 0;
+  const tutorialOverlay = document.getElementById("tutorialOverlay");
+  const tutStepTag = document.getElementById("tutorialStepTag");
+  const tutTitle = document.getElementById("tutorialTitle");
+  const tutBody = document.getElementById("tutorialBody");
+  const tutDots = document.getElementById("tutorialDots");
+  const tutBack = document.getElementById("tutBack");
+  const tutNext = document.getElementById("tutNext");
+  function renderTutorialStep() {
+    const step = TUTORIAL_STEPS[tutStep];
+    tutStepTag.textContent = step.tag;
+    tutTitle.textContent = step.title;
+    tutBody.innerHTML = step.body;
+    tutDots.innerHTML = "";
+    TUTORIAL_STEPS.forEach((_, i) => {
+      const dot = document.createElement("span");
+      if (i === tutStep) dot.classList.add("active");
+      tutDots.appendChild(dot);
+    });
+    tutBack.style.visibility = tutStep === 0 ? "hidden" : "visible";
+    tutNext.textContent = tutStep === TUTORIAL_STEPS.length - 1 ? "Done" : "Next";
   }
-  navigator.requestMIDIAccess({sysex:false}).then(access => {
-    refreshMidiInputs(access);
-    populateMidiOutputs(access);
-    access.onstatechange = () => { refreshMidiInputs(access); populateMidiOutputs(access); };
-  }).catch(() => {
-    statusEl.textContent = 'MIDI access was denied';
+  function openTutorial(fromStart) {
+    if (fromStart) tutStep = 0;
+    renderTutorialStep();
+    tutorialOverlay.classList.add("show");
+  }
+  function closeTutorial() {
+    tutorialOverlay.classList.remove("show");
+    try {
+      localStorage.setItem("loom-tutorial-seen", "1");
+    } catch (e) {}
+  }
+  document.getElementById("helpBtn").addEventListener("click", () => openTutorial(true));
+  document.getElementById("tutorialClose").addEventListener("click", closeTutorial);
+  document.getElementById("tutSkip").addEventListener("click", closeTutorial);
+  tutorialOverlay.addEventListener("click", e => {
+    if (e.target === tutorialOverlay) closeTutorial();
   });
-}
-initMidi();
-
-/* =========================================================================
-   TUTORIAL
-   ========================================================================= */
-
-const TUTORIAL_STEPS = [
-  {
-    tag: 'Welcome',
-    title: 'A harmonic idea engine, not a chord dictionary',
-    body: `
-      <p>Loom generates ambient/drone-appropriate chord progressions - modal, open-voiced, and deliberately non-functional. It won't give you I-V-vi-IV. That's on purpose.</p>
-      <p>Pick a <strong>mode</strong>, a <strong>movement style</strong> (how the chords move over time), and a <strong>voicing style</strong> (how each chord is built), then hit Generate. You'll get 8 chords you can read, hear, or export.</p>
-    `
-  },
-  {
-    tag: 'Step 1 of 4',
-    title: 'Mode - the harmonic color',
-    body: `
-      <p>These aren't major/minor in the pop sense - each mode has its own character. Dorian is the friendly default; Phrygian and Phrygian Dominant lean dark and tense; Lydian floats without resolving; the three Japanese pentatonics (Insen, Hirajoshi, Kumoi) are sparse and spacious with very few notes to work with.</p>
-      <p>There's no wrong choice here - try a few and listen for which mood you're after.</p>
-    `
-  },
-  {
-    tag: 'Step 2 of 4',
-    title: 'Movement - how chords move over time',
-    body: `
-      <p>This is what replaces functional harmony. <strong>Modal Wandering</strong> and <strong>Generative Drift</strong> are both random walks (drift is smoother, smaller steps). <strong>Slow-Motion Cycle</strong> repeats a fixed 4-chord pattern. <strong>Non-Resolving Loop</strong> is built specifically to never land back on the tonic. <strong>Eternal Loop</strong> repeats a very short 2-3 chord cell, meant to run for a long time without feeling stale.</p>
-    `
-  },
-  {
-    tag: 'Step 3 of 4',
-    title: 'Voicing - how each chord is built',
-    body: `
-      <p><strong>Tertian</strong> is the ordinary stacked-3rds chord. <strong>Extended</strong> keeps stacking past the 7th into 9ths/11ths/13ths for a denser color. <strong>Quartal</strong> stacks 4ths instead of 3rds - the classic open, ambiguous ambient pad chord. <strong>Cluster</strong> and <strong>Suspended</strong> lean more textural than harmonic.</p>
-      <p>Every voicing here spreads naturally across octaves - that's not a separate setting, it's just how the chord-tone math works once you stack more than a couple of steps.</p>
-    `
-  },
-  {
-    tag: 'Try it',
-    title: 'Hear it, not just read it',
-    body: `
-      <p>Hit <strong>Play</strong> to actually hear the progression - a simple pad voice steps through your 8 chords on a loop, crossfading between them at whatever tempo you set. Turn on the <strong>Drone</strong> to layer a sustained root note underneath, which is often what actually makes a modal progression feel "ambient" rather than just slow.</p>
-      <p><strong>Export JSON</strong> saves the chord list (root notes per step) if you want to bring it into a synth or just keep a record of something you liked.</p>
-    `
-  },
-];
-
-let tutStep = 0;
-const tutorialOverlay = document.getElementById('tutorialOverlay');
-const tutStepTag = document.getElementById('tutorialStepTag');
-const tutTitle = document.getElementById('tutorialTitle');
-const tutBody = document.getElementById('tutorialBody');
-const tutDots = document.getElementById('tutorialDots');
-const tutBack = document.getElementById('tutBack');
-const tutNext = document.getElementById('tutNext');
-
-function renderTutorialStep(){
-  const step = TUTORIAL_STEPS[tutStep];
-  tutStepTag.textContent = step.tag;
-  tutTitle.textContent = step.title;
-  tutBody.innerHTML = step.body;
-  tutDots.innerHTML = '';
-  TUTORIAL_STEPS.forEach((_, i) => {
-    const dot = document.createElement('span');
-    if(i === tutStep) dot.classList.add('active');
-    tutDots.appendChild(dot);
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape" && tutorialOverlay.classList.contains("show")) closeTutorial();
   });
-  tutBack.style.visibility = tutStep === 0 ? 'hidden' : 'visible';
-  tutNext.textContent = tutStep === TUTORIAL_STEPS.length-1 ? 'Done' : 'Next';
-}
-
-function openTutorial(fromStart){
-  if(fromStart) tutStep = 0;
-  renderTutorialStep();
-  tutorialOverlay.classList.add('show');
-}
-function closeTutorial(){
-  tutorialOverlay.classList.remove('show');
-  try{ localStorage.setItem('loom-tutorial-seen', '1'); }catch(e){}
-}
-
-document.getElementById('helpBtn').addEventListener('click', () => openTutorial(true));
-document.getElementById('tutorialClose').addEventListener('click', closeTutorial);
-document.getElementById('tutSkip').addEventListener('click', closeTutorial);
-tutorialOverlay.addEventListener('click', (e) => { if(e.target === tutorialOverlay) closeTutorial(); });
-window.addEventListener('keydown', (e) => { if(e.key === 'Escape' && tutorialOverlay.classList.contains('show')) closeTutorial(); });
-
-tutBack.addEventListener('click', () => { if(tutStep>0){ tutStep--; renderTutorialStep(); } });
-tutNext.addEventListener('click', () => {
-  if(tutStep < TUTORIAL_STEPS.length-1){ tutStep++; renderTutorialStep(); }
-  else closeTutorial();
-});
-
-try{
-  if(!localStorage.getItem('loom-tutorial-seen')) openTutorial(true);
-}catch(e){ /* localStorage unavailable -- skip auto-open, help button still works */ }
-
-/* ---- bridge to the MIDI OUTPUT block ----
-   Everything above lives inside an IIFE, so its bindings are private. The
-   MIDI output block below is a separate <script> written as though these were
-   globals, and it has been throwing ReferenceError on load ever since —
-   which silently disabled the previous/next chord buttons and the whole MIDI
-   send path.
-
-   Rather than dissolve the IIFE (which would leak sixty-odd names) or merge
-   the blocks (a large, risky move for a retheme), the handful of identifiers
-   that block genuinely needs are published here. `currentProgression` and
-   `isPlaying` are exposed through getters because they are reassigned up here
-   and a copied value would go stale the moment you pressed Generate. The
-   other block only ever reads them. */
-Object.defineProperty(window, 'currentProgression', {
-  configurable: true, get: function(){ return currentProgression; }
-});
-Object.defineProperty(window, 'isPlaying', {
-  configurable: true, get: function(){ return isPlaying; }
-});
-window.el = el;
-window.rootSelect = rootSelect;
-window.modeSelect = modeSelect;
-window.movementSelect = movementSelect;
-window.voicingSelect = voicingSelect;
-window.droneOctSlider = droneOctSlider;
-window.tempoSlider = tempoSlider;
-window.generateProgression = generateProgression;
-window.ensureAudioCtx = ensureAudioCtx;
-window.playChordAtStep = playChordAtStep;
-window.stopPlayback = stopPlayback;
-
+  tutBack.addEventListener("click", () => {
+    if (tutStep > 0) {
+      tutStep--;
+      renderTutorialStep();
+    }
+  });
+  tutNext.addEventListener("click", () => {
+    if (tutStep < TUTORIAL_STEPS.length - 1) {
+      tutStep++;
+      renderTutorialStep();
+    } else closeTutorial();
+  });
+  try {
+    if (!localStorage.getItem("loom-tutorial-seen")) openTutorial(true);
+  } catch (e) {}
+  Object.defineProperty(window, "currentProgression", {
+    configurable: true,
+    get: function() {
+      return currentProgression;
+    }
+  });
+  Object.defineProperty(window, "isPlaying", {
+    configurable: true,
+    get: function() {
+      return isPlaying;
+    }
+  });
+  window.el = el;
+  window.rootSelect = rootSelect;
+  window.modeSelect = modeSelect;
+  window.movementSelect = movementSelect;
+  window.voicingSelect = voicingSelect;
+  window.droneOctSlider = droneOctSlider;
+  window.tempoSlider = tempoSlider;
+  window.generateProgression = generateProgression;
+  window.ensureAudioCtx = ensureAudioCtx;
+  window.playChordAtStep = playChordAtStep;
+  window.stopPlayback = stopPlayback;
 })();
 </script>
   <script>
-/* =========================================================================
-   MIDI OUTPUT
-
-   Loom generates progressions and drones for people with hardware synths on
-   the desk, and could not send a single note to them — there was no
-   `.outputs` reference anywhere on the site. Notes now go out alongside (or
-   instead of) the internal pad synth.
-   ========================================================================= */
-
 let midiOut = null;
+
 let midiOutChannel = 0;
+
 let midiOutNotesOn = [];
 
-function populateMidiOutputs(access){
-  const sel = document.getElementById('midiOutSelect');
-  if(!sel) return;
+function populateMidiOutputs(access) {
+  const sel = document.getElementById("midiOutSelect");
+  if (!sel) return;
   const previous = sel.value;
   sel.innerHTML = '<option value="">(none - internal synth only)</option>';
-  [...access.outputs.values()].forEach(out => {
-    const o = document.createElement('option');
+  [ ...access.outputs.values() ].forEach(out => {
+    const o = document.createElement("option");
     o.value = out.id;
-    o.textContent = out.name || 'MIDI output';
+    o.textContent = out.name || "MIDI output";
     sel.appendChild(o);
   });
-  // Keep the chosen device across a hot-plug of some other device.
-  if(previous && [...access.outputs.values()].some(o => o.id === previous)){
+  if (previous && [ ...access.outputs.values() ].some(o => o.id === previous)) {
     sel.value = previous;
     midiOut = access.outputs.get(previous);
   }
 }
 
-function populateMidiChannels(){
-  const sel = document.getElementById('midiOutChannel');
-  if(!sel || sel.options.length) return;
-  for(let i = 1; i <= 16; i++){
-    const o = document.createElement('option');
+function populateMidiChannels() {
+  const sel = document.getElementById("midiOutChannel");
+  if (!sel || sel.options.length) return;
+  for (let i = 1; i <= 16; i++) {
+    const o = document.createElement("option");
     o.value = String(i - 1);
     o.textContent = String(i);
     sel.appendChild(o);
   }
 }
 
-function midiOutAllOff(){
-  if(!midiOut) { midiOutNotesOn = []; return; }
+function midiOutAllOff() {
+  if (!midiOut) {
+    midiOutNotesOn = [];
+    return;
+  }
   midiOutNotesOn.forEach(note => {
-    try { midiOut.send([0x80 | midiOutChannel, note, 0]); } catch(e) { /* device unplugged */ }
+    try {
+      midiOut.send([ 128 | midiOutChannel, note, 0 ]);
+    } catch (e) {}
   });
   midiOutNotesOn = [];
 }
 
-function midiOutSendChord(midiNotes){
-  if(!midiOut) return;
+function midiOutSendChord(midiNotes) {
+  if (!midiOut) return;
   midiOutAllOff();
   midiNotes.forEach(note => {
-    if(note < 0 || note > 127) return;   // out of MIDI range
+    if (note < 0 || note > 127) return;
     try {
-      midiOut.send([0x90 | midiOutChannel, note, 80]);
+      midiOut.send([ 144 | midiOutChannel, note, 80 ]);
       midiOutNotesOn.push(note);
-    } catch(e) { /* device unplugged mid-progression */ }
+    } catch (e) {}
   });
 }
 
-function localSynthMuted(){
-  const cb = document.getElementById('midiOutMuteLocal');
+function localSynthMuted() {
+  const cb = document.getElementById("midiOutMuteLocal");
   return !!(cb && cb.checked && midiOut);
 }
 
-/* =========================================================================
-   IMPORT, PERSISTENCE, STEP-THROUGH, SHORTCUTS
-   ========================================================================= */
+const loomStore = window.TSStore ? window.TSStore.create("loom") : null;
 
-const loomStore = window.TSStore ? window.TSStore.create('loom') : null;
+const SETTING_IDS = [ "rootSelect", "modeSelect", "movementSelect", "voicingSelect", "droneOctSlider", "tempoSlider" ];
 
-const SETTING_IDS = ['rootSelect','modeSelect','movementSelect','voicingSelect',
-                     'droneOctSlider','tempoSlider'];
-const CHECK_IDS = ['doubleRootCb','droneCb','midiPlayThroughCb','midiOutMuteLocal'];
+const CHECK_IDS = [ "doubleRootCb", "droneCb", "midiPlayThroughCb", "midiOutMuteLocal" ];
 
-function saveLoomSettings(){
-  if(!loomStore) return;
+function saveLoomSettings() {
+  if (!loomStore) return;
   const out = {};
-  SETTING_IDS.forEach(id => { const el = document.getElementById(id); if(el) out[id] = el.value; });
-  CHECK_IDS.forEach(id => { const el = document.getElementById(id); if(el) out[id] = el.checked; });
-  const midiSel = document.getElementById('midiOutSelect');
-  const chSel = document.getElementById('midiOutChannel');
-  if(midiSel) out.midiOut = midiSel.value;
-  if(chSel) out.midiOutChannel = chSel.value;
-  loomStore.set('settings', out);
-}
-
-function restoreLoomSettings(){
-  if(!loomStore) return;
-  const cfg = loomStore.get('settings', null);
-  if(!cfg) return;
   SETTING_IDS.forEach(id => {
     const el = document.getElementById(id);
-    if(el && cfg[id] != null){ el.value = cfg[id]; el.dispatchEvent(new Event('input')); el.dispatchEvent(new Event('change')); }
+    if (el) out[id] = el.value;
   });
   CHECK_IDS.forEach(id => {
     const el = document.getElementById(id);
-    if(el && cfg[id] != null){ el.checked = cfg[id]; el.dispatchEvent(new Event('change')); }
+    if (el) out[id] = el.checked;
   });
-  const chSel = document.getElementById('midiOutChannel');
-  if(chSel && cfg.midiOutChannel != null){ chSel.value = cfg.midiOutChannel; midiOutChannel = parseInt(cfg.midiOutChannel, 10) || 0; }
+  const midiSel = document.getElementById("midiOutSelect");
+  const chSel = document.getElementById("midiOutChannel");
+  if (midiSel) out.midiOut = midiSel.value;
+  if (chSel) out.midiOutChannel = chSel.value;
+  loomStore.set("settings", out);
 }
 
-function applyImportedSettings(settings){
-  if(!settings) return;
+function restoreLoomSettings() {
+  if (!loomStore) return;
+  const cfg = loomStore.get("settings", null);
+  if (!cfg) return;
+  SETTING_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && cfg[id] != null) {
+      el.value = cfg[id];
+      el.dispatchEvent(new Event("input"));
+      el.dispatchEvent(new Event("change"));
+    }
+  });
+  CHECK_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && cfg[id] != null) {
+      el.checked = cfg[id];
+      el.dispatchEvent(new Event("change"));
+    }
+  });
+  const chSel = document.getElementById("midiOutChannel");
+  if (chSel && cfg.midiOutChannel != null) {
+    chSel.value = cfg.midiOutChannel;
+    midiOutChannel = parseInt(cfg.midiOutChannel, 10) || 0;
+  }
+}
+
+function applyImportedSettings(settings) {
+  if (!settings) return;
   const map = {
-    root:'rootSelect', mode:'modeSelect', movement:'movementSelect',
-    voicing:'voicingSelect', droneOctave:'droneOctSlider', tempo:'tempoSlider',
+    root: "rootSelect",
+    mode: "modeSelect",
+    movement: "movementSelect",
+    voicing: "voicingSelect",
+    droneOctave: "droneOctSlider",
+    tempo: "tempoSlider"
   };
   Object.keys(map).forEach(key => {
     const el = document.getElementById(map[key]);
-    if(el && settings[key] != null){
+    if (el && settings[key] != null) {
       el.value = settings[key];
-      el.dispatchEvent(new Event('input'));
-      el.dispatchEvent(new Event('change'));
+      el.dispatchEvent(new Event("input"));
+      el.dispatchEvent(new Event("change"));
     }
   });
-  const dr = document.getElementById('doubleRootCb');
-  if(dr && settings.doubleRoot != null){ dr.checked = settings.doubleRoot; dr.dispatchEvent(new Event('change')); }
-  const dc = document.getElementById('droneCb');
-  if(dc && settings.drone != null){ dc.checked = settings.drone; dc.dispatchEvent(new Event('change')); }
+  const dr = document.getElementById("doubleRootCb");
+  if (dr && settings.doubleRoot != null) {
+    dr.checked = settings.doubleRoot;
+    dr.dispatchEvent(new Event("change"));
+  }
+  const dc = document.getElementById("droneCb");
+  if (dc && settings.drone != null) {
+    dc.checked = settings.drone;
+    dc.dispatchEvent(new Event("change"));
+  }
 }
 
-/* Step through the progression chord by chord — play-the-whole-thing or
-   nothing is the wrong granularity for learning voicings. */
 let stepCursor = 0;
 
-function refreshStepButtons(){
-  const prev = document.getElementById('prevChordBtn');
-  const next = document.getElementById('nextChordBtn');
+function refreshStepButtons() {
+  const prev = document.getElementById("prevChordBtn");
+  const next = document.getElementById("nextChordBtn");
   const n = currentProgression ? currentProgression.chords.length : 0;
-  if(prev) prev.disabled = n === 0;
-  if(next) next.disabled = n === 0;
+  if (prev) prev.disabled = n === 0;
+  if (next) next.disabled = n === 0;
 }
 
-function stepChord(delta){
-  if(!currentProgression || !currentProgression.chords.length) return;
-  if(isPlaying) stopPlayback();
+function stepChord(delta) {
+  if (!currentProgression || !currentProgression.chords.length) return;
+  if (isPlaying) stopPlayback();
   ensureAudioCtx();
   const n = currentProgression.chords.length;
   stepCursor = ((stepCursor + delta) % n + n) % n;
   playChordAtStep(stepCursor);
-  const status = document.getElementById('transportStatus');
-  if(status) status.textContent = 'Chord ' + (stepCursor + 1) + ' of ' + n;
+  const status = document.getElementById("transportStatus");
+  if (status) status.textContent = "Chord " + (stepCursor + 1) + " of " + n;
 }
 
-function wireLoomExtras(){
+function wireLoomExtras() {
   populateMidiChannels();
-
-  const outSel = document.getElementById('midiOutSelect');
-  if(outSel){
-    outSel.addEventListener('change', () => {
+  const outSel = document.getElementById("midiOutSelect");
+  if (outSel) {
+    outSel.addEventListener("change", () => {
       midiOutAllOff();
-      if(!outSel.value){ midiOut = null; saveLoomSettings(); return; }
-      if(navigator.requestMIDIAccess){
-        navigator.requestMIDIAccess({sysex:false}).then(access => {
+      if (!outSel.value) {
+        midiOut = null;
+        saveLoomSettings();
+        return;
+      }
+      if (navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess({
+          sysex: false
+        }).then(access => {
           midiOut = access.outputs.get(outSel.value) || null;
           saveLoomSettings();
-        }).catch(() => { midiOut = null; });
+        }).catch(() => {
+          midiOut = null;
+        });
       }
     });
   }
-
-  const chSel = document.getElementById('midiOutChannel');
-  if(chSel){
-    chSel.addEventListener('change', () => {
+  const chSel = document.getElementById("midiOutChannel");
+  if (chSel) {
+    chSel.addEventListener("change", () => {
       midiOutAllOff();
       midiOutChannel = parseInt(chSel.value, 10) || 0;
       saveLoomSettings();
     });
   }
-
-  const muteCb = document.getElementById('midiOutMuteLocal');
-  if(muteCb) muteCb.addEventListener('change', saveLoomSettings);
-
-  // Import — export existed with no way back in, so it was write-only.
-  const importBtn = document.getElementById('importBtn');
-  const importFile = document.getElementById('importFile');
-  if(importBtn && importFile){
-    importBtn.addEventListener('click', () => importFile.click());
-    importFile.addEventListener('change', e => {
+  const muteCb = document.getElementById("midiOutMuteLocal");
+  if (muteCb) muteCb.addEventListener("change", saveLoomSettings);
+  const importBtn = document.getElementById("importBtn");
+  const importFile = document.getElementById("importFile");
+  if (importBtn && importFile) {
+    importBtn.addEventListener("click", () => importFile.click());
+    importFile.addEventListener("change", e => {
       const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
+      if (!file) return;
+      const reader = new FileReader;
       reader.onload = ev => {
-        try{
+        try {
           const data = JSON.parse(ev.target.result);
-          if(!data || data.kind !== 'loom-progression'){
+          if (!data || data.kind !== "loom-progression") {
             alert("That file doesn't look like a Loom progression export.");
             return;
           }
-          if(data.settings){
+          if (data.settings) {
             applyImportedSettings(data.settings);
             generateProgression();
           } else {
-            // v1 exports carry display names only — the settings can't be
-            // restored exactly, so say so rather than silently guessing.
-            alert('This is an older Loom export without saved settings, so it can\u2019t be restored exactly. Re-export from this version to get a file that round-trips.');
+            alert("This is an older Loom export without saved settings, so it can’t be restored exactly. Re-export from this version to get a file that round-trips.");
           }
-        }catch(err){ alert('Could not read that file: ' + err.message); }
+        } catch (err) {
+          alert("Could not read that file: " + err.message);
+        }
       };
       reader.readAsText(file);
-      e.target.value = '';
+      e.target.value = "";
     });
   }
-
   SETTING_IDS.forEach(id => {
     const el = document.getElementById(id);
-    if(el){ el.addEventListener('change', saveLoomSettings); el.addEventListener('input', saveLoomSettings); }
+    if (el) {
+      el.addEventListener("change", saveLoomSettings);
+      el.addEventListener("input", saveLoomSettings);
+    }
   });
   CHECK_IDS.forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.addEventListener('change', saveLoomSettings);
+    if (el) el.addEventListener("change", saveLoomSettings);
   });
-
-  const prev = document.getElementById('prevChordBtn');
-  const next = document.getElementById('nextChordBtn');
-  if(prev) prev.addEventListener('click', () => stepChord(-1));
-  if(next) next.addEventListener('click', () => stepChord(1));
+  const prev = document.getElementById("prevChordBtn");
+  const next = document.getElementById("nextChordBtn");
+  if (prev) prev.addEventListener("click", () => stepChord(-1));
+  if (next) next.addEventListener("click", () => stepChord(1));
   refreshStepButtons();
-
-  document.getElementById('generateBtn').addEventListener('click', () => {
+  document.getElementById("generateBtn").addEventListener("click", () => {
     stepCursor = 0;
     refreshStepButtons();
     saveLoomSettings();
   });
-
   restoreLoomSettings();
-
-  if(window.TSShortcuts){
-    window.TSShortcuts.register([
-      {keys:'space', group:'Transport', label:'Play / stop the progression',
-       run:() => document.getElementById('playBtn').click()},
-      {keys:'left', group:'Transport', label:'Previous chord', run:() => stepChord(-1)},
-      {keys:'right', group:'Transport', label:'Next chord', run:() => stepChord(1)},
-      {keys:'g', group:'Progression', label:'Generate a new progression',
-       run:() => document.getElementById('generateBtn').click()},
-      {keys:'e', group:'Progression', label:'Export as JSON',
-       run:() => document.getElementById('exportBtn').click()},
-      {keys:'?', group:'General', label:'Show this help'},
-    ]);
+  if (window.TSShortcuts) {
+    window.TSShortcuts.register([ {
+      keys: "space",
+      group: "Transport",
+      label: "Play / stop the progression",
+      run: () => document.getElementById("playBtn").click()
+    }, {
+      keys: "left",
+      group: "Transport",
+      label: "Previous chord",
+      run: () => stepChord(-1)
+    }, {
+      keys: "right",
+      group: "Transport",
+      label: "Next chord",
+      run: () => stepChord(1)
+    }, {
+      keys: "g",
+      group: "Progression",
+      label: "Generate a new progression",
+      run: () => document.getElementById("generateBtn").click()
+    }, {
+      keys: "e",
+      group: "Progression",
+      label: "Export as JSON",
+      run: () => document.getElementById("exportBtn").click()
+    }, {
+      keys: "?",
+      group: "General",
+      label: "Show this help"
+    } ]);
   }
 }
 
 wireLoomExtras();
-
 </script>
   <script src="../shared/app-switcher.js" defer></script>
 </body>

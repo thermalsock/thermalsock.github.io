@@ -1,4 +1,3 @@
-// Background.js
 import { theme } from "../theme/theme.js";
 
 export function drawBackground(ctx, canvas) {

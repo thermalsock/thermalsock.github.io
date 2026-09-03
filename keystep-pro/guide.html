@@ -23,117 +23,294 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="../shared/chrome.css">
 <style>
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif-body); }
-  .wrap{ max-width:1000px; margin:0 auto; padding:22px 24px 70px; }
-
-  h1{ font-family:var(--serif-display); font-weight:600; font-size:28px; margin:6px 0 10px; }
-  .lede{ font-size:15.5px; color:var(--ink-soft); line-height:1.65; max-width:66ch; margin:0 0 8px; }
-
-  /* ---- the rig bar, sticky because it governs every example ---- */
-  .rig{
-    position:sticky; top:0; z-index:20;
-    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
-    background:var(--paper); border:1px solid var(--hairline);
-    border-radius:11px; padding:12px 15px; margin:20px 0 6px;
-    box-shadow:0 2px 14px rgba(138,160,184,0.07);
-  }
-  .rig label{ font-family:var(--mono); font-size:10px; letter-spacing:.09em;
-              text-transform:uppercase; color:var(--ink-faint); }
-  .rig select, .rig input[type=number]{
-    font-family:var(--mono); font-size:12px; color:var(--ink);
-    background:var(--paper); border:1px solid var(--hairline);
-    border-radius:6px; padding:7px 9px; outline:none;
-  }
-  .rig input[type=number]{ width:70px; }
-  .rig select:focus, .rig input:focus{ border-color:var(--app-accent); }
-  .rig .gap{ flex:1; }
-  button.tsl{
-    font-family:var(--mono); font-size:11px; letter-spacing:.04em;
-    color:var(--ink-soft); background:rgba(138,160,184,0.05);
-    border:1px solid var(--hairline); border-radius:999px;
-    padding:8px 14px; cursor:pointer;
-  }
-  button.tsl:hover{ color:var(--ink); border-color:var(--app-accent); }
-  button.tsl.primary{ background:var(--app-accent); border-color:var(--app-accent); color:var(--paper); font-weight:600; }
-  #rigNote{
-    font-family:var(--mono); font-size:11px; line-height:1.6; color:var(--ink-soft);
-    background:rgba(138,160,184,0.05); border:1px solid var(--hairline);
-    border-radius:9px; padding:11px 13px; margin-bottom:22px;
-  }
-  #rigNote b{ color:var(--ink); }
-
-  /* ---- contents ---- */
-  .toc{ display:flex; flex-wrap:wrap; gap:7px; margin:0 0 24px; }
-  .toc a{
-    font-family:var(--mono); font-size:11px; text-decoration:none;
-    color:var(--ink-soft); border:1px solid var(--hairline);
-    border-radius:999px; padding:7px 13px;
-  }
-  .toc a:hover{ color:var(--ink); border-color:var(--app-accent); }
-
-  h2.grp{
-    font-family:var(--serif-display); font-size:22px; font-weight:600;
-    margin:38px 0 3px; padding-top:26px; border-top:1px solid var(--hairline);
-  }
-  .grpblurb{ font-size:14px; color:var(--ink-soft); margin:0 0 4px; }
-
-  /* ---- an entry ---- */
-  .entry{
-    border:1px solid var(--hairline); border-radius:12px;
-    padding:18px 20px; margin-top:16px; background:rgba(138,160,184,0.03);
-  }
-  .entry h3{ font-family:var(--serif-display); font-size:19px; font-weight:600; margin:0 0 9px; }
-  .entry p.body{ font-size:15px; line-height:1.68; color:var(--ink); margin:0 0 13px; max-width:64ch; }
-  .listen{
-    font-family:var(--mono); font-size:11.5px; line-height:1.6;
-    background:rgba(0,200,255,0.09); border-left:3px solid var(--app-accent);
-    border-radius:0 7px 7px 0; padding:9px 12px; margin:0 0 14px;
-  }
-  .listen b{ text-transform:uppercase; letter-spacing:.08em; font-size:10px; display:block; color:var(--app-accent); margin-bottom:3px; }
-
-  .ab{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .ab button.side{
-    font-family:var(--mono); font-size:12px; font-weight:600;
-    color:var(--ink); background:var(--paper);
-    border:1px solid var(--hairline); border-radius:8px;
-    padding:11px 16px; cursor:pointer; min-width:150px; text-align:left;
-  }
-  .ab button.side span{
-    display:block; font-weight:400; font-size:9.5px; letter-spacing:.09em;
-    text-transform:uppercase; color:var(--ink-faint); margin-bottom:3px;
-  }
-  .ab button.side:hover{ border-color:var(--app-accent); }
-  .ab button.side[aria-pressed="true"]{
-    background:var(--app-accent); border-color:var(--app-accent); color:var(--paper);
-  }
-  .ab button.side[aria-pressed="true"] span{ color:rgba(255,255,255,0.72); }
-  .ab .stop{ margin-left:auto; }
-
-  .lanes{ margin-top:13px; }
-  .lane{ display:flex; gap:2px; margin-top:4px; }
-  .lane i{
-    flex:1; min-width:5px; height:20px; border-radius:3px;
-    background:rgba(138,160,184,0.08); font-style:normal;
-  }
-  .lane i.on{ background:var(--app-accent); }
-  .lane i.acc{ background:var(--ink); }
-  .lane i.now{ outline:2px solid var(--ink); outline-offset:1px; }
-
-  .refs{ margin-top:14px; font-size:13.5px; color:var(--ink-soft); line-height:1.6; }
-  .refs b{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.09em;
-           text-transform:uppercase; color:var(--ink-faint); margin-bottom:5px; }
-  .refs li{ margin-bottom:3px; }
-  .refs ul{ margin:0; padding-left:18px; }
-  .refs em{ font-style:normal; color:var(--ink); }
-
-  #legalBar{
-    display:flex; gap:14px; align-items:center; justify-content:center;
-    font-family:var(--mono); font-size:10px; letter-spacing:.05em;
-    color:var(--ink-faint); padding:34px 0 8px;
-  }
-  #legalBar a{ color:var(--ink-faint); text-decoration:none; }
-  #legalBar a:hover{ color:var(--ink); }
+* {
+  box-sizing: border-box
+}
+body,
+html {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif-body)
+}
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 22px 24px 70px
+}
+h1 {
+  font-family: var(--serif-display);
+  font-weight: 600;
+  font-size: 28px;
+  margin: 6px 0 10px
+}
+.lede {
+  font-size: 15.5px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  max-width: 66ch;
+  margin: 0 0 8px
+}
+.rig {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: 11px;
+  padding: 12px 15px;
+  margin: 20px 0 6px;
+  box-shadow: 0 2px 14px rgba(138,160,184,.07)
+}
+.rig label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint)
+}
+.rig input[type=number],
+.rig select {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 7px 9px;
+  outline: 0
+}
+.rig input[type=number] {
+  width: 70px
+}
+.rig input:focus,
+.rig select:focus {
+  border-color: var(--app-accent)
+}
+.rig .gap {
+  flex: 1
+}
+button.tsl {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+  background: rgba(138,160,184,.05);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer
+}
+button.tsl:hover {
+  color: var(--ink);
+  border-color: var(--app-accent)
+}
+button.tsl.primary {
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+  color: var(--paper);
+  font-weight: 600
+}
+#rigNote {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  background: rgba(138,160,184,.05);
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  padding: 11px 13px;
+  margin-bottom: 22px
+}
+#rigNote b {
+  color: var(--ink)
+}
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 24px
+}
+.toc a {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 7px 13px
+}
+.toc a:hover {
+  color: var(--ink);
+  border-color: var(--app-accent)
+}
+h2.grp {
+  font-family: var(--serif-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 38px 0 3px;
+  padding-top: 26px;
+  border-top: 1px solid var(--hairline)
+}
+.grpblurb {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 4px
+}
+.entry {
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-top: 16px;
+  background: rgba(138,160,184,.03)
+}
+.entry h3 {
+  font-family: var(--serif-display);
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0 0 9px
+}
+.entry p.body {
+  font-size: 15px;
+  line-height: 1.68;
+  color: var(--ink);
+  margin: 0 0 13px;
+  max-width: 64ch
+}
+.listen {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  background: rgba(0,200,255,.09);
+  border-left: 3px solid var(--app-accent);
+  border-radius: 0 7px 7px 0;
+  padding: 9px 12px;
+  margin: 0 0 14px
+}
+.listen b {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: 10px;
+  display: block;
+  color: var(--app-accent);
+  margin-bottom: 3px
+}
+.ab {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap
+}
+.ab button.side {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 11px 16px;
+  cursor: pointer;
+  min-width: 150px;
+  text-align: left
+}
+.ab button.side span {
+  display: block;
+  font-weight: 400;
+  font-size: 9.5px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 3px
+}
+.ab button.side:hover {
+  border-color: var(--app-accent)
+}
+.ab button.side[aria-pressed=true] {
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+  color: var(--paper)
+}
+.ab button.side[aria-pressed=true] span {
+  color: rgba(255,255,255,.72)
+}
+.ab .stop {
+  margin-left: auto
+}
+.lanes {
+  margin-top: 13px
+}
+.lane {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px
+}
+.lane i {
+  flex: 1;
+  min-width: 5px;
+  height: 20px;
+  border-radius: 3px;
+  background: rgba(138,160,184,.08);
+  font-style: normal
+}
+.lane i.on {
+  background: var(--app-accent)
+}
+.lane i.acc {
+  background: var(--ink)
+}
+.lane i.now {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px
+}
+.refs {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.6
+}
+.refs b {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 5px
+}
+.refs li {
+  margin-bottom: 3px
+}
+.refs ul {
+  margin: 0;
+  padding-left: 18px
+}
+.refs em {
+  font-style: normal;
+  color: var(--ink)
+}
+#legalBar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .05em;
+  color: var(--ink-faint);
+  padding: 34px 0 8px
+}
+#legalBar a {
+  color: var(--ink-faint);
+  text-decoration: none
+}
+#legalBar a:hover {
+  color: var(--ink)
+}
 </style>
 </head>
 <body>
@@ -214,183 +391,193 @@
 <script src="player.js"></script>
 <script src="guide-content.js"></script>
 <script>
-(function () {
-  'use strict';
+(function() {
+  "use strict";
   var Gd = window.KSPGuide, G = window.KSPGen;
-  var store = window.TSStore ? window.TSStore.create('keystep-guide') : null;
-  function $(id) { return document.getElementById(id); }
-
+  var store = window.TSStore ? window.TSStore.create("keystep-guide") : null;
+  function $(id) {
+    return document.getElementById(id);
+  }
   var midi = null, output = null;
-  var players = [];        /* one per voice, so dual examples stay in step */
+  var players = [];
   var activeEntry = null, activeSide = null;
-
-  /* ---------- MIDI rig ---------- */
-
-  function sink() { return $('sink').value; }
-  function channel() { return parseInt($('chan').value, 10) || 1; }
-
+  function sink() {
+    return $("sink").value;
+  }
+  function channel() {
+    return parseInt($("chan").value, 10) || 1;
+  }
   function makePlayers(n) {
     while (players.length < n) {
-      (function (i) {
+      (function(i) {
         players.push(window.KSPPlayer.create({
-          getOutput: function () { return output; },
-          /* Each voice of a dual example goes out on its own channel, so the
-             KeyStep Pro's four tracks can drive four different synths. */
-          getChannel: function () { return channel() + i; },
+          getOutput: function() {
+            return output;
+          },
+          getChannel: function() {
+            return channel() + i;
+          },
           getSink: sink,
-          onStep: function (pos) { paintLane(i, pos); }
+          onStep: function(pos) {
+            paintLane(i, pos);
+          }
         }));
       })(players.length);
     }
     return players.slice(0, n);
   }
-
   function rigNote() {
-    var el = $('rigNote');
-    if (sink() === 'audio') {
-      el.innerHTML = '<b>Browser synth.</b> Fine for following along, but it is a plain saw through ' +
-        'a filter. Switch to MIDI and the examples play through whatever is on the end of your cable.';
+    var el = $("rigNote");
+    if (sink() === "audio") {
+      el.innerHTML = "<b>Browser synth.</b> Fine for following along, but it is a plain saw through " + "a filter. Switch to MIDI and the examples play through whatever is on the end of your cable.";
       return;
     }
     if (!output) {
-      el.innerHTML = '<b>Not connected.</b> Press Connect MIDI. Web MIDI needs Chrome or Edge over ' +
-        'localhost or https. Until then the examples fall back to the browser synth.';
+      el.innerHTML = "<b>Not connected.</b> Press Connect MIDI. Web MIDI needs Chrome or Edge over " + "localhost or https. Until then the examples fall back to the browser synth.";
       return;
     }
-    el.innerHTML = '<b>Playing through ' + output.name + ' on channel ' + channel() + '.</b> ' +
-      'Notes are streamed live rather than recorded, so nothing is written to your patterns and ' +
-      'switching between A and B is instant. Set the KeyStep Pro track\u2019s input channel to match, ' +
-      'and make sure it is <em>not</em> in Record.';
+    el.innerHTML = "<b>Playing through " + output.name + " on channel " + channel() + ".</b> " + "Notes are streamed live rather than recorded, so nothing is written to your patterns and " + "switching between A and B is instant. Set the KeyStep Pro track’s input channel to match, " + "and make sure it is <em>not</em> in Record.";
   }
-
   function populate() {
-    var sel = $('port');
-    sel.innerHTML = '';
+    var sel = $("port");
+    sel.innerHTML = "";
     var found = [];
-    midi.outputs.forEach(function (o) { found.push(o); });
+    midi.outputs.forEach(function(o) {
+      found.push(o);
+    });
     if (!found.length) {
-      sel.innerHTML = '<option>No MIDI outputs</option>';
-      output = null; rigNote(); return;
+      sel.innerHTML = "<option>No MIDI outputs</option>";
+      output = null;
+      rigNote();
+      return;
     }
-    found.forEach(function (o) {
-      var opt = document.createElement('option');
-      opt.value = o.id; opt.textContent = o.name;
+    found.forEach(function(o) {
+      var opt = document.createElement("option");
+      opt.value = o.id;
+      opt.textContent = o.name;
       sel.appendChild(opt);
     });
-    /* The site-wide choice wins over this page's own memory, so a port
-       picked on the home page is already selected when you arrive. */
-    var saved = (window.TSDevices && window.TSDevices.savedOutputId())
-             || (store && store.get('port', null));
+    var saved = window.TSDevices && window.TSDevices.savedOutputId() || store && store.get("port", null);
     var pick = null;
-    found.forEach(function (o) { if (!pick && saved && o.id === saved) pick = o; });
-    found.forEach(function (o) { if (!pick && /keystep/i.test(o.name)) pick = o; });
+    found.forEach(function(o) {
+      if (!pick && saved && o.id === saved) pick = o;
+    });
+    found.forEach(function(o) {
+      if (!pick && /keystep/i.test(o.name)) pick = o;
+    });
     if (!pick) pick = found[0];
     sel.value = pick.id;
     output = pick;
-    if (store) store.set('port', pick.id);
+    if (store) store.set("port", pick.id);
     rigNote();
   }
-
-  $('connect').addEventListener('click', function () {
+  $("connect").addEventListener("click", function() {
     if (!navigator.requestMIDIAccess) {
-      $('rigNote').innerHTML = '<b>No Web MIDI in this browser.</b> Chrome or Edge, over localhost or https.';
+      $("rigNote").innerHTML = "<b>No Web MIDI in this browser.</b> Chrome or Edge, over localhost or https.";
       return;
     }
-    navigator.requestMIDIAccess({ sysex: false }).then(function (a) {
-      midi = a; a.onstatechange = populate; populate();
-    }).catch(function (e) {
-      $('rigNote').innerHTML = '<b>MIDI blocked.</b> ' + (e.message || 'Permission denied.');
+    navigator.requestMIDIAccess({
+      sysex: false
+    }).then(function(a) {
+      midi = a;
+      a.onstatechange = populate;
+      populate();
+    }).catch(function(e) {
+      $("rigNote").innerHTML = "<b>MIDI blocked.</b> " + (e.message || "Permission denied.");
     });
   });
-  $('port').addEventListener('change', function () {
-    output = midi ? midi.outputs.get($('port').value) : null;
-    if (output && store) store.set('port', output.id);
-    /* Changing it here changes it everywhere. */
+  $("port").addEventListener("change", function() {
+    output = midi ? midi.outputs.get($("port").value) : null;
+    if (output && store) store.set("port", output.id);
     if (output && window.TSDevices) window.TSDevices.setOutput(output.id);
     rigNote();
   });
-  $('sink').addEventListener('change', function () { stopAll(); rigNote(); if (store) store.set('sink', sink()); });
-  $('chan').addEventListener('change', rigNote);
-  $('bpm').addEventListener('change', function () {
-    players.forEach(function (p) { p.setTempo(parseFloat($('bpm').value) || 110); });
-    if (store) store.set('bpm', $('bpm').value);
+  $("sink").addEventListener("change", function() {
+    stopAll();
+    rigNote();
+    if (store) store.set("sink", sink());
   });
-  $('test').addEventListener('click', function () { makePlayers(1)[0].ping(62, 100); });
-  $('panic').addEventListener('click', stopAll);
-
+  $("chan").addEventListener("change", rigNote);
+  $("bpm").addEventListener("change", function() {
+    players.forEach(function(p) {
+      p.setTempo(parseFloat($("bpm").value) || 110);
+    });
+    if (store) store.set("bpm", $("bpm").value);
+  });
+  $("test").addEventListener("click", function() {
+    makePlayers(1)[0].ping(62, 100);
+  });
+  $("panic").addEventListener("click", stopAll);
   if (store) {
-    if (store.get('sink', null)) $('sink').value = store.get('sink', 'midi');
-    if (store.get('bpm', null)) $('bpm').value = store.get('bpm', 110);
+    if (store.get("sink", null)) $("sink").value = store.get("sink", "midi");
+    if (store.get("bpm", null)) $("bpm").value = store.get("bpm", 110);
   }
   if (navigator.permissions && navigator.permissions.query) {
-    navigator.permissions.query({ name: 'midi', sysex: false })
-      .then(function (st) { if (st.state === 'granted') $('connect').click(); else rigNote(); })
-      .catch(rigNote);
+    navigator.permissions.query({
+      name: "midi",
+      sysex: false
+    }).then(function(st) {
+      if (st.state === "granted") $("connect").click(); else rigNote();
+    }).catch(rigNote);
   } else rigNote();
-
-  /* ---------- playback ---------- */
-
   function stopAll() {
-    players.forEach(function (p) { p.stop(); });
+    players.forEach(function(p) {
+      p.stop();
+    });
     if (activeEntry) {
       var el = document.querySelector('[data-entry="' + activeEntry + '"]');
-      if (el) Array.prototype.forEach.call(el.querySelectorAll('.side'), function (b) {
-        b.setAttribute('aria-pressed', 'false');
+      if (el) Array.prototype.forEach.call(el.querySelectorAll(".side"), function(b) {
+        b.setAttribute("aria-pressed", "false");
       });
     }
-    activeEntry = null; activeSide = null;
-    document.querySelectorAll('.lane i.now').forEach(function (c) { c.classList.remove('now'); });
+    activeEntry = null;
+    activeSide = null;
+    document.querySelectorAll(".lane i.now").forEach(function(c) {
+      c.classList.remove("now");
+    });
   }
-
   var lanesFor = {};
-
   function paintLane(voiceIndex, pos) {
     var lanes = lanesFor[activeEntry];
     if (!lanes || !lanes[voiceIndex]) return;
     var cells = lanes[voiceIndex].children;
-    for (var i = 0; i < cells.length; i++) cells[i].classList.toggle('now', i === pos);
+    for (var i = 0; i < cells.length; i++) cells[i].classList.toggle("now", i === pos);
   }
-
   function playSide(entry, side, el) {
     var built = entry[side].build();
-    var patterns = Array.isArray(built) ? built : [built];
+    var patterns = Array.isArray(built) ? built : [ built ];
     var ps = makePlayers(patterns.length);
-    var bpm = parseFloat($('bpm').value) || 110;
-
-    /* Switching sides mid-comparison keeps the transport running so the pulse
-       never breaks — that continuity is what makes the difference audible
-       rather than just noticeable. */
+    var bpm = parseFloat($("bpm").value) || 110;
     var continuing = activeEntry === entry.id && ps[0].isPlaying();
-
-    patterns.forEach(function (p, i) {
+    patterns.forEach(function(p, i) {
       ps[i].setTempo(bpm);
-      if (continuing) ps[i].swap(p, false);
-      else ps[i].play(p, { bpm: bpm, division: 4 });
+      if (continuing) ps[i].swap(p, false); else ps[i].play(p, {
+        bpm: bpm,
+        division: 4
+      });
     });
     for (var k = patterns.length; k < players.length; k++) players[k].stop();
-
-    activeEntry = entry.id; activeSide = side;
+    activeEntry = entry.id;
+    activeSide = side;
     drawLanes(entry, patterns, el);
-
-    Array.prototype.forEach.call(el.querySelectorAll('.side'), function (b) {
-      b.setAttribute('aria-pressed', b.getAttribute('data-side') === side ? 'true' : 'false');
+    Array.prototype.forEach.call(el.querySelectorAll(".side"), function(b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-side") === side ? "true" : "false");
     });
-    document.querySelectorAll('[data-entry] .side').forEach(function (b) {
-      if (!el.contains(b)) b.setAttribute('aria-pressed', 'false');
+    document.querySelectorAll("[data-entry] .side").forEach(function(b) {
+      if (!el.contains(b)) b.setAttribute("aria-pressed", "false");
     });
   }
-
   function drawLanes(entry, patterns, el) {
-    var host = el.querySelector('.lanes');
-    host.innerHTML = '';
+    var host = el.querySelector(".lanes");
+    host.innerHTML = "";
     var lanes = [];
-    patterns.forEach(function (p) {
-      var lane = document.createElement('div');
-      lane.className = 'lane';
-      p.steps.forEach(function (s, i) {
-        var c = document.createElement('i');
-        if (!s.rest) c.className = s.accent ? 'on acc' : 'on';
-        c.title = 'step ' + (i + 1) + (s.rest ? '' : ' — ' + G.noteName(s.notes[0]));
+    patterns.forEach(function(p) {
+      var lane = document.createElement("div");
+      lane.className = "lane";
+      p.steps.forEach(function(s, i) {
+        var c = document.createElement("i");
+        if (!s.rest) c.className = s.accent ? "on acc" : "on";
+        c.title = "step " + (i + 1) + (s.rest ? "" : " — " + G.noteName(s.notes[0]));
         lane.appendChild(c);
       });
       host.appendChild(lane);
@@ -398,76 +585,72 @@
     });
     lanesFor[entry.id] = lanes;
   }
-
-  /* ---------- render ---------- */
-
-  var school = $('school'), toc = $('toc');
-
-  Gd.GROUPS.forEach(function (grp) {
-    var link = document.createElement('a');
-    link.href = '#' + grp.id; link.textContent = grp.name;
+  var school = $("school"), toc = $("toc");
+  Gd.GROUPS.forEach(function(grp) {
+    var link = document.createElement("a");
+    link.href = "#" + grp.id;
+    link.textContent = grp.name;
     toc.appendChild(link);
-
-    var h = document.createElement('h2');
-    h.className = 'grp'; h.id = grp.id; h.textContent = grp.name;
+    var h = document.createElement("h2");
+    h.className = "grp";
+    h.id = grp.id;
+    h.textContent = grp.name;
     school.appendChild(h);
-    var gb = document.createElement('p');
-    gb.className = 'grpblurb'; gb.textContent = grp.blurb;
+    var gb = document.createElement("p");
+    gb.className = "grpblurb";
+    gb.textContent = grp.blurb;
     school.appendChild(gb);
-
-    Gd.ENTRIES.filter(function (e) { return e.group === grp.id; }).forEach(function (entry) {
-      var box = document.createElement('div');
-      box.className = 'entry';
-      box.setAttribute('data-entry', entry.id);
-
-      var t = document.createElement('h3');
+    Gd.ENTRIES.filter(function(e) {
+      return e.group === grp.id;
+    }).forEach(function(entry) {
+      var box = document.createElement("div");
+      box.className = "entry";
+      box.setAttribute("data-entry", entry.id);
+      var t = document.createElement("h3");
       t.textContent = entry.title;
       box.appendChild(t);
-
-      var body = document.createElement('p');
-      body.className = 'body'; body.textContent = entry.blurb;
+      var body = document.createElement("p");
+      body.className = "body";
+      body.textContent = entry.blurb;
       box.appendChild(body);
-
-      var lf = document.createElement('div');
-      lf.className = 'listen';
-      lf.innerHTML = '<b>Listen for</b>' + entry.listenFor;
+      var lf = document.createElement("div");
+      lf.className = "listen";
+      lf.innerHTML = "<b>Listen for</b>" + entry.listenFor;
       box.appendChild(lf);
-
-      var ab = document.createElement('div');
-      ab.className = 'ab';
-      ['a', 'b'].forEach(function (side) {
-        var b = document.createElement('button');
-        b.className = 'side';
-        b.setAttribute('data-side', side);
-        b.setAttribute('aria-pressed', 'false');
-        b.innerHTML = '<span>' + side.toUpperCase() + '</span>' + entry[side].label;
-        b.addEventListener('click', function () { playSide(entry, side, box); });
+      var ab = document.createElement("div");
+      ab.className = "ab";
+      [ "a", "b" ].forEach(function(side) {
+        var b = document.createElement("button");
+        b.className = "side";
+        b.setAttribute("data-side", side);
+        b.setAttribute("aria-pressed", "false");
+        b.innerHTML = "<span>" + side.toUpperCase() + "</span>" + entry[side].label;
+        b.addEventListener("click", function() {
+          playSide(entry, side, box);
+        });
         ab.appendChild(b);
       });
-      var stopBtn = document.createElement('button');
-      stopBtn.className = 'tsl stop'; stopBtn.textContent = 'Stop';
-      stopBtn.addEventListener('click', stopAll);
+      var stopBtn = document.createElement("button");
+      stopBtn.className = "tsl stop";
+      stopBtn.textContent = "Stop";
+      stopBtn.addEventListener("click", stopAll);
       ab.appendChild(stopBtn);
       box.appendChild(ab);
-
-      var lanes = document.createElement('div');
-      lanes.className = 'lanes';
+      var lanes = document.createElement("div");
+      lanes.className = "lanes";
       box.appendChild(lanes);
-
-      var refs = document.createElement('div');
-      refs.className = 'refs';
-      refs.innerHTML = '<b>Where to hear it</b><ul>' + entry.heardOn.map(function (r) {
-        var who = r.artist ? '<em>' + r.artist + '</em>' : '';
-        var what = r.work ? (who ? ' — ' + r.work : '<em>' + r.work + '</em>') : '';
-        return '<li>' + who + what + (r.note ? '. ' + r.note : '') + '</li>';
-      }).join('') + '</ul>';
+      var refs = document.createElement("div");
+      refs.className = "refs";
+      refs.innerHTML = "<b>Where to hear it</b><ul>" + entry.heardOn.map(function(r) {
+        var who = r.artist ? "<em>" + r.artist + "</em>" : "";
+        var what = r.work ? who ? " — " + r.work : "<em>" + r.work + "</em>" : "";
+        return "<li>" + who + what + (r.note ? ". " + r.note : "") + "</li>";
+      }).join("") + "</ul>";
       box.appendChild(refs);
-
       school.appendChild(box);
     });
   });
-
-  window.addEventListener('beforeunload', stopAll);
+  window.addEventListener("beforeunload", stopAll);
 })();
 </script>
 <script src="../shared/app-switcher.js" defer></script>

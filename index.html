@@ -22,412 +22,939 @@
 
 
 <style>
-:root{
-  --void:      #05060A;   /* artboard */
-  --canvas:    #0B0D12;   /* desk */
-  --panel:     #0F1118;
-  --bar:       #05060A;
-  --line:      #1A1D24;
+:root {
+  --void: #05060A;
+  --canvas: #0B0D12;
+  --panel: #0F1118;
+  --bar: #05060A;
+  --line: #1A1D24;
   --line-soft: #12141B;
-  --ink:       #E7F4FF;
-  --muted:     #8AA0B8;
-  --dim:       #5E6A7A;
-  --gold:      #00C8FF;   /* now cyan */
-  --gold-dim:  rgba(0,200,255,0.16);
-  --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --ink: #E7F4FF;
+  --muted: #8AA0B8;
+  --dim: #5E6A7A;
+  --gold: #00C8FF;
+  --gold-dim: rgba(0,200,255,0.16);
+  --sans: 'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;
+  --mono: 'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
   --rail: 232px;
   --insp: 230px;
-  --bar-h: 44px;
+  --bar-h: 44px
 }
-
-  *{ box-sizing:border-box; }
-  html,body{ height:100%; }
-  body{
-    margin:0; background:var(--bar); color:var(--ink);
-    font-family:var(--sans); overflow:hidden;
-    -webkit-font-smoothing:antialiased;
-  }
-  a{ color:inherit; text-decoration:none; }
-
-  /* ---------------- top bar ---------------- */
-  .bar{
-    height:var(--bar-h); display:flex; align-items:center; gap:2px;
-    padding:0 14px; background:var(--bar); position:relative; z-index:40;
-  }
-  .mark{ width:26px; height:26px; display:grid; place-items:center; margin-right:8px; }
-  .tool{
-    width:30px; height:30px; display:grid; place-items:center;
-    border-radius:7px; color:var(--muted); cursor:pointer; border:0; background:none;
-  }
-  .tool:hover{ color:var(--ink); background:rgba(255,255,255,0.05); }
-  .tool[aria-pressed="true"]{ color:var(--gold); background:var(--gold-dim); }
-  .sep{ width:1px; height:18px; background:var(--line); margin:0 12px; }
-  .crumb{ font-size:13px; color:var(--muted); letter-spacing:-0.01em; }
-  .crumb b{ color:var(--ink); font-weight:500; }
-  .bar-right{ margin-left:auto; display:flex; align-items:center; gap:10px; }
-  .avatar{
-    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--gold);
-    display:grid; place-items:center; font-family:var(--mono); font-size:10px; color:var(--gold);
-  }
-  .share{
-    font-size:12px; color:var(--ink); background:rgba(255,255,255,0.06);
-    border:1px solid var(--line); border-radius:8px; padding:6px 14px; cursor:pointer;
-  }
-  .share:hover{ border-color:var(--gold); color:var(--gold); }
-
-  /* ---------------- stage ---------------- */
-  .stage{ position:absolute; inset:var(--bar-h) 0 0; }
-
-.canvas-wrap{
-    position:absolute; inset:0; overflow:hidden; cursor:grab;
-    background:
-      linear-gradient(
-        to top,
-        rgba(0,200,255,0.18) 0%,
-        rgba(0,200,255,0.12) 20%,
-        rgba(0,200,255,0.06) 45%,
-        transparent 80%
-      ),
-      var(--canvas);
+* {
+  box-sizing: border-box
 }
-
-  .canvas-wrap.dragging{ cursor:grabbing; }
-.dots{
-  position:absolute;
-  inset:-3000px;
-
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      rgba(0,200,255,0.05) 2px,
-      transparent 2px 48px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(0,200,255,0.03) 2px,
-      transparent 2px 48px
-    ),
-    radial-gradient(
-      rgba(0,200,255,0.04) 1px,
-      transparent 1px
-    );
+body,
+html {
+  height: 100%
+}
+body {
+  margin: 0;
+  background: var(--bar);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased
+}
+a {
+  color: inherit;
+  text-decoration: none
+}
+.bar {
+  height: var(--bar-h);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 14px;
+  background: var(--bar);
+  position: relative;
+  z-index: 40
+}
+.mark {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  margin-right: 8px
+}
+.tool {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  border: 0;
+  background: 0 0
+}
+.tool:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,.05)
+}
+.tool[aria-pressed=true] {
+  color: var(--gold);
+  background: var(--gold-dim)
+}
+.sep {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 12px
+}
+.crumb {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: -.01em
+}
+.crumb b {
+  color: var(--ink);
+  font-weight: 500
+}
+.bar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px
+}
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--gold)
+}
+.share {
+  font-size: 12px;
+  color: var(--ink);
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer
+}
+.share:hover {
+  border-color: var(--gold);
+  color: var(--gold)
+}
+.stage {
+  position: absolute;
+  inset: var(--bar-h) 0 0
+}
+.canvas-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  background: linear-gradient(to top,rgba(0,200,255,.18) 0,rgba(0,200,255,.12) 20%,rgba(0,200,255,.06) 45%,transparent 80%),var(--canvas)
+}
+.canvas-wrap.dragging {
+  cursor: grabbing
+}
+.dots {
+  position: absolute;
+  inset: -3000px;
+  background-image: repeating-linear-gradient(to right,rgba(0,200,255,.05) 2px,transparent 2px 48px),repeating-linear-gradient(to bottom,rgba(0,200,255,.03) 2px,transparent 2px 48px),radial-gradient(rgba(0,200,255,.04) 1px,transparent 1px);
   background-size: 48px 48px;
-  pointer-events:none;
+  pointer-events: none
 }
-
-
-
-
-
-
-  .canvas{ position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
-
-  /* ---------------- frames ---------------- */
-  .frame{ position:absolute; }
-  .frame-label{
-    position:absolute; top:-24px; left:0; font-family:var(--mono);
-    font-size:11px; color:var(--muted); letter-spacing:0.02em; white-space:nowrap;
-  }
-  .frame-dims{
-    position:absolute; top:-24px; right:0; font-family:var(--mono);
-    font-size:11px; color:var(--dim); white-space:nowrap;
-  }
-  .board{
-    position:relative; width:100%; height:100%; background:var(--void);
-    border:1px solid var(--line-soft); overflow:hidden; display:block;
-  }
-  .frame.sel .frame-label{ color:var(--gold); }
-  .frame.sel .board{ border-color:var(--gold); }
-  .frame.sel .handle{ opacity:1; }
-  .handle{
-    position:absolute; width:7px; height:7px; background:var(--void);
-    border:1.5px solid var(--gold); opacity:0; pointer-events:none; z-index:3;
-  }
-  .handle.tl{ left:-4px; top:-4px; } .handle.tr{ right:-4px; top:-4px; }
-  .handle.bl{ left:-4px; bottom:-4px; } .handle.br{ right:-4px; bottom:-4px; }
-  .size-badge{
-    position:absolute; left:50%; bottom:-30px; transform:translateX(-50%);
-    background:var(--gold); color:#1A1200; font-family:var(--mono); font-size:11px;
-    padding:3px 10px; border-radius:5px; opacity:0; white-space:nowrap; pointer-events:none;
-  }
-  .frame.sel .size-badge{ opacity:1; }
-
-  /* ---------------- hero board ---------------- */
-  .hero-inner{ padding:64px 72px; height:100%; display:flex; flex-direction:column; position:relative; }
-.hero-inner::before{
-  content:''; position:absolute; inset:0;
-  background:radial-gradient(620px 420px at 26% 22%, rgba(0,200,255,0.18), transparent 68%);
-  pointer-events:none;
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform
 }
-.scope-dot{
-  background:var(--gold);
+.frame {
+  position: absolute
 }
-.thumb .lit,
-.thumb .fill-lit,
-.frame.sel .frame-label,
-.frame.sel .board,
-.frame.sel .handle,
+.frame-label {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .02em;
+  white-space: nowrap
+}
+.frame-dims {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap
+}
+.board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--void);
+  border: 1px solid var(--line-soft);
+  overflow: hidden;
+  display: block
+}
+.frame.sel .frame-label {
+  color: var(--gold)
+}
+.frame.sel .board {
+  border-color: var(--gold)
+}
+.frame.sel .handle {
+  opacity: 1
+}
+.handle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: var(--void);
+  border: 1.5px solid var(--gold);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3
+}
+.handle.tl {
+  left: -4px;
+  top: -4px
+}
+.handle.tr {
+  right: -4px;
+  top: -4px
+}
+.handle.bl {
+  left: -4px;
+  bottom: -4px
+}
+.handle.br {
+  right: -4px;
+  bottom: -4px
+}
+.size-badge {
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  background: var(--gold);
+  color: #1a1200;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none
+}
+.frame.sel .size-badge {
+  opacity: 1
+}
+.hero-inner {
+  padding: 64px 72px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative
+}
+.hero-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(620px 420px at 26% 22%,rgba(0,200,255,.18),transparent 68%);
+  pointer-events: none
+}
+.scope-dot {
+  background: var(--gold)
+}
 .badge-ext,
 .board-foot .scroll em,
+.eyebrow,
+.frame.sel .board,
+.frame.sel .frame-label,
+.frame.sel .handle,
 .layer.on,
 .layer.on .hash,
-
-
-  .eyebrow{
-    font-family:var(--mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase;
-    color:var(--muted); display:flex; align-items:center; gap:9px; margin-bottom:auto; position:relative;
+.thumb .fill-lit,
+.thumb .lit {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: auto;
+  position: relative
+}
+.eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold)
+}
+h1 {
+  font-size: 76px;
+  line-height: .98;
+  letter-spacing: -.03em;
+  font-weight: 500;
+  margin: 0 0 26px;
+  max-width: 19ch;
+  position: relative
+}
+h1 .grey {
+  color: var(--muted)
+}
+.subline {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 46ch;
+  margin: 0 0 34px;
+  position: relative
+}
+.cta-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  position: relative
+}
+.cta {
+  background: var(--gold);
+  color: #1a1200;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 22px;
+  border-radius: 8px;
+  white-space: nowrap
+}
+.cta:hover {
+  filter: brightness(1.08)
+}
+.cta-ghost {
+  font-size: 13px;
+  color: var(--gold);
+  border-bottom: 1px solid rgba(255,177,0,.4);
+  padding-bottom: 2px
+}
+.cta-ghost:hover {
+  border-bottom-color: var(--gold)
+}
+.board-foot {
+  margin-top: auto;
+  padding-top: 44px;
+  display: flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  position: relative
+}
+.board-foot .scroll {
+  margin-left: auto
+}
+.board-foot .scroll em {
+  font-style: normal;
+  color: var(--gold)
+}
+.scope {
+  position: relative;
+  margin: 38px 0 0;
+  height: 200px
+}
+.scope svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible
+}
+.scope-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--gold);
+  pointer-events: none
+}
+.thumb {
+  position: relative;
+  height: 78px;
+  margin: -4px 0 16px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--line-soft)
+}
+.thumb svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible
+}
+.frame.big .thumb {
+  height: 118px;
+  margin-bottom: 20px
+}
+.thumb .ln {
+  stroke: var(--dim);
+  fill: none;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke
+}
+.thumb .lit {
+  stroke: var(--gold);
+  fill: none;
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke
+}
+.thumb .fill {
+  fill: var(--dim)
+}
+.thumb .fill-lit {
+  fill: var(--gold)
+}
+.frame:hover .thumb .ln {
+  stroke: var(--muted)
+}
+.app-board {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%
+}
+.app-board .jack {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.4px solid var(--dim);
+  position: relative;
+  margin-bottom: 16px;
+  flex: 0 0 auto
+}
+.app-board .jack::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: .5;
+  transition: opacity .2s
+}
+.frame:hover .jack {
+  border-color: var(--gold)
+}
+.frame:hover .jack::after {
+  opacity: 1
+}
+.app-board h3 {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -.015em;
+  margin: 0 0 5px
+}
+.app-board .kick {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 11px
+}
+.app-board p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0
+}
+.app-board .open {
+  margin-top: auto;
+  padding-top: 16px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--dim);
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  gap: 6px
+}
+.frame:hover .open {
+  color: var(--gold)
+}
+.frame.big .app-board h3 {
+  font-size: 22px
+}
+.frame.big .app-board p {
+  font-size: 14px
+}
+.badge-ext {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(255,177,0,.45);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 9px;
+  vertical-align: 2px
+}
+.about-board {
+  padding: 26px 28px;
+  height: 100%;
+  overflow: hidden
+}
+.about-board h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 12px
+}
+.about-board p {
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--muted);
+  margin: 0 0 11px
+}
+.about-board .links {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--dim)
+}
+.about-board .links a:hover {
+  color: var(--gold)
+}
+.measure {
+  position: absolute;
+  pointer-events: none
+}
+.measure .rule {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gold);
+  opacity: .5
+}
+.measure .val {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  background: var(--canvas);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 1px 6px
+}
+.note {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  pointer-events: none
+}
+.note .who {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bar);
+  border: 1.5px solid var(--gold);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--gold);
+  flex: 0 0 auto
+}
+.note .bub {
+  background: var(--bar);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap
+}
+.ghost-cursor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5
+}
+.ghost-cursor .tag {
+  position: absolute;
+  left: 14px;
+  top: 16px;
+  background: var(--gold);
+  color: #1a1200;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 5px;
+  white-space: nowrap
+}
+.panel {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: var(--rail);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  overflow: hidden
+}
+.panel.left {
+  left: 10px
+}
+.panel.right {
+  right: 10px;
+  width: var(--insp)
+}
+.panel-head {
+  display: flex;
+  gap: 18px;
+  padding: 16px 18px 0;
+  flex: 0 0 auto
+}
+.panel-head button {
+  background: 0 0;
+  border: 0;
+  padding: 0 0 9px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1.5px solid transparent
+}
+.panel-head button[aria-pressed=true] {
+  color: var(--ink);
+  border-bottom-color: var(--gold)
+}
+.panel-body {
+  overflow-y: auto;
+  padding: 14px 10px 18px;
+  flex: 1
+}
+.panel-body::-webkit-scrollbar {
+  width: 8px
+}
+.panel-body::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px
+}
+.tree-title {
+  font-size: 12px;
+  color: var(--dim);
+  padding: 4px 8px 10px;
+  letter-spacing: -.01em
+}
+.layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: 0 0;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-radius: 7px;
+  letter-spacing: -.01em
+}
+.layer:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,.04)
+}
+.layer.group {
+  color: var(--ink)
+}
+.layer .hash {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim)
+}
+.layer.child {
+  padding-left: 26px
+}
+.layer.on {
+  background: var(--gold-dim);
+  color: var(--gold)
+}
+.layer.on .hash {
+  color: var(--gold)
+}
+.insp-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 8px 8px
+}
+.field {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--ink);
+  display: flex;
+  gap: 7px
+}
+.field span {
+  color: var(--dim)
+}
+.insp-label {
+  font-size: 12px;
+  color: var(--dim);
+  padding: 14px 8px 8px
+}
+.swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 5px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink)
+}
+.swatch {
+  width: 17px;
+  height: 1px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,.13);
+  flex: 0 0 auto
+}
+.swatch-row .pct {
+  margin-left: auto;
+  color: var(--dim)
+}
+.kv {
+  display: flex;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  color: var(--ink)
+}
+.kv .k {
+  color: var(--ink)
+}
+.kv .v {
+  margin-left: auto;
+  color: var(--dim)
+}
+.kv.soft .k {
+  color: var(--muted)
+}
+.dev {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 6px
+}
+.dev label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  width: 22px;
+  flex: none
+}
+.dev select {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--ink);
+  background: var(--bar);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 7px;
+  outline: 0
+}
+.dev select:focus {
+  border-color: var(--gold)
+}
+.insp-label .mini {
+  float: right;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  color: var(--gold);
+  background: 0 0;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 2px 9px;
+  cursor: pointer;
+  text-transform: uppercase
+}
+.insp-label .mini:hover {
+  background: var(--gold-dim)
+}
+.insp-label .mini[hidden] {
+  display: none
+}
+.devnote {
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.55;
+  color: var(--dim);
+  padding: 8px 8px 0
+}
+.corner {
+  position: absolute;
+  right: calc(var(--insp) + 26px);
+  bottom: 20px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 14px
+}
+.domain {
+  font-size: 12px;
+  color: var(--dim);
+  background: rgba(15,15,17,.82);
+  border-radius: 6px;
+  padding: 5px 10px;
+  backdrop-filter: blur(6px)
+}
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px
+}
+.zoom button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: 0 0;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1
+}
+.zoom button:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,.05)
+}
+.zoom .pct {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  min-width: 42px;
+  text-align: center
+}
+.hint {
+  position: absolute;
+  left: calc(var(--rail) + 26px);
+  bottom: 20px;
+  z-index: 30;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--dim);
+  letter-spacing: .04em;
+  background: rgba(15,15,17,.82);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 12px;
+  backdrop-filter: blur(6px)
+}
+.hint b {
+  color: var(--muted);
+  font-weight: 400
+}
+@media (max-width:720px) {
+  .crumb,
+  .sep,
+  .tool {
+    display: none
   }
-  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); }
-  h1{
-    font-size:76px; line-height:0.98; letter-spacing:-0.03em; font-weight:500;
-    margin:0 0 26px; max-width:19ch; position:relative;
+  .bar {
+    padding: 0 12px
   }
-  h1 .grey{ color:var(--muted); }
-  .subline{
-    font-size:15px; line-height:1.6; color:var(--muted); max-width:46ch;
-    margin:0 0 34px; position:relative;
+  .bar-right {
+    margin-left: auto
   }
-  .cta-row{ display:flex; align-items:center; gap:22px; position:relative; }
-  .cta{
-    background:var(--gold); color:#1A1200; font-size:14px; font-weight:500;
-    padding:12px 22px; border-radius:8px; white-space:nowrap;
+}
+@media (max-width:1000px) {
+  body {
+    overflow: auto
   }
-  .cta:hover{ filter:brightness(1.08); }
-  .cta-ghost{ font-size:13px; color:var(--gold); border-bottom:1px solid rgba(255,177,0,0.4); padding-bottom:2px; }
-  .cta-ghost:hover{ border-bottom-color:var(--gold); }
-  .board-foot{
-    margin-top:auto; padding-top:44px; display:flex; align-items:center;
-    font-family:var(--mono); font-size:10px; letter-spacing:0.16em;
-    text-transform:uppercase; color:var(--dim); position:relative;
+  .corner,
+  .frame-dims,
+  .frame-label,
+  .ghost-cursor,
+  .handle,
+  .hint,
+  .measure,
+  .note,
+  .panel,
+  .size-badge {
+    display: none!important
   }
-  .board-foot .scroll{ margin-left:auto; }
-  .board-foot .scroll em{ font-style:normal; color:var(--gold); }
-  .scope{ position:relative; margin:38px 0 0; height:200px; }
-  .scope svg{ width:100%; height:100%; overflow:visible; }
-  /* The trace is allowed to stretch to the width of the board; the dots are
-     not, or they turn into little gold bars on a narrow screen. */
-  .scope-dot{
-    position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px;
-    border-radius:50%; background:var(--gold); pointer-events:none;
+  .stage {
+    position: static
   }
-
-  /* card artwork */
-  .thumb{
-    position:relative; height:78px; margin:-4px 0 16px; flex:0 0 auto;
-    border-bottom:1px solid var(--line-soft);
+  .canvas-wrap {
+    position: static;
+    overflow: visible;
+    cursor: auto;
+    background: var(--canvas)
   }
-  .thumb svg{ width:100%; height:100%; display:block; overflow:visible; }
-  .frame.big .thumb{ height:118px; margin-bottom:20px; }
-  .thumb .ln{ stroke:var(--dim); fill:none; stroke-width:1.4; vector-effect:non-scaling-stroke; }
-  .thumb .lit{ stroke:var(--gold); fill:none; stroke-width:1.6; vector-effect:non-scaling-stroke; }
-  .thumb .fill{ fill:var(--dim); }
-  .thumb .fill-lit{ fill:var(--gold); }
-  .frame:hover .thumb .ln{ stroke:var(--muted); }
-
-  /* ---------------- app frames ---------------- */
-  .app-board{ padding:22px 24px; display:flex; flex-direction:column; height:100%; }
-  .app-board .jack{
-    width:16px; height:16px; border-radius:50%; border:1.4px solid var(--dim);
-    position:relative; margin-bottom:16px; flex:0 0 auto;
+  .dots {
+    display: none
   }
-  .app-board .jack::after{
-    content:''; position:absolute; inset:4px; border-radius:50%;
-    background:var(--gold); opacity:0.5; transition:opacity .2s;
+  .canvas {
+    position: static;
+    transform: none!important;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px
   }
-  .frame:hover .jack{ border-color:var(--gold); }
-  .frame:hover .jack::after{ opacity:1; }
-  .app-board h3{ font-size:17px; font-weight:500; letter-spacing:-0.015em; margin:0 0 5px; }
-  .app-board .kick{
-    font-family:var(--mono); font-size:10px; letter-spacing:0.07em; text-transform:uppercase;
-    color:var(--gold); margin-bottom:11px;
+  .frame {
+    position: static!important;
+    width: auto!important;
+    height: auto!important
   }
-  .app-board p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
-  .app-board .open{
-    margin-top:auto; padding-top:16px; font-family:var(--mono); font-size:10.5px;
-    color:var(--dim); letter-spacing:0.06em; display:flex; align-items:center; gap:6px;
+  .board {
+    border-radius: 12px;
+    border-color: var(--line)
   }
-  .frame:hover .open{ color:var(--gold); }
-  .frame.big .app-board h3{ font-size:22px; }
-  .frame.big .app-board p{ font-size:14px; }
-  .badge-ext{
-    font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase;
-    color:var(--gold); border:1px solid rgba(255,177,0,0.45); border-radius:999px;
-    padding:2px 8px; margin-left:9px; vertical-align:2px;
+  .hero-inner {
+    padding: 32px 24px
   }
-
-  /* about frame */
-  .about-board{ padding:26px 28px; height:100%; overflow:hidden; }
-  .about-board h3{ font-size:18px; font-weight:500; margin:0 0 12px; }
-  .about-board p{ font-size:13px; line-height:1.62; color:var(--muted); margin:0 0 11px; }
-  .about-board .links{ display:flex; gap:16px; margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--dim); }
-  .about-board .links a:hover{ color:var(--gold); }
-
-  /* ---------------- measurement + annotation ---------------- */
-  .measure{ position:absolute; pointer-events:none; }
-  .measure .rule{ position:absolute; top:50%; left:0; right:0; height:1px; background:var(--gold); opacity:0.5; }
-  .measure .val{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    background:var(--canvas); color:var(--gold); font-family:var(--mono); font-size:11px; padding:1px 6px;
+  h1 {
+    font-size: 34px;
+    margin-bottom: 18px
   }
-  .note{
-    position:absolute; display:flex; align-items:center; gap:9px; pointer-events:none;
+  .subline {
+    font-size: 14px
   }
-  .note .who{
-    width:26px; height:26px; border-radius:50%; background:var(--bar);
-    border:1.5px solid var(--gold); display:grid; place-items:center;
-    font-family:var(--mono); font-size:9px; color:var(--gold); flex:0 0 auto;
+  .board-foot {
+    display: none
   }
-  .note .bub{
-    background:var(--bar); border:1px solid var(--line); border-radius:999px;
-    padding:8px 15px; font-size:12.5px; color:var(--ink); white-space:nowrap;
+  .app-board {
+    padding: 20px
   }
-  .ghost-cursor{ position:absolute; pointer-events:none; z-index:5; }
-  .ghost-cursor .tag{
-    position:absolute; left:14px; top:16px; background:var(--gold); color:#1A1200;
-    font-size:11px; font-weight:500; padding:2px 8px; border-radius:5px; white-space:nowrap;
+  .app-board .open {
+    padding-top: 14px
   }
-
-  /* ---------------- side panels ---------------- */
-  .panel{
-    position:absolute; top:10px; bottom:10px; width:var(--rail);
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    display:flex; flex-direction:column; z-index:30; overflow:hidden;
-  }
-  .panel.left{ left:10px; }
-  .panel.right{ right:10px; width:var(--insp); }
-  .panel-head{ display:flex; gap:18px; padding:16px 18px 0; flex:0 0 auto; }
-  .panel-head button{
-    background:none; border:0; padding:0 0 9px; cursor:pointer;
-    font-family:var(--sans); font-size:13px; color:var(--muted); border-bottom:1.5px solid transparent;
-  }
-  .panel-head button[aria-pressed="true"]{ color:var(--ink); border-bottom-color:var(--gold); }
-  .panel-body{ overflow-y:auto; padding:14px 10px 18px; flex:1; }
-  .panel-body::-webkit-scrollbar{ width:8px; }
-  .panel-body::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
-
-  .tree-title{
-    font-size:12px; color:var(--dim); padding:4px 8px 10px; letter-spacing:-0.01em;
-  }
-  .layer{
-    display:flex; align-items:center; gap:8px; width:100%; text-align:left;
-    background:none; border:0; cursor:pointer; font-family:var(--sans);
-    font-size:13px; color:var(--muted); padding:6px 8px; border-radius:7px;
-    letter-spacing:-0.01em;
-  }
-  .layer:hover{ color:var(--ink); background:rgba(255,255,255,0.04); }
-  .layer.group{ color:var(--ink); }
-  .layer .hash{ font-family:var(--mono); font-size:11px; color:var(--dim); }
-  .layer.child{ padding-left:26px; }
-  .layer.on{ background:var(--gold-dim); color:var(--gold); }
-  .layer.on .hash{ color:var(--gold); }
-
-  .insp-row{ display:flex; gap:8px; padding:0 8px 8px; }
-  .field{
-    flex:1; border:1px solid var(--line); border-radius:8px; padding:8px 10px;
-    font-family:var(--sans); font-size:12.5px; color:var(--ink); display:flex; gap:7px;
-  }
-
-  .field span{ color:var(--dim); }
-  .insp-label{
-    font-size:12px; color:var(--dim); padding:14px 8px 8px;
-  }
-  .swatch-row{
-    display:flex; align-items:center; gap:11px; padding:5px 8px;
-    font-family:var(--mono); font-size:10px; color:var(--ink);
-  }
-  .swatch{ width:17px; height:1px; border-radius:5px; border:1px solid rgba(255,255,255,0.13); flex:0 0 auto; }
-  .swatch-row .pct{ margin-left:auto; color:var(--dim); }
-  .kv{
-    display:flex; padding:5px 8px; font-size:12.5px; color:var(--ink);
-  }
-  .kv .k{ color:var(--ink); }
-  .kv .v{ margin-left:auto; color:var(--dim); }
-  .kv.soft .k{ color:var(--muted); }
-  .dev{ display:flex; align-items:center; gap:8px; padding:4px 8px 6px; }
-  .dev label{
-    font-family:var(--mono); font-size:10px; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--dim); width:22px; flex:none;
-  }
-  .dev select{
-    flex:1; min-width:0; font-family:var(--sans); font-size:11.5px; color:var(--ink);
-    background:var(--bar); border:1px solid var(--line); border-radius:7px;
-    padding:6px 7px; outline:none;
-  }
-  .dev select:focus{ border-color:var(--gold); }
-  .insp-label .mini{
-    float:right; font-family:var(--mono); font-size:9.5px; letter-spacing:.06em;
-    color:var(--gold); background:none; border:1px solid var(--gold);
-    border-radius:999px; padding:2px 9px; cursor:pointer; text-transform:uppercase;
-  }
-  .insp-label .mini:hover{ background:var(--gold-dim); }
-  .insp-label .mini[hidden]{ display:none; }
-  .devnote{
-    font-family:var(--mono); font-size:10px; line-height:1.55; color:var(--dim);
-    padding:8px 8px 0;
-  }
-
-  /* ---------------- bottom right ---------------- */
-  .corner{
-    position:absolute; right:calc(var(--insp) + 26px); bottom:20px; z-index:30;
-    display:flex; align-items:center; gap:14px;
-  }
-  .domain{
-    font-size:12px; color:var(--dim);
-    background:rgba(15,15,17,0.82); border-radius:6px; padding:5px 10px;
-    backdrop-filter:blur(6px);
-  }
-  .zoom{
-    display:flex; align-items:center; gap:2px; background:var(--panel);
-    border:1px solid var(--line); border-radius:9px; padding:3px;
-  }
-  .zoom button{
-    width:24px; height:24px; border:0; background:none; color:var(--muted);
-    cursor:pointer; border-radius:6px; font-size:14px; line-height:1;
-  }
-  .zoom button:hover{ color:var(--ink); background:rgba(255,255,255,0.05); }
-  .zoom .pct{ font-family:var(--mono); font-size:11.5px; color:var(--ink); min-width:42px; text-align:center; }
-
-  .hint{
-    position:absolute; left:calc(var(--rail) + 26px); bottom:20px; z-index:30;
-    font-family:var(--mono); font-size:10.5px; color:var(--dim); letter-spacing:0.04em;
-    background:rgba(15,15,17,0.82); border:1px solid var(--line);
-    border-radius:8px; padding:7px 12px; backdrop-filter:blur(6px);
-  }
-  .hint b{ color:var(--muted); font-weight:400; }
-
-  /* ---------------- narrow screens ----------------
-     The canvas conceit needs a mouse and room. Below this it becomes an
-     ordinary scrolling list, because a homepage that cannot be used on a
-     phone is a poster, not a homepage. */
-  /* The toolbar is the one piece of chrome that survives, so it has to fit.
-     Tools and breadcrumb go; the mark, avatar and Share stay. */
-  @media (max-width: 720px){
-    .tool, .sep, .crumb{ display:none; }
-    .bar{ padding:0 12px; }
-    .bar-right{ margin-left:auto; }
-  }
-
-  @media (max-width: 1000px){
-    body{ overflow:auto; }
-    .panel, .corner, .hint, .measure, .note, .ghost-cursor,
-    .frame-label, .frame-dims, .size-badge, .handle{ display:none !important; }
-    .stage{ position:static; }
-    .canvas-wrap{ position:static; overflow:visible; cursor:auto; background:var(--canvas); }
-    .dots{ display:none; }
-    .canvas{
-      position:static; transform:none !important;
-      display:flex; flex-direction:column; gap:16px; padding:18px;
-    }
-    .frame{ position:static !important; width:auto !important; height:auto !important; }
-    .board{ border-radius:12px; border-color:var(--line); }
-    .hero-inner{ padding:32px 24px; }
-    h1{ font-size:34px; margin-bottom:18px; }
-    .subline{ font-size:14px; }
-    .board-foot{ display:none; }
-    .app-board{ padding:20px; }
-    .app-board .open{ padding-top:14px; }
-  }
+}
 </style>
 </head>
 <body>
@@ -437,19 +964,19 @@
 
 <div class="mark" aria-hidden="true">
   <svg width="22" height="24" viewBox="0 0 22 24" fill="none">
-    <!-- top-left: bold cyan -->
+    
     <rect x="2" y="3" width="8" height="8" rx="2"
           fill="#00C8FF"/>
 
-    <!-- top-right: soft blue -->
+    
     <rect x="12" y="3" width="8" height="8" rx="2"
           fill="#1A3A5A"/>
 
-    <!-- bottom-left: soft blue -->
+    
     <rect x="2" y="13" width="8" height="8" rx="2"
           fill="#0E2236"/>
 
-    <!-- bottom-right: bold cyan (slightly different) -->
+    
     <rect x="12" y="13" width="8" height="8" rx="2"
           fill="#3AE0FF"/>
   </svg>
@@ -458,7 +985,7 @@
 
 
 <button class="tool" data-tool="move" aria-pressed="true" title="Patch cable">
-  <!-- patch cable -->
+  
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M3 4 C6 4 6 8 9 8 S12 12 13 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
     <circle cx="3" cy="4" r="1.4" fill="currentColor"/>
@@ -467,21 +994,21 @@
 </button>
 
 <button class="tool" data-tool="line" title="Envelope">
-  <!-- ADSR envelope -->
+  
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M2 12 L4 4 L7 7 L11 8 L14 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 </button>
 
 <button class="tool" data-tool="rect" title="Waveform draw">
-  <!-- waveform -->
+  
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M1.5 8 C3 4 5 12 7 8 C9 4 11 12 13 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 </button>
 
 <button class="tool" data-tool="ellipse" title="Mixer">
-  <!-- mixer faders -->
+  
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <line x1="4" y1="3" x2="4" y2="13" stroke="currentColor" stroke-width="1.2"/>
     <line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" stroke-width="1.2"/>
@@ -493,7 +1020,7 @@
 </button>
 
 <button class="tool" data-tool="pen" title="Scope">
-  <!-- oscilloscope -->
+  
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
     <path d="M3 9 L5 7 L7 11 L9 5 L11 9 L13 7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
@@ -513,14 +1040,14 @@
     <div class="dots" id="dots"></div>
     <div class="canvas" id="canvas">
 
-      <!-- hero -->
+      
       <div class="frame sel" id="f-hero" data-name="Home / Hero" data-w="1440" data-h="900"
            style="left:0; top:0; width:1440px; height:900px;">
         <div class="frame-label">Home / Hero</div>
         <div class="frame-dims">1440 × 900</div>
         <div class="board">
           <div class="hero-inner">
-            <div class="eyebrow"><span class="dot"></span>Thermalsock Labs&nbsp; / &nbsp;Eskifjörður, Iceland</div>
+            <div class="eyebrow"><span class="dot"></span>Thermalsock Labs&nbsp; / &nbsp;Breiðdalsvík, Iceland</div>
             <h1>Web based tools for all <span class="grey">your audio gear.</span></h1>
             <p class="subline">
               Browser instruments and apps for your synths and audio gear. <b>No sign‑up. No payment.</b> These are hobby projects I use myself and decided to share. Most get updated regularly.
@@ -553,7 +1080,7 @@
 
       <div class="note" style="left:60px; top:960px;">
         <div class="who">TS</div>
-        <div class="bub">Takk fyrir að heimsækja síðuna. Njóttu þín! </div>
+        <div class="bub">ETakk fyrir að heimsækja síðuna. Njóttu þín!</div>
       </div>
 
 
@@ -579,7 +1106,7 @@
 
   <div class="panel-body">
 
-    <!-- MIDI -->
+    
     <div class="insp-label">MIDI <button class="mini" id="devConnect">Connect</button></div>
 
     <div class="dev">
@@ -605,7 +1132,7 @@
 
 
 
-    <!-- CLOCK -->
+    
     <div class="insp-label">Clock</div>
 
     <div class="kv">
@@ -617,7 +1144,7 @@
       <span class="v">120</span>
     </div>
 
-    <!-- SELECTION -->
+    
     <div class="insp-label">Selection</div>
     <div class="kv soft">
       <span class="k">Name</span>
@@ -652,653 +1179,599 @@
 <script src="shared/persist.js"></script>
 <script src="shared/devices.js"></script>
 <script>
-(function(){
-  'use strict';
-
-  /* The artboards are the site. Everything on the canvas and in the layer
-     panel is generated from this one list, so a tool cannot appear in the
-     tree and be missing from the canvas. */
-  var APPS = [
-    { id:'keystep', href:'keystep-pro/index.html', name:'KeyStep Pro Arp Machine',
-      kick:'Pattern generator + sequencing school', hero:true,
-      desc:'Melody and rhythm generation for the Arturia KeyStep Pro, on a pixel-measured recreation of its panel. Seventeen styles, true polyrhythm, and one-button injection over MIDI.' },
-    { id:'signal', href:'signal-path/index.html', name:'Signal Path',
-      kick:'Hardware rig mapper', hero:true,
-      desc:'Every cable in the studio, mapped out. 135 devices in the catalog, audio, MIDI and CV on one canvas, exportable as JSON or a PNG.' },
-
-    { id:'osc',   href:'oscilloscope/index.html',          name:'Web Oscilloscope',      kick:'Real-time signal',
-      desc:'A dual-trace oscilloscope in your browser.' },
-    { id:'gran',  href:'granulator/index.html',            name:'Granulator',            kick:'Granular processor',
-      desc:'Freeze, scatter and stretch live input into grain clouds.' },
-    { id:'spec',  href:'spectral-mutation-lab/index.html', name:'Spectral Mutation Lab', kick:'FFT bin mutation',
-      desc:'2048 bins, frozen, morphed, shifted and scattered.' },
-    { id:'loom',  href:'loom/index.html',                  name:'Loom',                  kick:'Modal chord engine',
-      desc:'A harmonic sketchpad for ambient and drone work.' },
-    { id:'sub',   href:'subharmonicon/index.html',         name:'Subharmonicon',         kick:'Ratio tuning aid',
-      desc:'Play a note, get the sub-oscillator settings for the chord.' },
-    { id:'mod',   href:'modulus-studio/index.html',        name:'Modulus Studio',        kick:'LFO & envelope modelling',
-      desc:'Shape LFOs and envelopes exactly like the hardware.' },
-    { id:'sound', href:'sound-design/index.html',          name:'Sound Design',          kick:'Take 5 patch reference',
-      desc:'39 named sounds with knob settings and envelope shapes.' },
-    { id:'ear',   href:'illuminated-ear/index.html',       name:'The Illuminated Ear',   kick:'Ear-training game',
-      desc:'Hear a line, play it back, see where you went wrong.' },
-    { id:'trans', href:'transient-lab/index.html',         name:'Transient Lab',         kick:'Ear & hand training',
-      desc:'Scales, chords and genre lessons judged against your keyboard.' },
-    { id:'bloom', href:'ambient-bloom/index.html',         name:'Ambient Bloom',         kick:'Audio-reactive visuals',
-      desc:'One painted horizon, driven by whatever you play.' },
-
-    { id:'rud', href:'https://store.steampowered.com/app/5065240/Rudiment/', external:true,
-      wide:true, name:'Rudiment', kick:'Finger drumming trainer',
-      desc:'Singles, doubles and paradiddles built for pads instead of sticks. A native app, not a browser tool.' }
-  ];
-
-
-  /* ---------- card artwork ----------
-     One small piece of line art per tool, each drawing the thing the tool
-     actually does rather than a generic icon: sequencer steps for the step
-     sequencer, a grain cloud for the granulator, an ADSR for the envelope
-     modeller. Deterministic geometry, no randomness, so a card looks the same
-     on every visit. */
-  /* "meet" rather than "none": the card is close to the viewBox ratio, so the
-     art fits with a hair of side margin — and a knob stays a circle instead of
-     becoming an ellipse on a wider card. */
+(function() {
+  "use strict";
+  var APPS = [ {
+    id: "keystep",
+    href: "keystep-pro/index.html",
+    name: "KeyStep Pro Arp Machine",
+    kick: "Pattern generator + sequencing school",
+    hero: true,
+    desc: "Melody and rhythm generation for the Arturia KeyStep Pro, on a pixel-measured recreation of its panel. Seventeen styles, true polyrhythm, and one-button injection over MIDI."
+  }, {
+    id: "signal",
+    href: "signal-path/index.html",
+    name: "Signal Path",
+    kick: "Hardware rig mapper",
+    hero: true,
+    desc: "Every cable in the studio, mapped out. 135 devices in the catalog, audio, MIDI and CV on one canvas, exportable as JSON or a PNG."
+  }, {
+    id: "osc",
+    href: "oscilloscope/index.html",
+    name: "Web Oscilloscope",
+    kick: "Real-time signal",
+    desc: "A dual-trace oscilloscope in your browser."
+  }, {
+    id: "gran",
+    href: "granulator/index.html",
+    name: "Granulator",
+    kick: "Granular processor",
+    desc: "Freeze, scatter and stretch live input into grain clouds."
+  }, {
+    id: "spec",
+    href: "spectral-mutation-lab/index.html",
+    name: "Spectral Mutation Lab",
+    kick: "FFT bin mutation",
+    desc: "2048 bins, frozen, morphed, shifted and scattered."
+  }, {
+    id: "loom",
+    href: "loom/index.html",
+    name: "Loom",
+    kick: "Modal chord engine",
+    desc: "A harmonic sketchpad for ambient and drone work."
+  }, {
+    id: "sub",
+    href: "subharmonicon/index.html",
+    name: "Subharmonicon",
+    kick: "Ratio tuning aid",
+    desc: "Play a note, get the sub-oscillator settings for the chord."
+  }, {
+    id: "mod",
+    href: "modulus-studio/index.html",
+    name: "Modulus Studio",
+    kick: "LFO & envelope modelling",
+    desc: "Shape LFOs and envelopes exactly like the hardware."
+  }, {
+    id: "sound",
+    href: "sound-design/index.html",
+    name: "Sound Design",
+    kick: "Take 5 patch reference",
+    desc: "39 named sounds with knob settings and envelope shapes."
+  }, {
+    id: "ear",
+    href: "illuminated-ear/index.html",
+    name: "The Illuminated Ear",
+    kick: "Ear-training game",
+    desc: "Hear a line, play it back, see where you went wrong."
+  }, {
+    id: "trans",
+    href: "transient-lab/index.html",
+    name: "Transient Lab",
+    kick: "Ear & hand training",
+    desc: "Scales, chords and genre lessons judged against your keyboard."
+  }, {
+    id: "bloom",
+    href: "ambient-bloom/index.html",
+    name: "Ambient Bloom",
+    kick: "Audio-reactive visuals",
+    desc: "One painted horizon, driven by whatever you play."
+  }, {
+    id: "rud",
+    href: "https://store.steampowered.com/app/5065240/Rudiment/",
+    external: true,
+    wide: true,
+    name: "Rudiment",
+    kick: "Finger drumming trainer",
+    desc: "Singles, doubles and paradiddles built for pads instead of sticks. A native app, not a browser tool."
+  } ];
   var V = 'viewBox="0 0 300 80" preserveAspectRatio="xMidYMid meet"';
-  function svg(inner){ return '<svg ' + V + ' aria-hidden="true">' + inner + '</svg>'; }
-
-  function sinePath(cycles, amp, mid, phase, w){
-    var d = '', N = 90;
-    for (var i = 0; i <= N; i++){
+  function svg(inner) {
+    return "<svg " + V + ' aria-hidden="true">' + inner + "</svg>";
+  }
+  function sinePath(cycles, amp, mid, phase, w) {
+    var d = "", N = 90;
+    for (var i = 0; i <= N; i++) {
       var x = i / N;
       var y = mid - Math.sin(2 * Math.PI * (x * cycles + (phase || 0))) * amp;
-      d += (i ? ' L' : 'M') + (x * (w || 300)).toFixed(1) + ',' + y.toFixed(1);
+      d += (i ? " L" : "M") + (x * (w || 300)).toFixed(1) + "," + y.toFixed(1);
     }
     return d;
   }
-
   var THUMBS = {
-    /* 16 steps, four of them lit, with a playhead — the KeyStep in miniature */
-    keystep: (function(){
-      var on = { 0:1, 3:1, 6:1, 8:1, 11:1, 14:1 }, o = '';
-      for (var i = 0; i < 16; i++){
+    keystep: function() {
+      var on = {
+        0: 1,
+        3: 1,
+        6: 1,
+        8: 1,
+        11: 1,
+        14: 1
+      }, o = "";
+      for (var i = 0; i < 16; i++) {
         var x = 6 + i * 18.2;
-        o += '<rect x="' + x.toFixed(1) + '" y="' + (on[i] ? 26 : 34) + '" width="13" height="' +
-             (on[i] ? 28 : 12) + '" rx="2" class="' + (on[i] ? 'fill-lit' : 'fill') + '"' +
-             (on[i] ? '' : ' opacity="0.5"') + '/>';
+        o += '<rect x="' + x.toFixed(1) + '" y="' + (on[i] ? 26 : 34) + '" width="13" height="' + (on[i] ? 28 : 12) + '" rx="2" class="' + (on[i] ? "fill-lit" : "fill") + '"' + (on[i] ? "" : ' opacity="0.5"') + "/>";
       }
       o += '<line x1="115" y1="14" x2="115" y2="70" class="lit" opacity="0.75"/>';
       o += '<line x1="6" y1="70" x2="298" y2="70" class="ln" opacity="0.35"/>';
       return svg(o);
-    })(),
-
-    /* devices and the cables between them */
-    signal: svg(
-      '<path class="ln" d="M40 22 C 110 22, 90 58, 150 58"/>' +
-      '<path class="lit" d="M40 22 C 120 22, 140 22, 258 40"/>' +
-      '<path class="ln" d="M150 58 C 200 58, 210 40, 258 40"/>' +
-      '<circle cx="40" cy="22" r="7" class="fill"/>' +
-      '<circle cx="150" cy="58" r="7" class="fill"/>' +
-      '<circle cx="258" cy="40" r="7" class="fill-lit"/>' +
-      '<circle cx="40" cy="22" r="12" class="ln" opacity="0.4"/>' +
-      '<circle cx="258" cy="40" r="12" class="lit" opacity="0.4"/>'
-    ),
-
-    /* two traces, one per channel */
-    osc: svg(
-      '<line x1="0" y1="40" x2="300" y2="40" class="ln" opacity="0.25"/>' +
-      '<path class="ln" d="' + '"/>'
-    ),
-
-    /* grains scattered around a playhead */
-    gran: (function(){
-      var o = '', seedy = [12,44,8,60,30,52,20,66,38,16,58,26,48,10,62,34,54,22,42,14];
-      for (var i = 0; i < 20; i++){
-        var x = 12 + i * 14.6, y = seedy[i], r = 1.6 + (i % 4) * 0.9;
-        var lit = (i % 7 === 3);
-        o += '<circle cx="' + x.toFixed(0) + '" cy="' + y + '" r="' + r.toFixed(1) + '" class="' +
-             (lit ? 'fill-lit' : 'fill') + '" opacity="' + (lit ? 1 : 0.45 + (i % 3) * 0.15) + '"/>';
+    }(),
+    signal: svg('<path class="ln" d="M40 22 C 110 22, 90 58, 150 58"/>' + '<path class="lit" d="M40 22 C 120 22, 140 22, 258 40"/>' + '<path class="ln" d="M150 58 C 200 58, 210 40, 258 40"/>' + '<circle cx="40" cy="22" r="7" class="fill"/>' + '<circle cx="150" cy="58" r="7" class="fill"/>' + '<circle cx="258" cy="40" r="7" class="fill-lit"/>' + '<circle cx="40" cy="22" r="12" class="ln" opacity="0.4"/>' + '<circle cx="258" cy="40" r="12" class="lit" opacity="0.4"/>'),
+    osc: svg('<line x1="0" y1="40" x2="300" y2="40" class="ln" opacity="0.25"/>' + '<path class="ln" d="' + '"/>'),
+    gran: function() {
+      var o = "", seedy = [ 12, 44, 8, 60, 30, 52, 20, 66, 38, 16, 58, 26, 48, 10, 62, 34, 54, 22, 42, 14 ];
+      for (var i = 0; i < 20; i++) {
+        var x = 12 + i * 14.6, y = seedy[i], r = 1.6 + i % 4 * .9;
+        var lit = i % 7 === 3;
+        o += '<circle cx="' + x.toFixed(0) + '" cy="' + y + '" r="' + r.toFixed(1) + '" class="' + (lit ? "fill-lit" : "fill") + '" opacity="' + (lit ? 1 : .45 + i % 3 * .15) + '"/>';
       }
       o += '<line x1="150" y1="6" x2="150" y2="74" class="lit" opacity="0.55"/>';
       return svg(o);
-    })(),
-
-    /* an FFT frame */
-    spec: (function(){
-      var h = [8,15,26,44,58,66,52,38,47,61,40,28,34,22,30,18,25,13,17,9,14,7,11,6];
-      var o = '';
-      for (var i = 0; i < h.length; i++){
+    }(),
+    spec: function() {
+      var h = [ 8, 15, 26, 44, 58, 66, 52, 38, 47, 61, 40, 28, 34, 22, 30, 18, 25, 13, 17, 9, 14, 7, 11, 6 ];
+      var o = "";
+      for (var i = 0; i < h.length; i++) {
         var x = 8 + i * 12.1;
-        o += '<rect x="' + x.toFixed(1) + '" y="' + (72 - h[i]) + '" width="7" height="' + h[i] +
-             '" rx="1" class="' + (h[i] > 55 ? 'fill-lit' : 'fill') + '" opacity="' + (h[i] > 55 ? 1 : 0.55) + '"/>';
+        o += '<rect x="' + x.toFixed(1) + '" y="' + (72 - h[i]) + '" width="7" height="' + h[i] + '" rx="1" class="' + (h[i] > 55 ? "fill-lit" : "fill") + '" opacity="' + (h[i] > 55 ? 1 : .55) + '"/>';
       }
       return svg(o);
-    })(),
-
-    /* woven threads — warp and weft */
-    loom: (function(){
-      var o = '';
-      [14,28,42,56,70].forEach(function(y, i){
-        o += '<line x1="0" y1="' + y + '" x2="300" y2="' + y + '" class="' + (i === 2 ? 'lit' : 'ln') +
-             '" opacity="' + (i === 2 ? 0.9 : 0.5) + '"/>';
+    }(),
+    loom: function() {
+      var o = "";
+      [ 14, 28, 42, 56, 70 ].forEach(function(y, i) {
+        o += '<line x1="0" y1="' + y + '" x2="300" y2="' + y + '" class="' + (i === 2 ? "lit" : "ln") + '" opacity="' + (i === 2 ? .9 : .5) + '"/>';
       });
-      [46,92,138,184,230,276].forEach(function(x, i){
-        o += '<line x1="' + x + '" y1="8" x2="' + x + '" y2="76" class="ln" opacity="' + (i % 2 ? 0.5 : 0.28) + '"/>';
+      [ 46, 92, 138, 184, 230, 276 ].forEach(function(x, i) {
+        o += '<line x1="' + x + '" y1="8" x2="' + x + '" y2="76" class="ln" opacity="' + (i % 2 ? .5 : .28) + '"/>';
       });
       o += '<circle cx="138" cy="42" r="4" class="fill-lit"/>';
       return svg(o);
-    })(),
-
-    /* a fundamental and two subdivisions beneath it */
-    sub: svg(
-      '<path class="lit" d="' + '"/>'
-    ),
-
-    /* an ADSR */
-    mod: svg(
-      '<line x1="0" y1="72" x2="300" y2="72" class="ln" opacity="0.3"/>' +
-      '<path class="lit" d="M8 72 L60 12 L110 40 L206 44 L292 72"/>' +
-      '<circle cx="60" cy="12" r="3.5" class="fill-lit"/>' +
-      '<circle cx="110" cy="40" r="3.5" class="fill-lit"/>' +
-      '<circle cx="206" cy="44" r="3.5" class="fill-lit"/>' +
-      '<line x1="60" y1="12" x2="60" y2="72" class="ln" opacity="0.28"/>' +
-      '<line x1="110" y1="40" x2="110" y2="72" class="ln" opacity="0.28"/>' +
-      '<line x1="206" y1="44" x2="206" y2="72" class="ln" opacity="0.28"/>'
-    ),
-
-    /* three knobs at three settings */
-    sound: (function(){
-      var o = '', angles = [-125, -20, 70];
-      [64, 150, 236].forEach(function(cx, i){
+    }(),
+    sub: svg('<path class="lit" d="' + '"/>'),
+    mod: svg('<line x1="0" y1="72" x2="300" y2="72" class="ln" opacity="0.3"/>' + '<path class="lit" d="M8 72 L60 12 L110 40 L206 44 L292 72"/>' + '<circle cx="60" cy="12" r="3.5" class="fill-lit"/>' + '<circle cx="110" cy="40" r="3.5" class="fill-lit"/>' + '<circle cx="206" cy="44" r="3.5" class="fill-lit"/>' + '<line x1="60" y1="12" x2="60" y2="72" class="ln" opacity="0.28"/>' + '<line x1="110" y1="40" x2="110" y2="72" class="ln" opacity="0.28"/>' + '<line x1="206" y1="44" x2="206" y2="72" class="ln" opacity="0.28"/>'),
+    sound: function() {
+      var o = "", angles = [ -125, -20, 70 ];
+      [ 64, 150, 236 ].forEach(function(cx, i) {
         var a = angles[i] * Math.PI / 180;
         o += '<circle cx="' + cx + '" cy="40" r="21" class="ln"/>';
-        o += '<line x1="' + cx + '" y1="40" x2="' + (cx + Math.cos(a) * 21).toFixed(1) +
-             '" y2="' + (40 + Math.sin(a) * 21).toFixed(1) + '" class="lit"/>';
+        o += '<line x1="' + cx + '" y1="40" x2="' + (cx + Math.cos(a) * 21).toFixed(1) + '" y2="' + (40 + Math.sin(a) * 21).toFixed(1) + '" class="lit"/>';
         o += '<circle cx="' + cx + '" cy="40" r="2.6" class="fill"/>';
       });
       return svg(o);
-    })(),
-
-    /* an interval ladder, one step being tested */
-    ear: (function(){
-      var steps = [66,58,50,34,42,26,18,26,34,50], o = '';
-      for (var i = 0; i < steps.length; i++){
+    }(),
+    ear: function() {
+      var steps = [ 66, 58, 50, 34, 42, 26, 18, 26, 34, 50 ], o = "";
+      for (var i = 0; i < steps.length; i++) {
         var x = 20 + i * 29;
-        var lit = (i === 5);
-        o += '<circle cx="' + x + '" cy="' + steps[i] + '" r="' + (lit ? 5.5 : 4) + '" class="' +
-             (lit ? 'fill-lit' : 'fill') + '" opacity="' + (lit ? 1 : 0.6) + '"/>';
-        if (i) o += '<line x1="' + (20 + (i - 1) * 29) + '" y1="' + steps[i-1] + '" x2="' + x +
-                    '" y2="' + steps[i] + '" class="ln" opacity="0.4"/>';
+        var lit = i === 5;
+        o += '<circle cx="' + x + '" cy="' + steps[i] + '" r="' + (lit ? 5.5 : 4) + '" class="' + (lit ? "fill-lit" : "fill") + '" opacity="' + (lit ? 1 : .6) + '"/>';
+        if (i) o += '<line x1="' + (20 + (i - 1) * 29) + '" y1="' + steps[i - 1] + '" x2="' + x + '" y2="' + steps[i] + '" class="ln" opacity="0.4"/>';
       }
       o += '<circle cx="165" cy="26" r="11" class="lit" opacity="0.5"/>';
       return svg(o);
-    })(),
-
-    /* transients with their decay tails */
-    trans: (function(){
+    }(),
+    trans: function() {
       var o = '<line x1="0" y1="52" x2="300" y2="52" class="ln" opacity="0.28"/>';
-      [30, 108, 172, 246].forEach(function(x, i){
-        var top = [10, 22, 14, 30][i];
-        o += '<path class="' + (i === 0 ? 'lit' : 'ln') + '" d="M' + x + ' 52 L' + x + ' ' + top +
-             ' M' + x + ' ' + top + ' Q' + (x + 26) + ' ' + top + ', ' + (x + 44) + ' 52"/>';
+      [ 30, 108, 172, 246 ].forEach(function(x, i) {
+        var top = [ 10, 22, 14, 30 ][i];
+        o += '<path class="' + (i === 0 ? "lit" : "ln") + '" d="M' + x + " 52 L" + x + " " + top + " M" + x + " " + top + " Q" + (x + 26) + " " + top + ", " + (x + 44) + ' 52"/>';
       });
       return svg(o);
-    })(),
-
-    /* a horizon blooming */
-    bloom: (function(){
-      var o = '';
-      [30, 22, 14].forEach(function(r, i){
-        o += '<path class="' + (i === 2 ? 'lit' : 'ln') + '" opacity="' + (0.35 + i * 0.25) +
-             '" d="M' + (150 - r * 3.4) + ' 68 Q150 ' + (68 - r * 1.9) + ', ' + (150 + r * 3.4) + ' 68"/>';
+    }(),
+    bloom: function() {
+      var o = "";
+      [ 30, 22, 14 ].forEach(function(r, i) {
+        o += '<path class="' + (i === 2 ? "lit" : "ln") + '" opacity="' + (.35 + i * .25) + '" d="M' + (150 - r * 3.4) + " 68 Q150 " + (68 - r * 1.9) + ", " + (150 + r * 3.4) + ' 68"/>';
       });
       o += '<line x1="10" y1="68" x2="290" y2="68" class="ln" opacity="0.45"/>';
       o += '<circle cx="150" cy="30" r="5" class="fill-lit"/>';
       return svg(o);
-    })(),
-
-    /* eight pads, two struck */
-    rud: (function(){
-      var o = '';
-      for (var r = 0; r < 2; r++){
-        for (var c = 0; c < 4; c++){
-          var lit = (r === 0 && c === 1) || (r === 1 && c === 2);
-          o += '<rect x="' + (64 + c * 46) + '" y="' + (12 + r * 34) + '" width="36" height="26" rx="4" class="' +
-               (lit ? 'lit' : 'ln') + '" opacity="' + (lit ? 1 : 0.5) + '"' +
-               (lit ? ' fill="var(--gold)" fill-opacity="0.16"' : '') + '/>';
+    }(),
+    rud: function() {
+      var o = "";
+      for (var r = 0; r < 2; r++) {
+        for (var c = 0; c < 4; c++) {
+          var lit = r === 0 && c === 1 || r === 1 && c === 2;
+          o += '<rect x="' + (64 + c * 46) + '" y="' + (12 + r * 34) + '" width="36" height="26" rx="4" class="' + (lit ? "lit" : "ln") + '" opacity="' + (lit ? 1 : .5) + '"' + (lit ? ' fill="var(--gold)" fill-opacity="0.16"' : "") + "/>";
         }
       }
       return svg(o);
-    })()
+    }()
   };
-
-  /* Two thumbs need a computed waveform, so they are filled in afterwards. */
-  THUMBS.osc = svg(
-    '<line x1="0" y1="40" x2="300" y2="40" class="ln" opacity="0.25"/>' +
-    '<path class="ln" opacity="0.6" d="' + sinePath(2, 24, 40, 0.25) + '"/>' +
-    '<path class="lit" d="' + sinePath(2, 30, 40, 0) + '"/>'
-  );
-  THUMBS.sub = svg(
-    '<path class="lit" d="' + sinePath(4, 13, 20, 0) + '"/>' +
-    '<path class="ln" opacity="0.7" d="' + sinePath(2, 13, 44, 0) + '"/>' +
-    '<path class="ln" opacity="0.45" d="' + sinePath(1.333, 13, 68, 0) + '"/>'
-  );
-
-
-  /* ---------- layout ----------
-     Positions are computed from one grid definition rather than typed per
-     card. Hand-written coordinates drifted the last time the card heights
-     changed: four of thirteen kept their old y and height, and the grid came
-     apart. This cannot happen to a formula. */
+  THUMBS.osc = svg('<line x1="0" y1="40" x2="300" y2="40" class="ln" opacity="0.25"/>' + '<path class="ln" opacity="0.6" d="' + sinePath(2, 24, 40, .25) + '"/>' + '<path class="lit" d="' + sinePath(2, 30, 40, 0) + '"/>');
+  THUMBS.sub = svg('<path class="lit" d="' + sinePath(4, 13, 20, 0) + '"/>' + '<path class="ln" opacity="0.7" d="' + sinePath(2, 13, 44, 0) + '"/>' + '<path class="ln" opacity="0.45" d="' + sinePath(1.333, 13, 68, 0) + '"/>');
   var CARD_W = 330, CARD_H = 300, GAP = 30, COLS = 6;
   var GRID_TOP = 1120, HERO_X = 1560, HERO_W = 520, HERO_H = 430;
   var COL = CARD_W + GAP, ROW = CARD_H + GAP;
-
-  (function place(){
-    var heroes = APPS.filter(function(a){ return a.hero; });
-    heroes.forEach(function(a, i){
-      a.x = HERO_X; a.y = i * (HERO_H + 80);
-      a.w = HERO_W; a.h = HERO_H;
+  (function place() {
+    var heroes = APPS.filter(function(a) {
+      return a.hero;
     });
-
+    heroes.forEach(function(a, i) {
+      a.x = HERO_X;
+      a.y = i * (HERO_H + 80);
+      a.w = HERO_W;
+      a.h = HERO_H;
+    });
     var slot = 0;
-    APPS.filter(function(a){ return !a.hero; }).forEach(function(a){
+    APPS.filter(function(a) {
+      return !a.hero;
+    }).forEach(function(a) {
       var span = a.wide ? 2 : 1;
-      /* keep a wide card on one row rather than split across the wrap */
-      if ((slot % COLS) + span > COLS) slot += COLS - (slot % COLS);
-      a.x = (slot % COLS) * COL;
+      if (slot % COLS + span > COLS) slot += COLS - slot % COLS;
+      a.x = slot % COLS * COL;
       a.y = GRID_TOP + Math.floor(slot / COLS) * ROW;
       a.w = span === 2 ? CARD_W * 2 + GAP : CARD_W;
       a.h = CARD_H;
       slot += span;
     });
-
     var rows = Math.ceil(slot / COLS);
     window.__aboutY = GRID_TOP + rows * ROW;
   })();
-
-  var canvas = document.getElementById('canvas');
-  var wrap   = document.getElementById('wrap');
-  var layers = document.getElementById('layers');
-
-  /* ---------- build the canvas ---------- */
-  function frameFor(a){
-    var el = document.createElement(a.external ? 'a' : 'a');
-    el.className = 'frame' + (a.hero ? ' big' : '');
-    el.id = 'f-' + a.id;
+  var canvas = document.getElementById("canvas");
+  var wrap = document.getElementById("wrap");
+  var layers = document.getElementById("layers");
+  function frameFor(a) {
+    var el = document.createElement(a.external ? "a" : "a");
+    el.className = "frame" + (a.hero ? " big" : "");
+    el.id = "f-" + a.id;
     el.href = a.href;
-    if (a.external){ el.target = '_blank'; el.rel = 'noopener'; }
-    el.style.cssText = 'left:'+a.x+'px;top:'+a.y+'px;width:'+a.w+'px;height:'+a.h+'px;';
+    if (a.external) {
+      el.target = "_blank";
+      el.rel = "noopener";
+    }
+    el.style.cssText = "left:" + a.x + "px;top:" + a.y + "px;width:" + a.w + "px;height:" + a.h + "px;";
     el.dataset.name = a.name;
-    el.dataset.w = a.w; el.dataset.h = a.h;
-    el.dataset.x = a.x; el.dataset.y = a.y;
-    el.dataset.kind = a.external ? 'External link' : (a.hero ? 'Component' : 'Frame');
-    el.innerHTML =
-      '<div class="frame-label">'+ (a.hero ? 'Hero / ' : 'Tool / ') + a.name +'</div>'+
-      '<div class="frame-dims">'+ a.w +' × '+ a.h +'</div>'+
-      '<div class="board"><div class="app-board">'+
-        '<div class="thumb">'+ THUMBS[a.id] +'</div>'+
-        '<h3>'+ a.name + (a.external ? '<span class="badge-ext">Steam</span>' : '') +'</h3>'+
-        '<div class="kick">'+ a.kick +'</div>'+
-        '<p>'+ a.desc +'</p>'+
-        '<div class="open">'+ (a.external ? 'Open on Steam ↗' : 'Open →') +'</div>'+
-      '</div></div>'+
-      '<i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>'+
-      '<div class="size-badge">'+ a.w +' × '+ a.h +'</div>';
+    el.dataset.w = a.w;
+    el.dataset.h = a.h;
+    el.dataset.x = a.x;
+    el.dataset.y = a.y;
+    el.dataset.kind = a.external ? "External link" : a.hero ? "Component" : "Frame";
+    el.innerHTML = '<div class="frame-label">' + (a.hero ? "Hero / " : "Tool / ") + a.name + "</div>" + '<div class="frame-dims">' + a.w + " × " + a.h + "</div>" + '<div class="board"><div class="app-board">' + '<div class="thumb">' + THUMBS[a.id] + "</div>" + "<h3>" + a.name + (a.external ? '<span class="badge-ext">Steam</span>' : "") + "</h3>" + '<div class="kick">' + a.kick + "</div>" + "<p>" + a.desc + "</p>" + '<div class="open">' + (a.external ? "Open on Steam ↗" : "Open →") + "</div>" + "</div></div>" + '<i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>' + '<div class="size-badge">' + a.w + " × " + a.h + "</div>";
     return el;
   }
-  APPS.forEach(function(a){ canvas.appendChild(frameFor(a)); });
-
-  /* about frame, last on the canvas */
-  var about = document.createElement('div');
-  about.className = 'frame';
-  about.id = 'f-about';
-  about.dataset.name = 'About / Studio';
-  about.dataset.w = 690; about.dataset.h = 260; about.dataset.x = 0; about.dataset.y = window.__aboutY;
-  about.dataset.kind = 'Frame';
-  about.style.cssText = 'left:0;top:' + window.__aboutY + 'px;width:690px;height:260px;';
-  about.innerHTML =
-    '<div class="frame-label">About / Studio</div><div class="frame-dims">690 × 260</div>'+
-    '<div class="board"><div class="about-board">'+
-      '<h3>One person, one home studio.</h3>'+
-      '<p>Small tools for the gear already on the desk. Most of them started because '+
-      'something was hard to tune, hard to see, or hard to remember.</p>'+
-      '<p>Everything runs in the browser. Nothing is uploaded, nothing is recorded, '+
-      'nothing is sent anywhere. No accounts, no tracking.</p>'+
-      '<div class="links"><a href="legal/privacy.html">Privacy</a>'+
-      '<a href="legal/disclaimer.html">Disclaimer</a>'+
-      '<span>© 2026 Thermalsock Labs</span></div>'+
-    '</div></div>'+
-    '<i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>'+
-    '<div class="size-badge">690 × 260</div>';
+  APPS.forEach(function(a) {
+    canvas.appendChild(frameFor(a));
+  });
+  var about = document.createElement("div");
+  about.className = "frame";
+  about.id = "f-about";
+  about.dataset.name = "About / Studio";
+  about.dataset.w = 690;
+  about.dataset.h = 260;
+  about.dataset.x = 0;
+  about.dataset.y = window.__aboutY;
+  about.dataset.kind = "Frame";
+  about.style.cssText = "left:0;top:" + window.__aboutY + "px;width:690px;height:260px;";
+  about.innerHTML = '<div class="frame-label">About / Studio</div><div class="frame-dims">690 × 260</div>' + '<div class="board"><div class="about-board">' + "<h3>One person, one home studio.</h3>" + "<p>Small tools for the gear already on the desk. Most of them started because " + "something was hard to tune, hard to see, or hard to remember.</p>" + "<p>Everything runs in the browser. Nothing is uploaded, nothing is recorded, " + "nothing is sent anywhere. No accounts, no tracking.</p>" + '<div class="links"><a href="legal/privacy.html">Privacy</a>' + '<a href="legal/disclaimer.html">Disclaimer</a>' + "<span>© 2026 Thermalsock Labs</span></div>" + "</div></div>" + '<i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>' + '<div class="size-badge">690 × 260</div>';
   canvas.appendChild(about);
-
-  /* ---------- layer tree ---------- */
-  function addLayer(label, target, group, child){
-    var b = document.createElement('button');
-    b.className = 'layer' + (group ? ' group' : '') + (child ? ' child' : '');
-    b.innerHTML = (group ? '<span class="hash">#</span>' : '') + label;
-    b.dataset.target = target || '';
+  function addLayer(label, target, group, child) {
+    var b = document.createElement("button");
+    b.className = "layer" + (group ? " group" : "") + (child ? " child" : "");
+    b.innerHTML = (group ? '<span class="hash">#</span>' : "") + label;
+    b.dataset.target = target || "";
     layers.appendChild(b);
     return b;
   }
-addLayer('Master bus / Hero', 'f-hero', true);
-['master channel','navigation deck','secondary signal','operator','project arenig fawr'].forEach(function(n){
-  addLayer(n, 'f-hero', false, true);
-});
-addLayer('Hero instruments', 'f-keystep', true);
-APPS.filter(function(a){ return a.hero; }).forEach(function(a){ addLayer(a.name, 'f-'+a.id, false, true); });
-addLayer('Micro instruments', 'f-osc', true);
-APPS.filter(function(a){ return !a.hero && !a.external; }).forEach(function(a){ addLayer(a.name, 'f-'+a.id, false, true); });
-addLayer('External', 'f-rud', true);
-addLayer('Rudiment', 'f-rud', false, true);
-addLayer('About / Studio', 'f-about', true);
-
-
-  /* ---------- selection ---------- */
-  var frames = Array.prototype.slice.call(canvas.querySelectorAll('.frame'));
-  var current = document.getElementById('f-hero');
-
-  function setText(id, value){
+  addLayer("Master bus / Hero", "f-hero", true);
+  [ "transport / eyebrow", "headline / main", "subline / copy", "cta / controls", "session / meta" ].forEach(function(n) {
+    addLayer(n, "f-hero", false, true);
+  });
+  addLayer("Hero instruments", "f-keystep", true);
+  APPS.filter(function(a) {
+    return a.hero;
+  }).forEach(function(a) {
+    addLayer(a.name, "f-" + a.id, false, true);
+  });
+  addLayer("Micro instruments", "f-osc", true);
+  APPS.filter(function(a) {
+    return !a.hero && !a.external;
+  }).forEach(function(a) {
+    addLayer(a.name, "f-" + a.id, false, true);
+  });
+  addLayer("External", "f-rud", true);
+  addLayer("Rudiment", "f-rud", false, true);
+  addLayer("About / Studio", "f-about", true);
+  var frames = Array.prototype.slice.call(canvas.querySelectorAll(".frame"));
+  var current = document.getElementById("f-hero");
+  function setText(id, value) {
     var el = document.getElementById(id);
     if (el) el.textContent = value;
   }
-
-  function select(el){
+  function select(el) {
     if (!el) return;
-    frames.forEach(function(f){ f.classList.toggle('sel', f === el); });
+    frames.forEach(function(f) {
+      f.classList.toggle("sel", f === el);
+    });
     current = el;
-    /* The inspector is a surface you will keep redesigning, so read-outs are
-       optional by design. One missing id used to throw here, which aborted the
-       rest of select() — that is why the layer tree stopped highlighting and
-       the waveform never started. */
-    setText('iW', el.dataset.w || 1440);
-    setText('iH', el.dataset.h || 900);
-    setText('iX', el.dataset.x || 0);
-    setText('iY', el.dataset.y || 0);
-    setText('iName', el.dataset.name || 'Home / Hero');
-    setText('iKind', el.dataset.kind || 'Frame');
-    setText('iType', el.id === 'f-hero' ? '76 / 74' : '17 / 22');
-    /* Children all point at their parent frame, so matching on target alone
-       lights the whole branch. Only the group row is the selection. */
-    Array.prototype.forEach.call(layers.querySelectorAll('.layer'), function(b){
-      b.classList.toggle('on', b.dataset.target === el.id && b.classList.contains('group'));
+    setText("iW", el.dataset.w || 1440);
+    setText("iH", el.dataset.h || 900);
+    setText("iX", el.dataset.x || 0);
+    setText("iY", el.dataset.y || 0);
+    setText("iName", el.dataset.name || "Home / Hero");
+    setText("iKind", el.dataset.kind || "Frame");
+    setText("iType", el.id === "f-hero" ? "76 / 74" : "17 / 22");
+    Array.prototype.forEach.call(layers.querySelectorAll(".layer"), function(b) {
+      b.classList.toggle("on", b.dataset.target === el.id && b.classList.contains("group"));
     });
   }
-  document.getElementById('f-hero').dataset.name = 'Home / Hero';
-  document.getElementById('f-hero').dataset.kind = 'Frame';
-
-  /* Hovering inspects, clicking opens. Selection on hover keeps the software
-     conceit without hiding the fact that these are links to real pages. */
-  frames.forEach(function(f){
-    f.addEventListener('mouseenter', function(){ select(f); });
-    f.addEventListener('focus', function(){ select(f); centreOn(f); });
+  document.getElementById("f-hero").dataset.name = "Home / Hero";
+  document.getElementById("f-hero").dataset.kind = "Frame";
+  frames.forEach(function(f) {
+    f.addEventListener("mouseenter", function() {
+      select(f);
+    });
+    f.addEventListener("focus", function() {
+      select(f);
+      centreOn(f);
+    });
   });
-
-  /* ---------- pan and zoom ---------- */
-  var scale = 0.7, tx = 90, ty = 40;
-  var minS = 0.25, maxS = 1.6;
-
-  function apply(){
-    canvas.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+scale+')';
-    document.getElementById('dots').style.backgroundSize = (26*scale)+'px '+(26*scale)+'px';
-    document.getElementById('dots').style.backgroundPosition = tx+'px '+ty+'px';
-    document.getElementById('zPct').textContent = Math.round(scale*100)+'%';
+  var scale = .7, tx = 90, ty = 40;
+  var minS = .25, maxS = 1.6;
+  function apply() {
+    canvas.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")";
+    document.getElementById("dots").style.backgroundSize = 26 * scale + "px " + 26 * scale + "px";
+    document.getElementById("dots").style.backgroundPosition = tx + "px " + ty + "px";
+    document.getElementById("zPct").textContent = Math.round(scale * 100) + "%";
   }
-
-  /* The panels float over the canvas, so the usable area is the gap between
-     them. Centring on the window instead parks half the artboard underneath
-     the layer tree, which is exactly what it looked like the first time. */
-  function viewport(){
+  function viewport() {
     var r = wrap.getBoundingClientRect();
-    var wide = window.innerWidth > 1000;
+    var wide = window.innerWidth > 1e3;
     var left = wide ? 252 : 0;
     var right = wide ? 250 : 0;
-    return { left:left, top:0, w:Math.max(200, r.width - left - right), h:r.height };
+    return {
+      left: left,
+      top: 0,
+      w: Math.max(200, r.width - left - right),
+      h: r.height
+    };
   }
-
-  function centreOn(el, fit){
+  function centreOn(el, fit) {
     var v = viewport();
     var x = parseFloat(el.style.left) || 0, y = parseFloat(el.style.top) || 0;
     var w = parseFloat(el.style.width) || 0, h = parseFloat(el.style.height) || 0;
-    if (fit){
+    if (fit) {
       var pad = 90;
       scale = Math.max(minS, Math.min(maxS, Math.min((v.w - pad) / w, (v.h - pad) / h)));
     }
-    tx = v.left + v.w/2 - (x + w/2) * scale;
-    ty = v.top + v.h/2 - (y + h/2) * scale;
+    tx = v.left + v.w / 2 - (x + w / 2) * scale;
+    ty = v.top + v.h / 2 - (y + h / 2) * scale;
     apply();
   }
-
   var dragging = false, sx = 0, sy = 0, stx = 0, sty = 0, moved = false;
-  wrap.addEventListener('mousedown', function(e){
+  wrap.addEventListener("mousedown", function(e) {
     if (e.button !== 0) return;
-    dragging = true; moved = false;
-    sx = e.clientX; sy = e.clientY; stx = tx; sty = ty;
-    wrap.classList.add('dragging');
+    dragging = true;
+    moved = false;
+    sx = e.clientX;
+    sy = e.clientY;
+    stx = tx;
+    sty = ty;
+    wrap.classList.add("dragging");
   });
-  window.addEventListener('mousemove', function(e){
+  window.addEventListener("mousemove", function(e) {
     if (!dragging) return;
     var dx = e.clientX - sx, dy = e.clientY - sy;
     if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
-    tx = stx + dx; ty = sty + dy; apply();
+    tx = stx + dx;
+    ty = sty + dy;
+    apply();
   });
-  window.addEventListener('mouseup', function(){
-    dragging = false; wrap.classList.remove('dragging');
+  window.addEventListener("mouseup", function() {
+    dragging = false;
+    wrap.classList.remove("dragging");
   });
-  /* A drag that ends on a frame must not also follow its link. */
-  canvas.addEventListener('click', function(e){
-    if (moved){ e.preventDefault(); moved = false; }
+  canvas.addEventListener("click", function(e) {
+    if (moved) {
+      e.preventDefault();
+      moved = false;
+    }
   }, true);
-
-  wrap.addEventListener('wheel', function(e){
+  wrap.addEventListener("wheel", function(e) {
     e.preventDefault();
-    /* Zoom on plain wheel. Figma pans on scroll and zooms on ctrl, but the
-       expectation here was a canvas you zoom into, so that is what it does.
-       Shift-scroll still pans sideways for trackpads. */
-    if (!e.shiftKey){
+    if (!e.shiftKey) {
       var r = wrap.getBoundingClientRect();
       var mx = e.clientX - r.left, my = e.clientY - r.top;
-      var next = Math.max(minS, Math.min(maxS, scale * (1 - e.deltaY * 0.0016)));
+      var next = Math.max(minS, Math.min(maxS, scale * (1 - e.deltaY * .0016)));
       tx = mx - (mx - tx) * (next / scale);
       ty = my - (my - ty) * (next / scale);
       scale = next;
     } else {
-      tx -= (e.deltaY || e.deltaX);
+      tx -= e.deltaY || e.deltaX;
     }
     apply();
-  }, { passive:false });
-
-  function zoomBy(f){
-    var v = viewport(), mx = v.left + v.w/2, my = v.h/2;
+  }, {
+    passive: false
+  });
+  function zoomBy(f) {
+    var v = viewport(), mx = v.left + v.w / 2, my = v.h / 2;
     var next = Math.max(minS, Math.min(maxS, scale * f));
     tx = mx - (mx - tx) * (next / scale);
     ty = my - (my - ty) * (next / scale);
-    scale = next; apply();
+    scale = next;
+    apply();
   }
-  document.getElementById('zIn').addEventListener('click', function(){ zoomBy(1.2); });
-  document.getElementById('zOut').addEventListener('click', function(){ zoomBy(1/1.2); });
-
-  /* ---------- layer clicks ---------- */
-  layers.addEventListener('click', function(e){
-    var b = e.target.closest('.layer');
+  document.getElementById("zIn").addEventListener("click", function() {
+    zoomBy(1.2);
+  });
+  document.getElementById("zOut").addEventListener("click", function() {
+    zoomBy(1 / 1.2);
+  });
+  layers.addEventListener("click", function(e) {
+    var b = e.target.closest(".layer");
     if (!b || !b.dataset.target) return;
     var el = document.getElementById(b.dataset.target);
-    select(el); centreOn(el, true);
+    select(el);
+    centreOn(el, true);
   });
-
-  document.querySelector('[data-scroll]').addEventListener('click', function(e){
+  document.querySelector("[data-scroll]").addEventListener("click", function(e) {
     e.preventDefault();
-    var el = document.getElementById('f-osc');
-    select(el); centreOn(el, true);
+    var el = document.getElementById("f-osc");
+    select(el);
+    centreOn(el, true);
   });
-
-  /* ---------- toolbar, kept honest ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(b){
-    b.addEventListener('click', function(){
-      Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(o){
-        o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+  Array.prototype.forEach.call(document.querySelectorAll(".tool"), function(b) {
+    b.addEventListener("click", function() {
+      Array.prototype.forEach.call(document.querySelectorAll(".tool"), function(o) {
+        o.setAttribute("aria-pressed", o === b ? "true" : "false");
       });
     });
   });
-  document.getElementById('shareBtn').addEventListener('click', function(){
+  document.getElementById("shareBtn").addEventListener("click", function() {
     var btn = this;
-    var done = function(t){ btn.textContent = t; setTimeout(function(){ btn.textContent = 'Share'; }, 1400); };
-    if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function(){ done('Link copied'); })
-      .catch(function(){ done('Copy failed'); });
-    else done('thermalsocklabs.com');
+    var done = function(t) {
+      btn.textContent = t;
+      setTimeout(function() {
+        btn.textContent = "Share";
+      }, 1400);
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function() {
+      done("Link copied");
+    }).catch(function() {
+      done("Copy failed");
+    }); else done("thermalsocklabs.com");
   });
-  ['assetsTab','protoTab'].forEach(function(id){
-    document.getElementById(id).addEventListener('click', function(){
+  [ "assetsTab", "protoTab" ].forEach(function(id) {
+    document.getElementById(id).addEventListener("click", function() {
       var was = this.textContent;
-      this.textContent = 'Not built';
+      this.textContent = "Not built";
       var self = this;
-      setTimeout(function(){ self.textContent = was; }, 1100);
+      setTimeout(function() {
+        self.textContent = was;
+      }, 1100);
     });
   });
-
-  document.addEventListener('keydown', function(e){
-    if (e.target.tagName === 'INPUT') return;
-    if (e.key === '0'){ home(); }
-    if (e.key === '1'){ scale = 1; apply(); }
-    if (e.key === '+' || e.key === '=') zoomBy(1.2);
-    if (e.key === '-') zoomBy(1/1.2);
+  document.addEventListener("keydown", function(e) {
+    if (e.target.tagName === "INPUT") return;
+    if (e.key === "0") {
+      home();
+    }
+    if (e.key === "1") {
+      scale = 1;
+      apply();
+    }
+    if (e.key === "+" || e.key === "=") zoomBy(1.2);
+    if (e.key === "-") zoomBy(1 / 1.2);
   });
-
-  var hero = document.getElementById('f-hero');
-  function home(){ centreOn(hero, true); select(hero); }
+  var hero = document.getElementById("f-hero");
+  function home() {
+    centreOn(hero, true);
+    select(hero);
+  }
   home();
-  window.addEventListener('resize', function(){ if (window.innerWidth > 1000) home(); });
-
-  /* ---------- the hero scope ----------
-     Carried over from the previous homepage, because it was the best thing on
-     it. Sine morphs to saw to square and back; two dots ride the live curve on
-     their own timing. Honours prefers-reduced-motion by drawing a still sine
-     and dropping the dots, since a permanently moving line is exactly what
-     that setting exists to stop. */
-  (function(){
-    var path = document.getElementById('tracePath');
+  window.addEventListener("resize", function() {
+    if (window.innerWidth > 1e3) home();
+  });
+  (function() {
+    var path = document.getElementById("tracePath");
     if (!path) return;
-    var dot1 = document.getElementById('dot1'), dot2 = document.getElementById('dot2');
-    var nameEl = document.getElementById('shapeName');
-    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+    var dot1 = document.getElementById("dot1"), dot2 = document.getElementById("dot2");
+    var nameEl = document.getElementById("shapeName");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var W = 1100, MID = 100, AMP = 68, CYCLES = 3, POINTS = 111;
-    var SHAPES = ['sine', 'saw', 'square'], HOLD = 2600, MORPH = 1800;
-
-    function waveY(shape, frac){
+    var SHAPES = [ "sine", "saw", "square" ], HOLD = 2600, MORPH = 1800;
+    function waveY(shape, frac) {
       var v = Math.sin(2 * Math.PI * frac);
-      if (shape === 'sine') return v;
-      if (shape === 'square') return v >= 0 ? 1 : -1;
-      var q = (frac + 0.5) % 1; if (q < 0) q += 1;
+      if (shape === "sine") return v;
+      if (shape === "square") return v >= 0 ? 1 : -1;
+      var q = (frac + .5) % 1;
+      if (q < 0) q += 1;
       return 2 * q - 1;
     }
-    function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
-    function blend(frac, a, b, t){ var x = waveY(a, frac); return x + (waveY(b, frac) - x) * t; }
-
-    function draw(a, b, t){
-      var d = '';
-      for (var i = 0; i <= POINTS; i++){
-        var x = i / POINTS;
-        d += (i ? ' L' : 'M') + (x * W).toFixed(1) + ',' +
-             (MID - blend(x * CYCLES, a, b, t) * AMP).toFixed(1);
-      }
-      path.setAttribute('d', d);
+    function ease(t) {
+      return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     }
-
-    if (reduce){
-      draw('sine', 'sine', 0);
-      if (dot1) dot1.style.display = 'none';
-      if (dot2) dot2.style.display = 'none';
+    function blend(frac, a, b, t) {
+      var x = waveY(a, frac);
+      return x + (waveY(b, frac) - x) * t;
+    }
+    function draw(a, b, t) {
+      var d = "";
+      for (var i = 0; i <= POINTS; i++) {
+        var x = i / POINTS;
+        d += (i ? " L" : "M") + (x * W).toFixed(1) + "," + (MID - blend(x * CYCLES, a, b, t) * AMP).toFixed(1);
+      }
+      path.setAttribute("d", d);
+    }
+    if (reduce) {
+      draw("sine", "sine", 0);
+      if (dot1) dot1.style.display = "none";
+      if (dot2) dot2.style.display = "none";
       return;
     }
-
     var t0 = performance.now();
-    function frame(now){
+    function frame(now) {
       var cycle = HOLD + MORPH, span = cycle * SHAPES.length;
       var t = (now - t0) % span;
       var idx = Math.floor(t / cycle), within = t % cycle;
       var cur = SHAPES[idx], next = SHAPES[(idx + 1) % SHAPES.length];
       var mix = 0, label = cur;
-      if (within > HOLD){
+      if (within > HOLD) {
         var mt = (within - HOLD) / MORPH;
         mix = ease(Math.min(1, mt));
-        label = mt > 0.5 ? next : cur;
+        label = mt > .5 ? next : cur;
       }
       if (nameEl && nameEl.textContent !== label) nameEl.textContent = label;
       draw(cur, next, mix);
-
       var PERIOD = 4200;
-      [[dot1, 0], [dot2, PERIOD * 0.5]].forEach(function(pair){
+      [ [ dot1, 0 ], [ dot2, PERIOD * .5 ] ].forEach(function(pair) {
         if (!pair[0]) return;
-        var lap = ((now + pair[1]) % PERIOD) / PERIOD;
+        var lap = (now + pair[1]) % PERIOD / PERIOD;
         var y = MID - blend(lap * CYCLES, cur, next, mix) * AMP;
-        pair[0].style.left = (lap * 100).toFixed(2) + '%';
-        pair[0].style.top = (y / 200 * 100).toFixed(2) + '%';
+        pair[0].style.left = (lap * 100).toFixed(2) + "%";
+        pair[0].style.top = (y / 200 * 100).toFixed(2) + "%";
       });
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   })();
-
-  /* ---------- device panel ----------
-     The System panel is the one place on the site you pick your interface.
-     Every app reads the same choice through TSDevices, so moving from the Arp
-     Machine to the Oscilloscope no longer means choosing again.
-
-     Nothing here prompts on load: TSDevices only attaches silently if MIDI
-     permission is already on record, and the Connect button covers the first
-     time. Audio device names stay hidden until some tool has legitimately been
-     granted the microphone, which the note below the list explains rather than
-     leaving you looking at a list of blanks. */
-  (function(){
+  (function() {
     var D = window.TSDevices;
-    if (!D || !document.getElementById('devMidiOut')) return;
-
-    function fill(sel, items, chosen, blank){
-      sel.innerHTML = '';
-      if (!items.length){
-        var none = document.createElement('option');
-        none.textContent = blank; sel.appendChild(none);
-        sel.disabled = true; return;
+    if (!D || !document.getElementById("devMidiOut")) return;
+    function fill(sel, items, chosen, blank) {
+      sel.innerHTML = "";
+      if (!items.length) {
+        var none = document.createElement("option");
+        none.textContent = blank;
+        sel.appendChild(none);
+        sel.disabled = true;
+        return;
       }
       sel.disabled = false;
-      items.forEach(function(it, i){
-        var o = document.createElement('option');
+      items.forEach(function(it, i) {
+        var o = document.createElement("option");
         o.value = it.id || it.deviceId;
-        o.textContent = it.name || it.label || ('Input ' + (i + 1));
+        o.textContent = it.name || it.label || "Input " + (i + 1);
         sel.appendChild(o);
       });
       if (chosen) sel.value = chosen.id || chosen.deviceId;
     }
-
-    function paint(){
+    function paint() {
       var st = D.state();
-      fill(document.getElementById('devMidiIn'),  D.midiInputs(),  D.input(),
-           st === 'ready' ? 'No inputs' : 'Not connected');
-      fill(document.getElementById('devMidiOut'), D.midiOutputs(), D.output(),
-           st === 'ready' ? 'No outputs' : 'Not connected');
-      fill(document.getElementById('devAudioIn'), D.audioInputs(), D.audioInput(), 'None found');
-
-      document.getElementById('devConnect').hidden = (st === 'ready' || st === 'unsupported');
-
-      var note = document.getElementById('devNote'), msg = '';
-      if (st === 'unsupported') msg = 'Web MIDI needs Chrome or Edge over https or localhost.';
-      else if (st === 'denied') msg = 'MIDI permission was refused. Reload to try again.';
-      else if (st !== 'ready') msg = 'Press Connect to let the site see your MIDI ports.';
-      else if (D.audioInputs().length && !D.audioLabelsAvailable())
-        msg = 'Audio inputs are listed but unnamed until a tool has been given microphone access.';
+      fill(document.getElementById("devMidiIn"), D.midiInputs(), D.input(), st === "ready" ? "No inputs" : "Not connected");
+      fill(document.getElementById("devMidiOut"), D.midiOutputs(), D.output(), st === "ready" ? "No outputs" : "Not connected");
+      fill(document.getElementById("devAudioIn"), D.audioInputs(), D.audioInput(), "None found");
+      document.getElementById("devConnect").hidden = st === "ready" || st === "unsupported";
+      var note = document.getElementById("devNote"), msg = "";
+      if (st === "unsupported") msg = "Web MIDI needs Chrome or Edge over https or localhost."; else if (st === "denied") msg = "MIDI permission was refused. Reload to try again."; else if (st !== "ready") msg = "Press Connect to let the site see your MIDI ports."; else if (D.audioInputs().length && !D.audioLabelsAvailable()) msg = "Audio inputs are listed but unnamed until a tool has been given microphone access.";
       note.textContent = msg;
     }
-
-    document.getElementById('devMidiIn').addEventListener('change', function(){ D.setInput(this.value); });
-    document.getElementById('devMidiOut').addEventListener('change', function(){ D.setOutput(this.value); });
-    document.getElementById('devAudioIn').addEventListener('change', function(){ D.setAudioInput(this.value); });
-    document.getElementById('devConnect').addEventListener('click', function(){ D.connect(); });
-
+    document.getElementById("devMidiIn").addEventListener("change", function() {
+      D.setInput(this.value);
+    });
+    document.getElementById("devMidiOut").addEventListener("change", function() {
+      D.setOutput(this.value);
+    });
+    document.getElementById("devAudioIn").addEventListener("change", function() {
+      D.setAudioInput(this.value);
+    });
+    document.getElementById("devConnect").addEventListener("click", function() {
+      D.connect();
+    });
     D.onChange(paint);
     D.init();
     paint();
   })();
-
 })();
 </script>
 </body>

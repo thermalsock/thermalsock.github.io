@@ -9,259 +9,354 @@
   <link rel="stylesheet" href="../shared/chrome.css">
 
   <style>
-    html, body {
-      margin: 0;
-      background: var(--paper);
-      height: 100%;
-      overflow: hidden;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Browser-compat banner -- hidden by default, shown by the check
-       script below only when Web MIDI genuinely isn't available.
-       Sits in normal document flow ABOVE the canvas (not overlaid on
-       top of it), so it never covers any of the app's own on-canvas
-       UI -- it pushes the canvas down instead. */
-    #compat-banner {
-      display: none;
-      flex: 0 0 auto;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 8px 16px;
-      background: rgba(138,160,184,0.10);
-      color: var(--rust);
-      font: 600 13px var(--serif-body);
-      text-align: center;
-    }
-    #compat-banner button {
-      flex: 0 0 auto;
-      background: none;
-      border: 1px solid var(--rust);
-      color: var(--rust);
-      border-radius: 3px;
-      padding: 2px 8px;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    /* Canvas fills whatever space is left below the banner, scaled to
-       fit while keeping its real 1920x1080 aspect ratio -- the canvas
-       itself always draws at its native 1920x1080 resolution
-       (unchanged), this only affects its on-screen display size.
-       engine.js's click handler already scales pointer coordinates by
-       canvas.width/rect.width and canvas.height/rect.height, so a
-       CSS-scaled canvas was already handled correctly -- no JS
-       changes needed for this. */
-    #canvas-wrap {
-      flex: 1 1 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 0;
-    }
-    canvas {
-      display: block;
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    /* Support widget -- small, fixed corner, out of the way of the
-       app's own UI. Rudiment's store links are commented out below;
-       add them once those listings are live. */
-    /* Legal bar — every other app on the site has one; this page was the
-       only app besides Subharmonicon and Ambient Bloom missing it. */
-    #legalBar {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      z-index: 9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      padding: 5px 12px;
-      font: 400 10.5px 'JetBrains Mono', ui-monospace, monospace;
-      color: var(--ink-faint);
-      background: rgba(11, 13, 18, 0.92);
-      border-top: 1px solid rgba(138, 160, 184, 0.14);
-    }
-    #legalBar a { color: var(--ink-faint); text-decoration: none; }
-    #legalBar a:hover { color: var(--rust); }
-
-    #support-widget {
-      position: fixed;
-      right: 14px;
-      bottom: 30px;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-    }
-    #support-widget a img {
-      display: block;
-    }
-    #support-widget .store-link {
-      display: block;
-      font: 600 12px var(--serif-body);
-      background: var(--paper-deep);
-      color: var(--ink);
-      border: 1px solid var(--hairline);
-      border-radius: 6px;
-      padding: 7px 12px;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    #support-widget .store-link:hover { border-color: var(--rust); }
-    #support-widget .store-link.pending {
-      color: var(--ink-faint);
-      cursor: default;
-      pointer-events: none;
-    }
-
-    /* Thin strip in normal document flow at the very top, above the
-       compat-banner -- same "push the canvas down, never overlay it"
-       technique as the banner below, so it can't collide with the
-       canvas-drawn TopBar controls (lesson title left, fullscreen/theme
-       buttons right). Always visible; this is the hub wayfinding link.
-       Matches the icon+lockup brand treatment used on the hub and every
-       other Thermalsock Labs app page -- this strip is site-shell, not
-       part of the app itself, so it stays in sync with that pattern. */
-    #hub-strip {
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 14px;
-      background: var(--paper-deep);
-      border-bottom: 1px solid var(--hairline);
-    }
-    #hub-strip .hs-spacer { flex: 1 1 auto; }
-    #hub-strip .hs-progress {
-      font: 500 10.5px 'JetBrains Mono', ui-monospace, monospace;
-      letter-spacing: 0.05em; color: var(--rust); white-space: nowrap;
-    }
-    #hub-strip .hs-btn {
-      font: 400 10px 'JetBrains Mono', ui-monospace, monospace;
-      letter-spacing: 0.05em; text-transform: uppercase;
-      color: var(--ink-soft); background: transparent;
-      border: 1px solid rgba(138, 160, 184,0.22); border-radius: 999px;
-      padding: 6px 12px; cursor: pointer; white-space: nowrap;
-      transition: color .2s, border-color .2s;
-    }
-    #hub-strip .hs-btn:hover { color: var(--ink); border-color: var(--rust); }
-    #hub-strip .hs-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
-
-    /* Lesson search — 216 scale packs with no filter meant browsing a
-       canvas-drawn dropdown to find anything. */
-    #hub-strip .hs-search { position: relative; }
-    #hub-strip .hs-search input {
-      font: 400 11px 'JetBrains Mono', ui-monospace, monospace;
-      color: var(--ink); background: var(--paper);
-      border: 1px solid rgba(138, 160, 184,0.22); border-radius: 999px;
-      padding: 6px 12px; width: 150px; outline: none;
-    }
-    #hub-strip .hs-search input:focus { border-color: var(--rust); }
-    #lessonSearchResults {
-      position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
-      background: var(--paper); border: 1px solid rgba(138, 160, 184,0.22);
-      border-radius: 10px; padding: 4px; min-width: 260px;
-      max-height: 300px; overflow-y: auto; display: none;
-      box-shadow: 0 12px 30px rgba(138, 160, 184,0.22);
-    }
-    #lessonSearchResults.open { display: block; }
-    #lessonSearchResults button {
-      display: block; width: 100%; text-align: left; background: none;
-      border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer;
-      font: 400 12px var(--serif-body); color: var(--ink);
-    }
-    #lessonSearchResults button:hover { background: rgba(0, 200, 255,0.12); }
-    #lessonSearchResults .ls-pack {
-      display: block; font: 400 9.5px 'JetBrains Mono', monospace;
-      color: var(--ink-faint); letter-spacing: 0.05em;
-    }
-    #lessonSearchResults .ls-empty { padding: 8px 10px; color: var(--ink-faint); font-size: 11px; }
-
-    /* Progress panel */
-    #progressPanel {
-      position: fixed; inset: 0; z-index: 60;
-      background: rgba(26,22,17,0.55);
-      display: flex; align-items: center; justify-content: center; padding: 24px;
-    }
-    #progressPanel[hidden] { display: none; }
-    #progressPanel .pp-inner {
-      background: var(--paper); border: 1px solid rgba(138, 160, 184,0.22);
-      border-radius: 14px; padding: 24px 26px; width: 100%; max-width: 520px;
-      max-height: 78vh; overflow-y: auto;
-      box-shadow: 0 20px 50px rgba(138, 160, 184,0.28);
-    }
-    #progressPanel .pp-head {
-      display: flex; align-items: baseline; justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    #progressPanel h2 {
-      font: 600 21px var(--serif-display); color: var(--ink); margin: 0;
-    }
-    #progressPanel .pp-close {
-      background: none; border: none; cursor: pointer;
-      font-size: 17px; color: var(--ink-faint); padding: 4px 6px; border-radius: 6px;
-    }
-    #progressPanel .pp-close:hover { color: var(--rust); background: rgba(0, 200, 255,0.10); }
-    #progressPanel .pp-actions {
-      display: flex; gap: 8px; margin-top: 18px;
-      padding-top: 14px; border-top: 1px solid rgba(138, 160, 184,0.14);
-    }
-    .pp-summary {
-      font: 400 14px var(--serif-body); color: var(--ink-soft); margin: 0 0 16px 0;
-    }
-    .pp-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 8px 0; border-bottom: 1px solid rgba(138, 160, 184,0.10);
-    }
-    .pp-row:last-child { border-bottom: none; }
-    .pp-name { flex: 1; font: 400 13px var(--serif-body); color: var(--ink); }
-    .pp-name small { display: block; font: 400 9.5px 'JetBrains Mono', monospace; color: var(--ink-faint); }
-    .pp-bar { width: 90px; height: 6px; background: rgba(138, 160, 184,0.12); border-radius: 3px; overflow: hidden; }
-    .pp-bar-fill { height: 100%; background: var(--rust); }
-    .pp-pct { width: 38px; text-align: right; font: 500 11px 'JetBrains Mono', monospace; color: var(--ink-soft); }
-    .pp-empty { color: var(--ink-faint); font: 400 13px var(--serif-body); }
-
-    /* The canvas is a fixed 1920x1080 scaled to fit, so on a 1366-wide
-       laptop everything renders at ~71% — including the small note-name and
-       fingering text. Nudging the floor up keeps that text legible rather
-       than letting it shrink with the viewport. */
-    @media (max-width: 1500px) {
-      #canvas-wrap { min-width: 1100px; }
-      #hub-strip .hs-search input { width: 110px; }
-    }
-    @media (max-width: 1100px) {
-      #hub-strip { flex-wrap: wrap; row-gap: 8px; }
-      #hub-strip .hs-spacer { flex-basis: 100%; height: 0; }
-    }
-    #hub-strip a {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      text-decoration: none;
-    }
-    #hub-strip a:hover .hs-appname { filter: brightness(1.15); }
-    #hub-strip .hs-mark { flex: none; display: block; }
-    #hub-strip .hs-text { display: flex; flex-direction: column; line-height: 1.15; }
-    #hub-strip .hs-appname {
-      font: 600 13px var(--serif-display);
-      color: var(--rust);
-      letter-spacing: 0.005em;
-    }
-    #hub-strip .hs-sub {
-      font: 500 9.5px 'JetBrains Mono', monospace;
-      color: var(--ink-soft);
-      letter-spacing: 0.02em;
-    }
-  </style>
+body,
+html {
+  margin: 0;
+  background: var(--paper);
+  height: 100%;
+  overflow: hidden
+}
+body {
+  display: flex;
+  flex-direction: column
+}
+#compat-banner {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(138,160,184,.1);
+  color: var(--rust);
+  font: 600 13px var(--serif-body);
+  text-align: center
+}
+#compat-banner button {
+  flex: 0 0 auto;
+  background: 0 0;
+  border: 1px solid var(--rust);
+  color: var(--rust);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font: inherit;
+  cursor: pointer
+}
+#canvas-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0
+}
+canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain
+}
+#legalBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 5px 12px;
+  font: 400 10.5px 'JetBrains Mono',ui-monospace,monospace;
+  color: var(--ink-faint);
+  background: rgba(11,13,18,.92);
+  border-top: 1px solid rgba(138,160,184,.14)
+}
+#legalBar a {
+  color: var(--ink-faint);
+  text-decoration: none
+}
+#legalBar a:hover {
+  color: var(--rust)
+}
+#support-widget {
+  position: fixed;
+  right: 14px;
+  bottom: 30px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px
+}
+#support-widget a img {
+  display: block
+}
+#support-widget .store-link {
+  display: block;
+  font: 600 12px var(--serif-body);
+  background: var(--paper-deep);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 7px 12px;
+  text-decoration: none;
+  white-space: nowrap
+}
+#support-widget .store-link:hover {
+  border-color: var(--rust)
+}
+#support-widget .store-link.pending {
+  color: var(--ink-faint);
+  cursor: default;
+  pointer-events: none
+}
+#hub-strip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--hairline)
+}
+#hub-strip .hs-spacer {
+  flex: 1 1 auto
+}
+#hub-strip .hs-progress {
+  font: 500 10.5px 'JetBrains Mono',ui-monospace,monospace;
+  letter-spacing: .05em;
+  color: var(--rust);
+  white-space: nowrap
+}
+#hub-strip .hs-btn {
+  font: 400 10px 'JetBrains Mono',ui-monospace,monospace;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: 0 0;
+  border: 1px solid rgba(138,160,184,.22);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .2s,border-color .2s
+}
+#hub-strip .hs-btn:hover {
+  color: var(--ink);
+  border-color: var(--rust)
+}
+#hub-strip .hs-btn.danger:hover {
+  color: var(--danger);
+  border-color: var(--danger)
+}
+#hub-strip .hs-search {
+  position: relative
+}
+#hub-strip .hs-search input {
+  font: 400 11px 'JetBrains Mono',ui-monospace,monospace;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid rgba(138,160,184,.22);
+  border-radius: 999px;
+  padding: 6px 12px;
+  width: 150px;
+  outline: 0
+}
+#hub-strip .hs-search input:focus {
+  border-color: var(--rust)
+}
+#lessonSearchResults {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  background: var(--paper);
+  border: 1px solid rgba(138,160,184,.22);
+  border-radius: 10px;
+  padding: 4px;
+  min-width: 260px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 12px 30px rgba(138,160,184,.22)
+}
+#lessonSearchResults.open {
+  display: block
+}
+#lessonSearchResults button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: 0 0;
+  border: none;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: 400 12px var(--serif-body);
+  color: var(--ink)
+}
+#lessonSearchResults button:hover {
+  background: rgba(0,200,255,.12)
+}
+#lessonSearchResults .ls-pack {
+  display: block;
+  font: 400 9.5px 'JetBrains Mono',monospace;
+  color: var(--ink-faint);
+  letter-spacing: .05em
+}
+#lessonSearchResults .ls-empty {
+  padding: 8px 10px;
+  color: var(--ink-faint);
+  font-size: 11px
+}
+#progressPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(26,22,17,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px
+}
+#progressPanel[hidden] {
+  display: none
+}
+#progressPanel .pp-inner {
+  background: var(--paper);
+  border: 1px solid rgba(138,160,184,.22);
+  border-radius: 14px;
+  padding: 24px 26px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 78vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(138,160,184,.28)
+}
+#progressPanel .pp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px
+}
+#progressPanel h2 {
+  font: 600 21px var(--serif-display);
+  color: var(--ink);
+  margin: 0
+}
+#progressPanel .pp-close {
+  background: 0 0;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  color: var(--ink-faint);
+  padding: 4px 6px;
+  border-radius: 6px
+}
+#progressPanel .pp-close:hover {
+  color: var(--rust);
+  background: rgba(0,200,255,.1)
+}
+#progressPanel .pp-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(138,160,184,.14)
+}
+.pp-summary {
+  font: 400 14px var(--serif-body);
+  color: var(--ink-soft);
+  margin: 0 0 16px 0
+}
+.pp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(138,160,184,.1)
+}
+.pp-row:last-child {
+  border-bottom: none
+}
+.pp-name {
+  flex: 1;
+  font: 400 13px var(--serif-body);
+  color: var(--ink)
+}
+.pp-name small {
+  display: block;
+  font: 400 9.5px 'JetBrains Mono',monospace;
+  color: var(--ink-faint)
+}
+.pp-bar {
+  width: 90px;
+  height: 6px;
+  background: rgba(138,160,184,.12);
+  border-radius: 3px;
+  overflow: hidden
+}
+.pp-bar-fill {
+  height: 100%;
+  background: var(--rust)
+}
+.pp-pct {
+  width: 38px;
+  text-align: right;
+  font: 500 11px 'JetBrains Mono',monospace;
+  color: var(--ink-soft)
+}
+.pp-empty {
+  color: var(--ink-faint);
+  font: 400 13px var(--serif-body)
+}
+@media (max-width:1500px) {
+  #canvas-wrap {
+    min-width: 1100px
+  }
+  #hub-strip .hs-search input {
+    width: 110px
+  }
+}
+@media (max-width:1100px) {
+  #hub-strip {
+    flex-wrap: wrap;
+    row-gap: 8px
+  }
+  #hub-strip .hs-spacer {
+    flex-basis: 100%;
+    height: 0
+  }
+}
+#hub-strip a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none
+}
+#hub-strip a:hover .hs-appname {
+  filter: brightness(1.15)
+}
+#hub-strip .hs-mark {
+  flex: none;
+  display: block
+}
+#hub-strip .hs-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15
+}
+#hub-strip .hs-appname {
+  font: 600 13px var(--serif-display);
+  color: var(--rust);
+  letter-spacing: .005em
+}
+#hub-strip .hs-sub {
+  font: 500 9.5px 'JetBrains Mono',monospace;
+  color: var(--ink-soft);
+  letter-spacing: .02em
+}
+</style>
   <link rel="canonical" href="https://thermalsocklabs.com/transient-lab/">
   <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
@@ -346,19 +441,14 @@
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
   <script>
-    // Web MIDI is Chrome/Edge/Firefox 108+ only -- Safari (desktop and
-    // iOS) has never shipped it and WebKit has no roadmap to. This app
-    // is MIDI-input-only with no on-screen fallback, so a visitor on
-    // an unsupported browser needs to know why nothing happens when
-    // they plug in a keyboard, rather than assuming the site is broken.
-    if (!('requestMIDIAccess' in navigator)) {
-      var banner = document.getElementById('compat-banner');
-      banner.style.display = 'flex';
-      document.getElementById('compat-dismiss').addEventListener('click', function () {
-        banner.style.display = 'none';
-      });
-    }
-  </script>
+if (!("requestMIDIAccess" in navigator)) {
+  var banner = document.getElementById("compat-banner");
+  banner.style.display = "flex";
+  document.getElementById("compat-dismiss").addEventListener("click", function() {
+    banner.style.display = "none";
+  });
+}
+</script>
 
   <script type="module" src="./engine.js"></script>
   <script src="../shared/app-switcher.js" defer></script>

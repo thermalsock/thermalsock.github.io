@@ -25,8 +25,7 @@
 </head>
 <body>
 
-  <!-- Permission gate: shown until the user explicitly starts capture, OR
-       skipped entirely via "Enter notes manually" for a mic-free workflow. -->
+  
   <div id="gate" class="gate">
     <div class="gate-panel">
       <h1>Subharmonicon</h1>
@@ -51,7 +50,7 @@
     </div>
   </div>
 
-  <!-- Main app -->
+  
   <div id="app" class="app" hidden>
     <header class="topbar">
       <a href="../index.html" class="brand-lockup">
@@ -87,7 +86,7 @@
 
     <main class="stage">
 
-      <!-- ============ Osc 1 / Osc 2 (identical structure, templated by JS) ============ -->
+      
       <section id="view-osc1" class="view active osc-view" data-osc="1"></section>
       <section id="view-both" class="view both-view">
         <p class="hint">Both oscillators at once, for the point where you stop tuning them separately and start hearing them together.</p>
@@ -98,7 +97,7 @@
       </section>
       <section id="view-osc2" class="view osc-view" data-osc="2"></section>
 
-      <!-- ============ Combined ============ -->
+      
       <section id="view-combined" class="view">
         <section class="card">
           <h2 class="section-title"><span class="chip amber" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M6 5.2v5.6M10 5.2v5.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>Osc 2 tuning, relative to Osc 1</h2>
@@ -123,7 +122,7 @@
         </section>
       </section>
 
-      <!-- ============ Ratio Library ============ -->
+      
       <section id="view-library" class="view">
         <div class="library-grid">
           <aside class="library-sidebar" id="librarySidebar"></aside>

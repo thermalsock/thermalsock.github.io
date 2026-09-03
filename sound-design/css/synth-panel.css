@@ -1,25 +1,11 @@
-/* synth-panel.css — extends the tokens defined in styles.css (chassis,
-   panel, hairline, accent, mono) with components specific to recreating an
-   instrument control panel: knobs, mini switches, section blocks, and the
-   patch-select strip.
-
-   Deliberately an original visual treatment (dark card sections, accent-
-   green pointers) rather than a pixel copy of Sequential's exact branding,
-   colors, or logo — this recreates the *functional control layout* of a
-   Take 5 for programming reference, not its trade dress.
-*/
-
 .synth-layout {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   display: flex;
   gap: 16px;
-  padding: 16px 22px 30px 22px;
+  padding: 16px 22px 30px 22px
 }
-
-/* --- Sidebar: the full browsable library, always visible ------------------ */
-
 .sound-sidebar {
   width: 250px;
   flex-shrink: 0;
@@ -27,23 +13,25 @@
   background: var(--panel);
   border: 1px solid var(--hairline);
   border-radius: 10px;
-  padding: 10px;
+  padding: 10px
 }
-.sound-nav-group + .sound-nav-group { margin-top: 14px; }
+.sound-nav-group + .sound-nav-group {
+  margin-top: 14px
+}
 .sound-nav-group h4 {
   margin: 4px 8px 6px;
   font-family: var(--sans);
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: .1em;
   color: var(--text-dim);
-  font-weight: 600;
+  font-weight: 600
 }
 .sound-nav-item {
   display: block;
   width: 100%;
   text-align: left;
-  background: none;
+  background: 0 0;
   border: none;
   border-radius: 6px;
   padding: 7px 9px;
@@ -51,17 +39,17 @@
   font-size: 11.5px;
   color: var(--text-dim);
   cursor: pointer;
-  line-height: 1.3;
+  line-height: 1.3
 }
-.sound-nav-item:hover { background: var(--panel-raised); color: var(--text); }
+.sound-nav-item:hover {
+  background: var(--panel-raised);
+  color: var(--text)
+}
 .sound-nav-item.active {
-  background: rgba(0, 200, 255, 0.1);
+  background: rgba(0,200,255,.1);
   color: var(--accent);
-  font-weight: 600;
+  font-weight: 600
 }
-
-/* --- Main content: controls + details, filling remaining space ------------ */
-
 .sound-main {
   flex: 1;
   min-width: 0;
@@ -69,63 +57,46 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden;
+  overflow: hidden
 }
-
 .synth-intro {
   font-family: var(--sans);
   font-size: 11px;
   color: var(--text-dim);
   line-height: 1.4;
   margin: 0;
-  flex: 0 0 auto;
+  flex: 0 0 auto
 }
-.synth-intro strong { color: var(--text); }
-
-/* --- Section blocks ----------------------------------------------------- */
-
+.synth-intro strong {
+  color: var(--text)
+}
 .synth-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: flex-start
 }
-
-/* Oscillators / Mixer / Filter / Envelopes / ADSR / Suggested Effects /
-   Modulation — 7 equal columns in one row, all the same height (grid rows
-   stretch by default), spanning the full width. Each section's own content
-   is then centered/distributed vertically within that shared height via the
-   rules below, rather than just sitting at the top of an oversized box. */
 .controls-row {
   display: grid;
-  /* Proportional, not equal — Oscillators/Envelopes genuinely hold more
-     controls (2 rows of 4) than Mixer/Filter (a handful of knobs), so equal
-     columns left visible dead space around Mixer/Filter's smaller content
-     once it was centered inside a same-width box. Sized to content instead. */
   grid-template-columns: 1.3fr 0.85fr 0.75fr 1.3fr 1fr 1.1fr 0.9fr;
   gap: 12px;
-  align-items: stretch;
+  align-items: stretch
 }
-
 .example-row {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: hidden
 }
 .example-row .sound-example-card {
   height: 100%;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
+  flex-direction: column
 }
-
-/* preserveAspectRatio="xMidYMid meet" on the SVG itself keeps the chart's
-   own proportions intact — this just stops the flex box from forcing it
-   wider/taller than the square viewBox wants to be. */
 .adsr-window {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center
 }
 .adsr-window .adsr-chart {
   flex: 1;
@@ -133,30 +104,28 @@
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1/1
 }
-
 .synth-section {
   background: var(--panel);
   border: 1px solid var(--hairline);
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column
 }
-
 .synth-section h3 {
   margin: 0 0 10px;
   font-family: var(--sans);
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: .12em;
   color: var(--text-dim);
   font-weight: 600;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 7px
 }
 .chip {
   width: 17px;
@@ -165,186 +134,199 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center
 }
-.chip svg { width: 10px; height: 10px; }
-.chip.amber { background: rgba(255, 180, 84, 0.15); color: var(--amber); }
-.chip.violet { background: rgba(167, 139, 250, 0.15); color: var(--violet); }
-.chip.teal { background: rgba(77, 232, 201, 0.15); color: var(--teal); }
-.chip.pink { background: rgba(255, 126, 182, 0.15); color: var(--pink); }
-.chip.blue { background: rgba(95, 168, 255, 0.15); color: var(--blue); }
-
-.synth-row.top .synth-section { flex: 1 1 140px; }
-
-.filter-controls { gap: 40px; }
-
+.chip svg {
+  width: 10px;
+  height: 10px
+}
+.chip.amber {
+  background: rgba(255,180,84,.15);
+  color: var(--amber)
+}
+.chip.violet {
+  background: rgba(167,139,250,.15);
+  color: var(--violet)
+}
+.chip.teal {
+  background: rgba(77,232,201,.15);
+  color: var(--teal)
+}
+.chip.pink {
+  background: rgba(255,126,182,.15);
+  color: var(--pink)
+}
+.chip.blue {
+  background: rgba(95,168,255,.15);
+  color: var(--blue)
+}
+.synth-row.top .synth-section {
+  flex: 1 1 140px
+}
+.filter-controls {
+  gap: 40px
+}
 .synth-controls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: center
 }
-
-/* Mixer/Filter each have a single row of knobs — center that row vertically
-   within the section now that all 7 sections share the same (taller) height.
-   Placed AFTER .synth-controls deliberately: same specificity, so source
-   order decides — this must come later to actually win the cascade. */
-.mixer-controls,
-.filter-controls {
+.filter-controls,
+.mixer-controls {
   flex: 1;
-  align-items: center;
+  align-items: center
 }
-
-/* --- Knob ----------------------------------------------------------------
-   Two layers: a tick-mark ring (CSS repeating-conic-gradient, masked into an
-   annulus so it surrounds the knob without filling it — mirrors the printed
-   scale ticks on a real synth panel) and the knob body itself (radial-
-   gradient for a metallic/plastic highlight, plus a white pointer with a
-   glowing tip). --angle is still the only thing that varies per instance. */
-
 .knob-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  width: 54px;
+  width: 54px
 }
-
 .knob-svg {
   width: 46px;
   height: 46px;
-  overflow: visible;
+  overflow: visible
 }
 .knob-svg.large {
   width: 62px;
-  height: 62px;
+  height: 62px
 }
-
 .knob-ring-bg {
   fill: var(--panel-raised);
   stroke: var(--hairline-strong);
-  stroke-width: 1;
+  stroke-width: 1
 }
 .knob-tick {
   stroke: var(--text-dim);
-  stroke-width: 1.5;
+  stroke-width: 1.5
 }
 .knob-num {
   font-family: var(--sans);
   font-size: 8px;
   fill: var(--text-dim);
   text-anchor: middle;
-  dominant-baseline: middle;
+  dominant-baseline: middle
 }
 .knob-body {
   fill: url(#knobBodyGrad);
   stroke: var(--hairline-strong);
   stroke-width: 1;
-  filter: drop-shadow(0 2px 3px rgba(138, 160, 184, 0.35));
+  filter: drop-shadow(0 2px 3px rgba(138, 160, 184, .35))
 }
 .knob-pointer {
   transform-origin: 35px 35px;
-  transform: rotate(var(--angle, -110deg));
+  transform: rotate(var(--angle,-110deg))
 }
 .knob-pointer-line {
   stroke: var(--accent);
   stroke-width: 2.6;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(138, 160, 184, 0.4));
+  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(138, 160, 184, .4))
 }
 .knob-pointer-dot {
   fill: var(--accent);
-  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(138, 160, 184, 0.4));
+  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(138, 160, 184, .4))
 }
-
 .knob-label {
   font-family: var(--sans);
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: .05em;
   color: var(--text-dim);
   text-align: center;
-  line-height: 1.25;
+  line-height: 1.25
 }
-
-/* --- Oscillator rows (matches reference: OSC1/OSC2 stacked rows, side label) --- */
-
-.osc-section { flex: 1 1 300px; }
+.osc-section {
+  flex: 1 1 300px
+}
 .osc-rows {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 32px;
+  gap: 32px
 }
-.osc-row { display: flex; align-items: flex-end; gap: 12px; }
+.osc-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px
+}
 .osc-side-label {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-family: var(--sans);
   font-size: 9px;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   color: var(--text-dim);
   align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
+  padding: 4px 0
 }
-
-/* Octave knob: small LED dots instead of a numbered ring, like a real octave selector */
-.knob-octave { overflow: visible; }
+.knob-octave {
+  overflow: visible
+}
 .knob-led {
   fill: var(--panel);
   stroke: var(--hairline-strong);
-  stroke-width: 0.8;
+  stroke-width: .8
 }
 .knob-led.on {
   fill: #C4402A;
-  filter: drop-shadow(0 0 2px rgba(196, 64, 42, 0.6));
+  filter: drop-shadow(0 0 2px rgba(196, 64, 42, .6))
 }
-
-/* Small square momentary-style buttons (Sync / FM / Env Routing) */
 .mini-btn-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
   width: 40px;
-  padding-bottom: 8px;
+  padding-bottom: 8px
 }
 .mini-btn {
   width: 22px;
   height: 22px;
   border-radius: 5px;
-  background: linear-gradient(160deg, var(--panel-raised), var(--panel));
+  background: linear-gradient(160deg,var(--panel-raised),var(--panel));
   border: 1px solid var(--hairline-strong);
-  box-shadow: 0 1px 2px rgba(138, 160, 184, 0.25), inset 0 1px 1px rgba(255, 250, 240, 0.5);
+  box-shadow: 0 1px 2px rgba(138,160,184,.25),inset 0 1px 1px rgba(255,250,240,.5)
 }
 .mini-btn.on {
   border-color: var(--accent-dim);
-  box-shadow: 0 0 6px var(--accent-dim), inset 0 1px 1px rgba(255, 250, 240, 0.5);
+  box-shadow: 0 0 6px var(--accent-dim),inset 0 1px 1px rgba(255,250,240,.5)
 }
-
-/* --- Mixer: OSC1/SUB, FM button, OSC2/Noise columns, matching reference grouping --- */
-.mixer-col { display: flex; flex-direction: column; gap: 10px; }
-
-/* --- Filter: orange-ringed Cutoff as the visual centerpiece --- */
-.filter-side-knobs { display: flex; flex-direction: column; gap: 10px; }
-.filter-cutoff .knob-tick { stroke: #C97A2E; stroke-width: 2; }
-.filter-cutoff .knob-num { fill: #C97A2E; }
-.filter-cutoff .knob-ring-bg { stroke: #C97A2E; stroke-width: 1.5; }
-
-/* --- Mini switch (kept for any remaining pill-style toggles) ---------------- */
-
+.mixer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px
+}
+.filter-side-knobs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px
+}
+.filter-cutoff .knob-tick {
+  stroke: #C97A2E;
+  stroke-width: 2
+}
+.filter-cutoff .knob-num {
+  fill: #C97A2E
+}
+.filter-cutoff .knob-ring-bg {
+  stroke: #C97A2E;
+  stroke-width: 1.5
+}
 .switch-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 52px;
+  width: 52px
 }
 .switch-mini {
   width: 30px;
@@ -352,43 +334,43 @@
   border-radius: 6px;
   background: var(--panel-raised);
   border: 1px solid var(--hairline-strong);
-  position: relative;
+  position: relative
 }
 .switch-mini::after {
   content: '';
   position: absolute;
   top: 2px;
-  left: var(--pos, 2px);
+  left: var(--pos,2px);
   width: 11px;
   height: 9px;
   border-radius: 5px;
-  background: var(--text-dim);
+  background: var(--text-dim)
 }
-.switch-mini.on::after { background: var(--accent); left: 17px; }
-
-/* --- Small buttons (memory/seq/arp) --------------------------------------- */
-
+.switch-mini.on::after {
+  background: var(--accent);
+  left: 17px
+}
 .synth-btn-row {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: wrap
 }
 .synth-btn {
   font-family: var(--sans);
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: .04em;
   color: var(--text-dim);
   background: var(--panel-raised);
   border: 1px solid var(--hairline-strong);
   border-radius: 6px;
   padding: 6px 8px;
-  cursor: default;
+  cursor: default
 }
-.synth-btn.on { color: var(--accent); border-color: var(--accent-dim); }
-
-/* --- Mini display screen -------------------------------------------------- */
-
+.synth-btn.on {
+  color: var(--accent);
+  border-color: var(--accent-dim)
+}
 .mini-display {
   background: #04140d;
   border: 1px solid var(--hairline-strong);
@@ -398,32 +380,28 @@
   font-size: 11px;
   color: var(--accent);
   text-shadow: 0 0 6px var(--accent-dim);
-  margin-bottom: 10px;
+  margin-bottom: 10px
 }
-
 .envelope-blocks {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 32px;
+  gap: 32px
 }
 .envelope-block h4 {
   margin: 0 0 6px;
   font-family: var(--sans);
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
+  letter-spacing: .08em;
+  color: var(--text-dim)
 }
-
-/* --- Patch select strip ---------------------------------------------------- */
-
 .patch-strip {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: wrap
 }
 .patch-btn {
   width: 30px;
@@ -436,21 +414,23 @@
   font-size: 11px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center
 }
-.patch-btn.on { color: var(--accent); border-color: var(--accent-dim); background: rgba(0, 200, 255, 0.08); }
-
-@media (max-width: 900px) {
-  .synth-row { flex-direction: column; }
+.patch-btn.on {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+  background: rgba(0,200,255,.08)
 }
-
-/* --- Explanation area ------------------------------------------------------ */
-
+@media (max-width:900px) {
+  .synth-row {
+    flex-direction: column
+  }
+}
 .explain-title {
   font-family: var(--sans);
   font-size: 19px;
   margin: 0 0 10px;
-  color: var(--text);
+  color: var(--text)
 }
 .explain-copy {
   font-family: var(--sans);
@@ -458,41 +438,44 @@
   line-height: 1.65;
   color: var(--text-dim);
   max-width: 780px;
-  margin: 0 0 16px;
+  margin: 0 0 16px
 }
-.explain-copy strong { color: var(--text); }
-
-/* --- Sound example card ---------------------------------------------------- */
-
+.explain-copy strong {
+  color: var(--text)
+}
 .sound-example-header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
-  flex: 0 0 auto;
+  flex: 0 0 auto
 }
-.sound-example-header h2 { margin: 0; }
+.sound-example-header h2 {
+  margin: 0
+}
 .sound-select {
   font-family: var(--sans);
   font-size: 15px;
   font-weight: 600;
   color: var(--text);
-  background: transparent;
+  background: 0 0;
   border: none;
   padding: 0;
-  cursor: pointer;
+  cursor: pointer
 }
-.sound-select:focus { outline: 1px solid var(--accent-dim); }
+.sound-select:focus {
+  outline: 1px solid var(--accent-dim)
+}
 .sound-category-tag {
   font-family: var(--sans);
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: .06em;
   color: var(--teal);
-  background: rgba(77, 232, 201, 0.12);
-  border: 1px solid rgba(77, 232, 201, 0.3);
+  background: rgba(77,232,201,.12);
+  border: 1px solid rgba(77,232,201,.3);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 10px
 }
 .sound-settings-list {
   font-family: var(--sans);
@@ -500,14 +483,17 @@
   color: var(--text-dim);
   line-height: 2;
   margin: 0 0 4px;
-  padding-left: 20px;
+  padding-left: 20px
 }
-.sound-settings-list strong { color: var(--accent); }
-
-/* --- Suggested Effects / Modulation windows -------------------------------- */
-
-.suggestion-window { justify-content: flex-start; }
-.suggestion-block + .suggestion-block { margin-top: 14px; }
+.sound-settings-list strong {
+  color: var(--accent)
+}
+.suggestion-window {
+  justify-content: flex-start
+}
+.suggestion-block + .suggestion-block {
+  margin-top: 14px
+}
 .suggestion-block h4 {
   margin: 0 0 4px;
   font-family: var(--sans);
@@ -515,51 +501,61 @@
   color: var(--text);
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 6px
 }
 .suggestion-type {
   font-size: 10px;
   color: var(--accent);
   text-transform: none;
-  font-weight: 400;
+  font-weight: 400
 }
 .suggestion-text {
   margin: 0;
   font-family: var(--sans);
   font-size: 11px;
   line-height: 1.55;
-  color: var(--text-dim);
+  color: var(--text-dim)
 }
-
-/* --- ADSR chart (right column of the sound card) ---------------------------
-   Colored per-phase fill areas + outline stroke, modeled on a classic
-   labeled ADSR diagram — built dynamically per preset in soundDesign.js,
-   these classes just supply the styling. */
-.adsr-fill-attack { fill: var(--danger); fill-opacity: 0.75; }
-.adsr-fill-decay { fill: var(--amber); fill-opacity: 0.75; }
-.adsr-fill-sustain { fill: var(--teal); fill-opacity: 0.75; }
-.adsr-fill-release { fill: var(--violet); fill-opacity: 0.75; }
+.adsr-fill-attack {
+  fill: var(--danger);
+  fill-opacity: 0.75
+}
+.adsr-fill-decay {
+  fill: var(--amber);
+  fill-opacity: 0.75
+}
+.adsr-fill-sustain {
+  fill: var(--teal);
+  fill-opacity: 0.75
+}
+.adsr-fill-release {
+  fill: var(--violet);
+  fill-opacity: 0.75
+}
 .adsr-outline {
   fill: none;
   stroke: #f5f6fa;
   stroke-width: 2;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 3px rgba(245, 246, 250, 0.4));
+  filter: drop-shadow(0 0 3px rgba(245, 246, 250, .4))
 }
-.adsr-axis { stroke: var(--hairline-strong); stroke-width: 1.5; }
+.adsr-axis {
+  stroke: var(--hairline-strong);
+  stroke-width: 1.5
+}
 .adsr-axis-label {
   font-family: var(--sans);
   font-size: 10px;
   fill: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: .06em
 }
 .adsr-phase-label {
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 700;
   fill: var(--text);
-  text-anchor: middle;
+  text-anchor: middle
 }
 .adsr-phase-sub {
   font-family: var(--sans);
@@ -567,54 +563,64 @@
   fill: var(--text-dim);
   text-anchor: middle;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: .04em
 }
-.adsr-marker-line { stroke-width: 1.4; stroke-dasharray: 3 3; }
+.adsr-marker-line {
+  stroke-width: 1.4;
+  stroke-dasharray: 3 3
+}
 .adsr-marker-text {
   font-family: var(--sans);
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: .04em
 }
-
-/* --- Audition controls, search, interactive knobs -------------------------
-   Everything about these knobs signalled "grab me" — tick rings, numbered
-   scales, a pointer, a metallic body — and nothing happened when you tried.
-   They're draggable now, so the affordance is honest. */
-
-.knob-svg { cursor: grab; touch-action: none; }
-.knob-svg:active { cursor: grabbing; }
-.knob-wrap.is-dragging .knob-svg { cursor: grabbing; }
-.knob-wrap.is-dragging .knob-label { color: var(--accent); }
-.knob-svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
-
-/* Live numeric readout while dragging, so a drag has a value not just a feel */
-.knob-wrap { position: relative; }
+.knob-svg {
+  cursor: grab;
+  touch-action: none
+}
+.knob-svg:active {
+  cursor: grabbing
+}
+.knob-wrap.is-dragging .knob-svg {
+  cursor: grabbing
+}
+.knob-wrap.is-dragging .knob-label {
+  color: var(--accent)
+}
+.knob-svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 50%
+}
+.knob-wrap {
+  position: relative
+}
 .knob-readout {
   position: absolute;
-  top: -6px; left: 50%;
+  top: -6px;
+  left: 50%;
   transform: translateX(-50%);
   font-family: var(--mono, var(--mono), monospace);
   font-size: 9px;
-  letter-spacing: 0.04em;
+  letter-spacing: .04em;
   color: var(--accent);
-  background: var(--paper, var(--chassis));
+  background: var(--paper,var(--chassis));
   padding: 1px 5px;
   border-radius: 4px;
   opacity: 0;
   transition: opacity .15s;
   pointer-events: none;
-  white-space: nowrap;
+  white-space: nowrap
 }
-.knob-wrap.is-dragging .knob-readout { opacity: 1; }
-
-/* "Edited" badge — once you turn something, the panel no longer matches the
-   documented preset, and it should say so rather than quietly diverge. */
+.knob-wrap.is-dragging .knob-readout {
+  opacity: 1
+}
 .edited-badge {
   display: none;
   font-family: var(--mono, var(--mono), monospace);
   font-size: 9.5px;
-  letter-spacing: 0.06em;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--accent);
   border: 1px solid var(--accent);
@@ -622,99 +628,128 @@
   padding: 3px 9px;
   margin-left: 10px;
   vertical-align: middle;
-  cursor: pointer;
+  cursor: pointer
 }
-.edited-badge.show { display: inline-block; }
-
+.edited-badge.show {
+  display: inline-block
+}
 .pill.action {
   font-family: var(--mono, var(--mono), monospace);
   font-size: 11px;
   color: var(--text-dim);
-  background: transparent;
+  background: 0 0;
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 6px 11px;
   cursor: pointer;
-  transition: color .2s, border-color .2s;
+  transition: color .2s,border-color .2s
 }
-.pill.action:hover { color: var(--text); border-color: var(--accent); }
-
+.pill.action:hover {
+  color: var(--text);
+  border-color: var(--accent)
+}
 .pill.audition {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   font-family: var(--mono, var(--mono), monospace);
   font-size: 10.5px;
-  letter-spacing: 0.05em;
+  letter-spacing: .05em;
   text-transform: uppercase;
-  color: var(--accent-fg, #FDF8EF);
+  color: var(--accent-fg,#fdf8ef);
   background: var(--accent);
   border: 1px solid var(--accent);
   border-radius: 999px;
   padding: 7px 15px;
   cursor: pointer;
-  transition: filter .2s;
+  transition: filter .2s
 }
-.pill.audition:hover { filter: brightness(1.08); }
-.pill.audition[aria-pressed="true"] .aud-icon { animation: sd-pulse 1s ease-in-out infinite; }
-@keyframes sd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@media (prefers-reduced-motion: reduce) {
-  .pill.audition[aria-pressed="true"] .aud-icon { animation: none; }
+.pill.audition:hover {
+  filter: brightness(1.08)
 }
-
+.pill.audition[aria-pressed=true] .aud-icon {
+  animation: sd-pulse 1s ease-in-out infinite
+}
+@keyframes sd-pulse {
+  0%,
+  100% {
+    opacity: 1
+  }
+  50% {
+    opacity: .4
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .pill.audition[aria-pressed=true] .aud-icon {
+    animation: none
+  }
+}
 .note-picker {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   font-family: var(--mono, var(--mono), monospace);
   font-size: 9.5px;
-  letter-spacing: 0.09em;
+  letter-spacing: .09em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-faint)
 }
 .note-picker select {
   font-family: var(--mono, var(--mono), monospace);
   font-size: 11px;
   color: var(--text);
-  background: rgba(138, 160, 184, 0.05);
+  background: rgba(138,160,184,.05);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 5px 9px;
-  cursor: pointer;
+  cursor: pointer
 }
-
-/* Sidebar search over 39 presets in 9 categories */
-.sound-sidebar-wrap { display: flex; flex-direction: column; min-height: 0; }
-.sidebar-search { padding: 0 0 10px 0; }
+.sound-sidebar-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0
+}
+.sidebar-search {
+  padding: 0 0 10px 0
+}
 .sidebar-search input {
   width: 100%;
   font-family: var(--mono, var(--mono), monospace);
   font-size: 11px;
   color: var(--text);
-  background: var(--paper-deep, var(--panel));
+  background: var(--paper-deep,var(--panel));
   border: 1px solid var(--hairline);
   border-radius: 8px;
   padding: 8px 11px;
-  outline: none;
+  outline: 0
 }
-.sidebar-search input:focus { border-color: var(--accent); }
+.sidebar-search input:focus {
+  border-color: var(--accent)
+}
 .sidebar-empty {
   font-size: 12px;
   color: var(--text-faint);
   padding: 10px 4px;
-  margin: 0;
+  margin: 0
 }
-
-/* Seven columns of knobs has no sensible sub-1400px form — below that the
-   row wraps into readable groups instead of squeezing. */
-@media (max-width: 1400px) {
-  .controls-row { grid-template-columns: repeat(4, 1fr) !important; }
+@media (max-width:1400px) {
+  .controls-row {
+    grid-template-columns: repeat(4,1fr)!important
+  }
 }
-@media (max-width: 1050px) {
-  .controls-row { grid-template-columns: repeat(2, 1fr) !important; }
+@media (max-width:1050px) {
+  .controls-row {
+    grid-template-columns: repeat(2,1fr)!important
+  }
 }
-@media (max-width: 700px) {
-  .controls-row { grid-template-columns: 1fr !important; }
-  .synth-layout { display: block; }
-  .sound-sidebar-wrap { margin-bottom: 20px; }
+@media (max-width:700px) {
+  .controls-row {
+    grid-template-columns: 1fr!important
+  }
+  .synth-layout {
+    display: block
+  }
+  .sound-sidebar-wrap {
+    margin-bottom: 20px
+  }
 }
