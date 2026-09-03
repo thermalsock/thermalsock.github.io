@@ -8,34 +8,34 @@
    canvas theme too, with CRT/Modern Lab/Aurora/Woven still selectable),
    but the chrome around it (topbar, panels, buttons) always stays in
    this one house style regardless of which canvas theme is active.
-   Type: Fraunces (display) + system sans (chrome labels) + IBM-Plex-style
+   Type: Space Grotesk (display) + system sans (chrome labels) + IBM-Plex-style
    mono for dense numeric alignment, matching the homepage's type system.
    Corner radii follow the shared scale: 10px windows/panels, 6px
    controls/buttons, fully-rounded pills for status/nav badges.
 ------------------------------------------------------------------------- */
 
 :root {
-  --chassis: #EDE6D6;
-  --panel: #E4DBC7;
-  --panel-raised: #DED2B4;
-  --hairline: rgba(43, 38, 32, 0.14);
-  --hairline-strong: rgba(43, 38, 32, 0.24);
-  --text: #2B2620;
-  --text-dim: #6b6153;
-  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
-  --sans: 'Newsreader', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --serif-display: 'Fraunces', serif;
+  --chassis: #0B0D12;
+  --panel: #0F1118;
+  --panel-raised: #161A22;
+  --hairline: rgba(138, 160, 184, 0.16);
+  --hairline-strong: rgba(138, 160, 184, 0.30);
+  --text: #E7F4FF;
+  --text-dim: #8AA0B8;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
+  --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --serif-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
 
-  --accent: #8B4A2B;
-  --accent-dim: rgba(139, 74, 43, 0.30);
-  --accent-fg: #FBF6EC;
-  --danger: #b8402a;
+  --accent: #00C8FF;
+  --accent-dim: rgba(0, 200, 255, 0.32);
+  --accent-fg: #04222C;
+  --danger: #FF5A6E;
 
-  --amber: #9a6a1f;
-  --violet: #6a5a9c;
-  --teal: #2f7a72;
-  --pink: #a34a72;
-  --blue: #33475C;
+  --amber: #FFB454;
+  --violet: #A98CFF;
+  --teal: #3FD9C4;
+  --pink: #FF7BB0;
+  --blue: #6FA8FF;
 }
 
 * { box-sizing: border-box; }
@@ -58,7 +58,7 @@ html, body {
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(139, 74, 43, 0.08), transparent 60%),
+    radial-gradient(ellipse at 50% 30%, rgba(0, 200, 255, 0.08), transparent 60%),
     var(--chassis);
 }
 
@@ -79,7 +79,7 @@ html, body {
   border: 1px solid var(--hairline);
   border-radius: 10px;
   padding: 32px;
-  box-shadow: 0 20px 50px rgba(43, 38, 32, 0.18);
+  box-shadow: 0 20px 50px rgba(138, 160, 184, 0.18);
 }
 
 .gate-panel h1 {
@@ -195,7 +195,7 @@ select {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
-  background: rgba(43, 38, 32, 0.04);
+  background: rgba(138, 160, 184, 0.04);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 3px;
@@ -228,7 +228,7 @@ select {
   padding: 5px 11px;
   border-radius: 999px;
   border: 1px solid var(--hairline-strong);
-  background: rgba(43, 38, 32, 0.04);
+  background: rgba(138, 160, 184, 0.04);
   color: var(--text-dim);
 }
 
@@ -277,7 +277,7 @@ select {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--hairline);
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6), inset 0 0 2px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(43, 38, 32, 0.08);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6), inset 0 0 2px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(138, 160, 184, 0.08);
   position: relative;
   background: #000;
 }
@@ -502,8 +502,8 @@ select {
 
 .hero-card {
   background: linear-gradient(160deg, var(--panel-raised), var(--panel));
-  border: 1px solid rgba(139, 74, 43, 0.22);
-  box-shadow: 0 0 0 1px rgba(139, 74, 43, 0.08), 0 8px 24px rgba(43, 38, 32, 0.14);
+  border: 1px solid rgba(0, 200, 255, 0.22);
+  box-shadow: 0 0 0 1px rgba(0, 200, 255, 0.08), 0 8px 24px rgba(138, 160, 184, 0.14);
 }
 
 .hero-label {
@@ -521,7 +521,7 @@ select {
   font-weight: 600;
   color: var(--accent);
   line-height: 1.1;
-  text-shadow: 0 0 1px rgba(139, 74, 43, 0.15);
+  text-shadow: 0 0 1px rgba(0, 200, 255, 0.15);
   margin-bottom: 4px;
   word-break: break-word;
 }
@@ -566,14 +566,14 @@ select {
   padding: 5px 12px;
   font-size: 10.5px;
   color: var(--text-dim);
-  background: rgba(237, 230, 214, 0.9);
+  background: rgba(11, 13, 18, 0.9);
   border-top: 1px solid var(--hairline);
 }
 #legalBar a { color: var(--text-dim); text-decoration: none; }
 #legalBar a:hover { color: var(--accent); }
 
 /* Site-wide brand thread: header lockup uses the shared Thermalsock Labs
-   display face (Fraunces), legal bar stays mono for that technical-footer
+   display face (Space Grotesk), legal bar stays mono for that technical-footer
    feel — matches the homepage and every other app page. Scoped to just
    these connective-tissue elements -- the app's own interior chrome
    (buttons, panel labels, chips) keeps its established --sans/--mono
@@ -593,17 +593,17 @@ select {
   gap: 8px;
 }
 .topbar-mode-label {
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 9.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 .topbar-mode select {
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 11.5px;
   color: var(--text);
-  background: rgba(43, 38, 32, 0.05);
+  background: rgba(138, 160, 184, 0.05);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 5px 10px;
@@ -612,12 +612,12 @@ select {
 .topbar-mode select:hover { border-color: var(--accent); }
 
 .toggle-pill {
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 10.5px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-dim);
-  background: rgba(43, 38, 32, 0.05);
+  background: rgba(138, 160, 184, 0.05);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 6px 12px;
@@ -638,7 +638,7 @@ select {
   justify-content: space-between;
 }
 .readout-name {
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;

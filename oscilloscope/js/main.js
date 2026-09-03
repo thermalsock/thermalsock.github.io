@@ -182,6 +182,17 @@ async function populateDevices() {
       opt.textContent = d.label || `Input ${i + 1}`;
       els.deviceSelect.appendChild(opt);
     });
+
+    /* Preselect whatever was chosen site-wide (home page System panel), and
+       remember any change here for the next app. TSDevices is optional — if
+       the module has not loaded, this falls through to the default input. */
+    const sharedIn = window.TSDevices && window.TSDevices.audioInput();
+    if (sharedIn && [...els.deviceSelect.options].some(o => o.value === sharedIn.deviceId)) {
+      els.deviceSelect.value = sharedIn.deviceId;
+    }
+    els.deviceSelect.addEventListener('change', () => {
+      if (window.TSDevices) window.TSDevices.setAudioInput(els.deviceSelect.value || null);
+    }, { once: false });
   } catch (e) {
     // enumerateDevices can fail before permission is granted in some browsers;
     // that's fine, the "Default input" option still lets capture start.

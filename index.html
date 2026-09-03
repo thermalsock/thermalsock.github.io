@@ -1,633 +1,1304 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app="home">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thermalsock Labs</title>
-<meta name="description" content="Thermalsock Labs — small tools for tuning, drawing, and understanding sound, built in a home studio.">
+<meta name="description" content="Browser tools for synths, sequencers and studio rigs. Nothing uploaded, no accounts, all free.">
 <link rel="canonical" href="https://thermalsocklabs.com/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#EDE6D6">
+<meta name="theme-color" content="#070708">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Thermalsock Labs">
 <meta property="og:title" content="Thermalsock Labs">
-<meta property="og:description" content="Small tools for tuning, drawing, and understanding sound, built in a home studio.">
+<meta property="og:description" content="Browser tools for synths, sequencers and studio rigs. Nothing uploaded, no accounts, all free.">
 <meta property="og:url" content="https://thermalsocklabs.com/">
 <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Thermalsock Labs">
-<meta name="twitter:description" content="Small tools for tuning, drawing, and understanding sound, built in a home studio.">
-<meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+
 <style>
-  :root{
-    --paper:#EDE6D6; --paper-deep:#E4DBC7; --grid-line:rgba(43,38,32,0.09);
-    --ink:#2B2620; --ink-soft:#5C5346; --ink-faint:#8A8070;
-    --rust:#8B4A2B; --rust-soft:rgba(139,74,43,0.12);
-    --blue-ink:#33475C;
-    --serif-display:'Fraunces', serif; --serif-body:'Newsreader', serif; --mono:'IBM Plex Mono', monospace;
-    --radius:14px;
-    --ease:cubic-bezier(0.22,1,0.36,1);
-    --ease-snap:cubic-bezier(0.65,0,0.35,1);
-  }
-  @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+:root{
+  --void:      #05060A;   /* artboard */
+  --canvas:    #0B0D12;   /* desk */
+  --panel:     #0F1118;
+  --bar:       #05060A;
+  --line:      #1A1D24;
+  --line-soft: #12141B;
+  --ink:       #E7F4FF;
+  --muted:     #8AA0B8;
+  --dim:       #5E6A7A;
+  --gold:      #00C8FF;   /* now cyan */
+  --gold-dim:  rgba(0,200,255,0.16);
+  --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --rail: 232px;
+  --insp: 230px;
+  --bar-h: 44px;
+}
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
   body{
-    margin:0; background:var(--paper); color:var(--ink);
-    font-family:var(--serif-body); line-height:1.6;
+    margin:0; background:var(--bar); color:var(--ink);
+    font-family:var(--sans); overflow:hidden;
+    -webkit-font-smoothing:antialiased;
   }
-  /* faint graph-paper grid across the whole page, the "notebook" ground */
-  body::before{
-    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:34px 34px;
-    opacity:0.7;
-  }
-  a{color:inherit; text-decoration:none;}
+  a{ color:inherit; text-decoration:none; }
 
-  /* ---------- Nav ---------- */
-  nav{
-    position:relative; z-index:5;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:22px 44px; border-bottom:1px solid rgba(43,38,32,0.14);
+  /* ---------------- top bar ---------------- */
+  .bar{
+    height:var(--bar-h); display:flex; align-items:center; gap:2px;
+    padding:0 14px; background:var(--bar); position:relative; z-index:40;
   }
-  .brand{ display:flex; align-items:center; gap:12px; }
-  .brand-mark{ width:30px; height:30px; flex:none; }
-  .brand-text{ font-family:var(--serif-display); font-weight:600; font-size:19px; letter-spacing:0.01em; }
-  .brand-sub{ font-family:var(--mono); font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); display:block; margin-top:1px; }
+  .mark{ width:26px; height:26px; display:grid; place-items:center; margin-right:8px; }
+  .tool{
+    width:30px; height:30px; display:grid; place-items:center;
+    border-radius:7px; color:var(--muted); cursor:pointer; border:0; background:none;
+  }
+  .tool:hover{ color:var(--ink); background:rgba(255,255,255,0.05); }
+  .tool[aria-pressed="true"]{ color:var(--gold); background:var(--gold-dim); }
+  .sep{ width:1px; height:18px; background:var(--line); margin:0 12px; }
+  .crumb{ font-size:13px; color:var(--muted); letter-spacing:-0.01em; }
+  .crumb b{ color:var(--ink); font-weight:500; }
+  .bar-right{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .avatar{
+    width:26px; height:26px; border-radius:50%; border:1.5px solid var(--gold);
+    display:grid; place-items:center; font-family:var(--mono); font-size:10px; color:var(--gold);
+  }
+  .share{
+    font-size:12px; color:var(--ink); background:rgba(255,255,255,0.06);
+    border:1px solid var(--line); border-radius:8px; padding:6px 14px; cursor:pointer;
+  }
+  .share:hover{ border-color:var(--gold); color:var(--gold); }
 
-  .nav-links{ display:flex; gap:34px; }
-  .nav-links a{
-    font-family:var(--mono); font-size:12px; letter-spacing:0.03em; text-transform:uppercase;
-    color:var(--ink-soft); position:relative; padding-bottom:3px;
-    transition:color 0.25s var(--ease);
-  }
-  .nav-links a:hover{ color:var(--ink); }
-  .nav-links a::after{
-    content:''; position:absolute; left:0; bottom:0; width:0; height:1px; background:var(--rust);
-    transition:width 0.3s var(--ease);
-  }
-  .nav-links a:hover::after{ width:100%; }
+  /* ---------------- stage ---------------- */
+  .stage{ position:absolute; inset:var(--bar-h) 0 0; }
 
-  .stamp-btn{
-    font-family:var(--mono); font-size:11.5px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase;
-    color:var(--rust); border:1.5px dashed var(--rust); border-radius:999px;
-    padding:9px 20px; transform:rotate(-1.2deg) translateY(0) scale(1); display:inline-block;
-    transition:transform 0.35s var(--ease), background 0.3s var(--ease), box-shadow 0.35s var(--ease), border-style 0.2s ease;
-    box-shadow:0 0 0 rgba(139,74,43,0);
-  }
-  .stamp-btn:hover{
-    transform:rotate(0deg) translateY(-2px) scale(1.015);
-    background:var(--rust-soft);
-    box-shadow:0 8px 18px rgba(139,74,43,0.18);
-  }
-  .stamp-btn:active{
-    transform:rotate(0.4deg) translateY(0px) scale(0.97);
-    background:var(--rust-soft);
-    box-shadow:0 2px 6px rgba(139,74,43,0.16);
-    transition-duration:0.1s;
-  }
+.canvas-wrap{
+    position:absolute; inset:0; overflow:hidden; cursor:grab;
+    background:
+      linear-gradient(
+        to top,
+        rgba(0,200,255,0.18) 0%,
+        rgba(0,200,255,0.12) 20%,
+        rgba(0,200,255,0.06) 45%,
+        transparent 80%
+      ),
+      var(--canvas);
+}
 
-  /* ---------- Hero ---------- */
-  .hero{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:78px 44px 40px 44px; }
+  .canvas-wrap.dragging{ cursor:grabbing; }
+.dots{
+  position:absolute;
+  inset:-3000px;
+
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(0,200,255,0.05) 2px,
+      transparent 2px 48px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,200,255,0.03) 2px,
+      transparent 2px 48px
+    ),
+    radial-gradient(
+      rgba(0,200,255,0.04) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+  pointer-events:none;
+}
+
+
+
+
+
+
+  .canvas{ position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; }
+
+  /* ---------------- frames ---------------- */
+  .frame{ position:absolute; }
+  .frame-label{
+    position:absolute; top:-24px; left:0; font-family:var(--mono);
+    font-size:11px; color:var(--muted); letter-spacing:0.02em; white-space:nowrap;
+  }
+  .frame-dims{
+    position:absolute; top:-24px; right:0; font-family:var(--mono);
+    font-size:11px; color:var(--dim); white-space:nowrap;
+  }
+  .board{
+    position:relative; width:100%; height:100%; background:var(--void);
+    border:1px solid var(--line-soft); overflow:hidden; display:block;
+  }
+  .frame.sel .frame-label{ color:var(--gold); }
+  .frame.sel .board{ border-color:var(--gold); }
+  .frame.sel .handle{ opacity:1; }
+  .handle{
+    position:absolute; width:7px; height:7px; background:var(--void);
+    border:1.5px solid var(--gold); opacity:0; pointer-events:none; z-index:3;
+  }
+  .handle.tl{ left:-4px; top:-4px; } .handle.tr{ right:-4px; top:-4px; }
+  .handle.bl{ left:-4px; bottom:-4px; } .handle.br{ right:-4px; bottom:-4px; }
+  .size-badge{
+    position:absolute; left:50%; bottom:-30px; transform:translateX(-50%);
+    background:var(--gold); color:#1A1200; font-family:var(--mono); font-size:11px;
+    padding:3px 10px; border-radius:5px; opacity:0; white-space:nowrap; pointer-events:none;
+  }
+  .frame.sel .size-badge{ opacity:1; }
+
+  /* ---------------- hero board ---------------- */
+  .hero-inner{ padding:64px 72px; height:100%; display:flex; flex-direction:column; position:relative; }
+.hero-inner::before{
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(620px 420px at 26% 22%, rgba(0,200,255,0.18), transparent 68%);
+  pointer-events:none;
+}
+.scope-dot{
+  background:var(--gold);
+}
+.thumb .lit,
+.thumb .fill-lit,
+.frame.sel .frame-label,
+.frame.sel .board,
+.frame.sel .handle,
+.badge-ext,
+.board-foot .scroll em,
+.layer.on,
+.layer.on .hash,
+
+
   .eyebrow{
-    font-family:var(--mono); font-size:11.5px; letter-spacing:0.14em; text-transform:uppercase;
-    color:var(--ink-faint); margin-bottom:22px;
+    font-family:var(--mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--muted); display:flex; align-items:center; gap:9px; margin-bottom:auto; position:relative;
   }
-  .eyebrow span{ color:var(--rust); }
-
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); }
   h1{
-    font-family:var(--serif-display); font-weight:600; font-style:normal;
-    font-size:clamp(40px,6vw,72px); line-height:1.04; letter-spacing:-0.01em;
-    margin:0 0 26px 0; max-width:820px;
+    font-size:76px; line-height:0.98; letter-spacing:-0.03em; font-weight:500;
+    margin:0 0 26px; max-width:19ch; position:relative;
   }
-  h1 em{ font-style:normal; font-weight:600; color:var(--rust); }
-
-  .hero-sub{
-    font-family:var(--serif-body); font-size:19px; color:var(--ink-soft);
-    max-width:520px; margin:0 0 36px 0;
+  h1 .grey{ color:var(--muted); }
+  .subline{
+    font-size:15px; line-height:1.6; color:var(--muted); max-width:46ch;
+    margin:0 0 34px; position:relative;
   }
-
-  .hero-ctas{ display:flex; gap:16px; align-items:center; margin-bottom:64px; }
-  .btn-plain{
-    font-family:var(--mono); font-size:12.5px; letter-spacing:0.03em; text-transform:uppercase;
-    color:var(--ink); border-bottom:1px solid var(--ink); padding-bottom:2px;
-    display:inline-block; transition:color 0.25s var(--ease), border-color 0.25s var(--ease), letter-spacing 0.25s var(--ease);
+  .cta-row{ display:flex; align-items:center; gap:22px; position:relative; }
+  .cta{
+    background:var(--gold); color:#1A1200; font-size:14px; font-weight:500;
+    padding:12px 22px; border-radius:8px; white-space:nowrap;
   }
-  .btn-plain:hover{ color:var(--rust); border-color:var(--rust); letter-spacing:0.05em; }
-
-  /* ---------- Signature: hand-drawn patchbay diagram ---------- */
-  .schematic{ position:relative; height:200px; margin:0 0 10px 0; }
-  .schematic svg{ width:100%; height:100%; overflow:visible; display:block; }
-  .trace-path{ fill:none; stroke:var(--ink); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:0.65; }
-  .trace-dot{ fill:var(--rust); filter:drop-shadow(0 0 3px rgba(139,74,43,0.5)); }
-  .trace-caption{
-    font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase;
-    color:var(--ink-faint); margin-top:8px; display:flex; justify-content:space-between;
+  .cta:hover{ filter:brightness(1.08); }
+  .cta-ghost{ font-size:13px; color:var(--gold); border-bottom:1px solid rgba(255,177,0,0.4); padding-bottom:2px; }
+  .cta-ghost:hover{ border-bottom-color:var(--gold); }
+  .board-foot{
+    margin-top:auto; padding-top:44px; display:flex; align-items:center;
+    font-family:var(--mono); font-size:10px; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--dim); position:relative;
   }
-  .trace-caption .shape-name{ color:var(--rust); }
-
-  /* ---------- Instruments (categorised grid) ---------- */
-  .section{ position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:20px 44px 60px 44px; }
-  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px; gap:20px; flex-wrap:wrap; }
-  .section-head h2{
-    font-family:var(--serif-display); font-weight:600; font-size:26px; margin:0;
-  }
-  .section-head .count{ font-family:var(--mono); font-size:12px; color:var(--ink-faint); }
-
-  .cat-section{ margin-bottom:38px; }
-  .cat-head{
-    display:flex; align-items:center; gap:14px; margin-bottom:16px;
-  }
-  .cat-head h3{
-    font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
-    color:var(--ink-faint); margin:0; white-space:nowrap;
-  }
-  .cat-head .rule{ flex:1; height:1px; background:rgba(43,38,32,0.16); }
-
-  .module-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
-    gap:18px;
+  .board-foot .scroll{ margin-left:auto; }
+  .board-foot .scroll em{ font-style:normal; color:var(--gold); }
+  .scope{ position:relative; margin:38px 0 0; height:200px; }
+  .scope svg{ width:100%; height:100%; overflow:visible; }
+  /* The trace is allowed to stretch to the width of the board; the dots are
+     not, or they turn into little gold bars on a narrow screen. */
+  .scope-dot{
+    position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px;
+    border-radius:50%; background:var(--gold); pointer-events:none;
   }
 
-  .featured-section{ margin-top:44px; }
-  .featured-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:16px; }
-  .featured-head h2{ font-family:var(--serif-display); font-weight:600; font-size:20px; margin:0; }
-  .featured-head .rule{ flex:1; height:1px; background:rgba(43,38,32,0.16); }
+  /* card artwork */
+  .thumb{
+    position:relative; height:78px; margin:-4px 0 16px; flex:0 0 auto;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .thumb svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .frame.big .thumb{ height:118px; margin-bottom:20px; }
+  .thumb .ln{ stroke:var(--dim); fill:none; stroke-width:1.4; vector-effect:non-scaling-stroke; }
+  .thumb .lit{ stroke:var(--gold); fill:none; stroke-width:1.6; vector-effect:non-scaling-stroke; }
+  .thumb .fill{ fill:var(--dim); }
+  .thumb .fill-lit{ fill:var(--gold); }
+  .frame:hover .thumb .ln{ stroke:var(--muted); }
 
-  .featured-card{
-    display:flex; align-items:center; gap:26px; flex-wrap:wrap;
-    background:var(--paper-deep); border:1px solid rgba(43,38,32,0.18); border-radius:var(--radius);
-    padding:26px 28px; text-decoration:none; color:inherit;
-    transition:transform 0.35s var(--ease), border-color 0.3s var(--ease), box-shadow 0.35s var(--ease);
-    box-shadow:0 1px 2px rgba(43,38,32,0.06);
+  /* ---------------- app frames ---------------- */
+  .app-board{ padding:22px 24px; display:flex; flex-direction:column; height:100%; }
+  .app-board .jack{
+    width:16px; height:16px; border-radius:50%; border:1.4px solid var(--dim);
+    position:relative; margin-bottom:16px; flex:0 0 auto;
   }
-  .featured-card:hover{
-    transform:translateY(-3px); border-color:var(--rust);
-    box-shadow:0 10px 24px rgba(43,38,32,0.12), 0 16px 32px rgba(139,74,43,0.10);
+  .app-board .jack::after{
+    content:''; position:absolute; inset:4px; border-radius:50%;
+    background:var(--gold); opacity:0.5; transition:opacity .2s;
   }
-  .featured-body{ flex:1; min-width:240px; }
-  .featured-head-row{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
-  .featured-card h3{ font-family:var(--serif-display); font-weight:600; font-size:19px; margin:0; }
-  .featured-badge{
-    font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;
-    color:var(--rust); background:var(--rust-soft); border:1px solid rgba(139,74,43,0.3);
-    border-radius:999px; padding:2px 9px;
+  .frame:hover .jack{ border-color:var(--gold); }
+  .frame:hover .jack::after{ opacity:1; }
+  .app-board h3{ font-size:17px; font-weight:500; letter-spacing:-0.015em; margin:0 0 5px; }
+  .app-board .kick{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.07em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:11px;
   }
-  .featured-kicker{ font-family:var(--mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--rust); margin-bottom:8px; }
-  .featured-card p{ font-family:var(--serif-body); font-size:13.5px; color:var(--ink-soft); margin:0; max-width:560px; line-height:1.6; }
-  .featured-cta{ flex-shrink:0; }
-
-  .module{
-    background:var(--paper-deep); border:1px solid rgba(43,38,32,0.18); border-radius:var(--radius);
-    padding:20px 20px 18px 20px; position:relative;
-    display:block; color:inherit; text-decoration:none; cursor:pointer;
-    box-shadow:0 1px 2px rgba(43,38,32,0.06), 0 1px 1px rgba(43,38,32,0.04);
-    transition:transform 0.4s var(--ease), border-color 0.3s var(--ease), box-shadow 0.4s var(--ease);
+  .app-board p{ font-size:13px; line-height:1.55; color:var(--muted); margin:0; }
+  .app-board .open{
+    margin-top:auto; padding-top:16px; font-family:var(--mono); font-size:10.5px;
+    color:var(--dim); letter-spacing:0.06em; display:flex; align-items:center; gap:6px;
   }
-  .module:nth-child(odd):hover{ transform:translateY(-6px) rotate(-0.4deg); }
-  .module:nth-child(even):hover{ transform:translateY(-6px) rotate(0.4deg); }
-  .module:hover{
-    border-color:var(--rust);
-    box-shadow:
-      0 2px 4px rgba(43,38,32,0.08),
-      0 10px 20px rgba(43,38,32,0.10),
-      0 20px 36px rgba(139,74,43,0.14);
-  }
-
-  .module-jack{ width:22px; height:22px; border-radius:50%; border:1.6px solid var(--ink); position:relative; margin-bottom:16px; transition:border-color 0.3s var(--ease), transform 0.3s var(--ease); }
-  .module-jack::after{ content:''; position:absolute; inset:6px; border-radius:50%; background:var(--rust); opacity:0.7; transition:opacity 0.3s var(--ease), transform 0.3s var(--ease); }
-  .module:hover .module-jack{ border-color:var(--rust); transform:scale(1.08); }
-  .module:hover .module-jack::after{ opacity:1; }
-
-  .module h3{ font-family:var(--serif-display); font-weight:600; font-size:18px; margin:0 0 4px 0; }
-  .module .kicker{ font-family:var(--mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--rust); margin-bottom:10px; }
-  .module p{ font-family:var(--serif-body); font-size:13.5px; color:var(--ink-soft); margin:0 0 18px 0; line-height:1.55; }
-  .module .tag{
-    font-family:var(--mono); font-size:9.5px; letter-spacing:0.05em; text-transform:uppercase;
-    color:var(--ink-faint); border:1px solid rgba(43,38,32,0.2); border-radius:999px; padding:3px 9px;
-    position:absolute; bottom:16px; right:16px;
+  .frame:hover .open{ color:var(--gold); }
+  .frame.big .app-board h3{ font-size:22px; }
+  .frame.big .app-board p{ font-size:14px; }
+  .badge-ext{
+    font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--gold); border:1px solid rgba(255,177,0,0.45); border-radius:999px;
+    padding:2px 8px; margin-left:9px; vertical-align:2px;
   }
 
-  footer{
-    position:relative; z-index:1; border-top:1px solid rgba(43,38,32,0.14);
-    padding:26px 44px 44px 44px; max-width:1180px; margin:0 auto;
-    display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;
-    font-family:var(--mono); font-size:11.5px; color:var(--ink-faint);
+  /* about frame */
+  .about-board{ padding:26px 28px; height:100%; overflow:hidden; }
+  .about-board h3{ font-size:18px; font-weight:500; margin:0 0 12px; }
+  .about-board p{ font-size:13px; line-height:1.62; color:var(--muted); margin:0 0 11px; }
+  .about-board .links{ display:flex; gap:16px; margin-top:16px; font-family:var(--mono); font-size:10.5px; color:var(--dim); }
+  .about-board .links a:hover{ color:var(--gold); }
+
+  /* ---------------- measurement + annotation ---------------- */
+  .measure{ position:absolute; pointer-events:none; }
+  .measure .rule{ position:absolute; top:50%; left:0; right:0; height:1px; background:var(--gold); opacity:0.5; }
+  .measure .val{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    background:var(--canvas); color:var(--gold); font-family:var(--mono); font-size:11px; padding:1px 6px;
   }
-  footer a:hover{ color:var(--rust); }
-
-  /* ---------- Scroll reveal + hero load-in ---------- */
-  .reveal{ opacity:0; transform:translateY(18px); transition:opacity 0.7s var(--ease), transform 0.7s var(--ease); }
-  .reveal.is-visible{ opacity:1; transform:translateY(0); }
-
-  .hero-load{ opacity:0; transform:translateY(14px); animation:heroFade 0.8s var(--ease) forwards; }
-  .hero-load:nth-child(1){ animation-delay:0.05s; }
-  .hero-load:nth-child(2){ animation-delay:0.16s; }
-  .hero-load:nth-child(3){ animation-delay:0.27s; }
-  .hero-load:nth-child(4){ animation-delay:0.38s; }
-  .hero-load:nth-child(5){ animation-delay:0.5s; }
-  @keyframes heroFade{ to{ opacity:1; transform:translateY(0); } }
-
-  .schematic{ will-change:transform; }
-
-  /* ---------- About ---------- */
-  .about-section{ margin-top:44px; }
-  .about-body{
-    background:var(--paper-deep); border:1px solid rgba(43,38,32,0.18); border-radius:var(--radius);
-    padding:26px 28px; box-shadow:0 1px 2px rgba(43,38,32,0.06);
-    max-width:760px;
+  .note{
+    position:absolute; display:flex; align-items:center; gap:9px; pointer-events:none;
   }
-  .about-body p{ font-family:var(--serif-body); font-size:14.5px; color:var(--ink-soft); margin:0 0 12px 0; line-height:1.65; }
-  .about-body p:last-child{ margin-bottom:0; }
-  .about-body a{ color:var(--rust); border-bottom:1px solid rgba(139,74,43,0.4); }
-  .about-body a:hover{ border-bottom-color:var(--rust); }
+  .note .who{
+    width:26px; height:26px; border-radius:50%; background:var(--bar);
+    border:1.5px solid var(--gold); display:grid; place-items:center;
+    font-family:var(--mono); font-size:9px; color:var(--gold); flex:0 0 auto;
+  }
+  .note .bub{
+    background:var(--bar); border:1px solid var(--line); border-radius:999px;
+    padding:8px 15px; font-size:12.5px; color:var(--ink); white-space:nowrap;
+  }
+  .ghost-cursor{ position:absolute; pointer-events:none; z-index:5; }
+  .ghost-cursor .tag{
+    position:absolute; left:14px; top:16px; background:var(--gold); color:#1A1200;
+    font-size:11px; font-weight:500; padding:2px 8px; border-radius:5px; white-space:nowrap;
+  }
 
-  /* ---------- Responsive ---------- */
-  /* Tablet: pull the generous desktop padding in before anything overflows. */
+  /* ---------------- side panels ---------------- */
+  .panel{
+    position:absolute; top:10px; bottom:10px; width:var(--rail);
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    display:flex; flex-direction:column; z-index:30; overflow:hidden;
+  }
+  .panel.left{ left:10px; }
+  .panel.right{ right:10px; width:var(--insp); }
+  .panel-head{ display:flex; gap:18px; padding:16px 18px 0; flex:0 0 auto; }
+  .panel-head button{
+    background:none; border:0; padding:0 0 9px; cursor:pointer;
+    font-family:var(--sans); font-size:13px; color:var(--muted); border-bottom:1.5px solid transparent;
+  }
+  .panel-head button[aria-pressed="true"]{ color:var(--ink); border-bottom-color:var(--gold); }
+  .panel-body{ overflow-y:auto; padding:14px 10px 18px; flex:1; }
+  .panel-body::-webkit-scrollbar{ width:8px; }
+  .panel-body::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+  .tree-title{
+    font-size:12px; color:var(--dim); padding:4px 8px 10px; letter-spacing:-0.01em;
+  }
+  .layer{
+    display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+    background:none; border:0; cursor:pointer; font-family:var(--sans);
+    font-size:13px; color:var(--muted); padding:6px 8px; border-radius:7px;
+    letter-spacing:-0.01em;
+  }
+  .layer:hover{ color:var(--ink); background:rgba(255,255,255,0.04); }
+  .layer.group{ color:var(--ink); }
+  .layer .hash{ font-family:var(--mono); font-size:11px; color:var(--dim); }
+  .layer.child{ padding-left:26px; }
+  .layer.on{ background:var(--gold-dim); color:var(--gold); }
+  .layer.on .hash{ color:var(--gold); }
+
+  .insp-row{ display:flex; gap:8px; padding:0 8px 8px; }
+  .field{
+    flex:1; border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+    font-family:var(--sans); font-size:12.5px; color:var(--ink); display:flex; gap:7px;
+  }
+
+  .field span{ color:var(--dim); }
+  .insp-label{
+    font-size:12px; color:var(--dim); padding:14px 8px 8px;
+  }
+  .swatch-row{
+    display:flex; align-items:center; gap:11px; padding:5px 8px;
+    font-family:var(--mono); font-size:10px; color:var(--ink);
+  }
+  .swatch{ width:17px; height:1px; border-radius:5px; border:1px solid rgba(255,255,255,0.13); flex:0 0 auto; }
+  .swatch-row .pct{ margin-left:auto; color:var(--dim); }
+  .kv{
+    display:flex; padding:5px 8px; font-size:12.5px; color:var(--ink);
+  }
+  .kv .k{ color:var(--ink); }
+  .kv .v{ margin-left:auto; color:var(--dim); }
+  .kv.soft .k{ color:var(--muted); }
+  .dev{ display:flex; align-items:center; gap:8px; padding:4px 8px 6px; }
+  .dev label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--dim); width:22px; flex:none;
+  }
+  .dev select{
+    flex:1; min-width:0; font-family:var(--sans); font-size:11.5px; color:var(--ink);
+    background:var(--bar); border:1px solid var(--line); border-radius:7px;
+    padding:6px 7px; outline:none;
+  }
+  .dev select:focus{ border-color:var(--gold); }
+  .insp-label .mini{
+    float:right; font-family:var(--mono); font-size:9.5px; letter-spacing:.06em;
+    color:var(--gold); background:none; border:1px solid var(--gold);
+    border-radius:999px; padding:2px 9px; cursor:pointer; text-transform:uppercase;
+  }
+  .insp-label .mini:hover{ background:var(--gold-dim); }
+  .insp-label .mini[hidden]{ display:none; }
+  .devnote{
+    font-family:var(--mono); font-size:10px; line-height:1.55; color:var(--dim);
+    padding:8px 8px 0;
+  }
+
+  /* ---------------- bottom right ---------------- */
+  .corner{
+    position:absolute; right:calc(var(--insp) + 26px); bottom:20px; z-index:30;
+    display:flex; align-items:center; gap:14px;
+  }
+  .domain{
+    font-size:12px; color:var(--dim);
+    background:rgba(15,15,17,0.82); border-radius:6px; padding:5px 10px;
+    backdrop-filter:blur(6px);
+  }
+  .zoom{
+    display:flex; align-items:center; gap:2px; background:var(--panel);
+    border:1px solid var(--line); border-radius:9px; padding:3px;
+  }
+  .zoom button{
+    width:24px; height:24px; border:0; background:none; color:var(--muted);
+    cursor:pointer; border-radius:6px; font-size:14px; line-height:1;
+  }
+  .zoom button:hover{ color:var(--ink); background:rgba(255,255,255,0.05); }
+  .zoom .pct{ font-family:var(--mono); font-size:11.5px; color:var(--ink); min-width:42px; text-align:center; }
+
+  .hint{
+    position:absolute; left:calc(var(--rail) + 26px); bottom:20px; z-index:30;
+    font-family:var(--mono); font-size:10.5px; color:var(--dim); letter-spacing:0.04em;
+    background:rgba(15,15,17,0.82); border:1px solid var(--line);
+    border-radius:8px; padding:7px 12px; backdrop-filter:blur(6px);
+  }
+  .hint b{ color:var(--muted); font-weight:400; }
+
+  /* ---------------- narrow screens ----------------
+     The canvas conceit needs a mouse and room. Below this it becomes an
+     ordinary scrolling list, because a homepage that cannot be used on a
+     phone is a poster, not a homepage. */
+  /* The toolbar is the one piece of chrome that survives, so it has to fit.
+     Tools and breadcrumb go; the mark, avatar and Share stay. */
+  @media (max-width: 720px){
+    .tool, .sep, .crumb{ display:none; }
+    .bar{ padding:0 12px; }
+    .bar-right{ margin-left:auto; }
+  }
+
   @media (max-width: 1000px){
-    nav{ padding:18px 28px; }
-    .nav-links{ gap:22px; }
-    .hero{ padding:56px 28px 32px 28px; }
-    .section{ padding:16px 28px 48px 28px; }
-    footer{ padding:24px 28px 40px 28px; }
-  }
-
-  /* Narrow: the nav becomes two rows — brand + stamp on top, links below in a
-     horizontally scrollable strip. No JS, no hamburger, nothing overflows. */
-  @media (max-width: 760px){
-    nav{
-      flex-wrap:wrap; row-gap:14px; padding:16px 20px;
+    body{ overflow:auto; }
+    .panel, .corner, .hint, .measure, .note, .ghost-cursor,
+    .frame-label, .frame-dims, .size-badge, .handle{ display:none !important; }
+    .stage{ position:static; }
+    .canvas-wrap{ position:static; overflow:visible; cursor:auto; background:var(--canvas); }
+    .dots{ display:none; }
+    .canvas{
+      position:static; transform:none !important;
+      display:flex; flex-direction:column; gap:16px; padding:18px;
     }
-    .brand{ flex:1 1 auto; min-width:0; }
-    .brand-text{ font-size:17px; }
-    .stamp-btn{ flex:none; padding:8px 15px; font-size:10.5px; }
-    .nav-links{
-      order:3; flex:1 0 100%;
-      gap:20px; overflow-x:auto; padding-bottom:2px;
-      scrollbar-width:none; -ms-overflow-style:none;
-    }
-    .nav-links::-webkit-scrollbar{ display:none; }
-    .nav-links a{ white-space:nowrap; }
-
-    .hero{ padding:44px 20px 24px 20px; }
-    .eyebrow{ margin-bottom:16px; font-size:10.5px; }
-    .hero-sub{ font-size:17px; margin-bottom:28px; }
-    .hero-ctas{ flex-wrap:wrap; gap:14px; margin-bottom:44px; }
-    .schematic{ height:132px; }
-
-    .section{ padding:12px 20px 40px 20px; }
-    .section-head h2{ font-size:22px; }
-    .module-grid{ grid-template-columns:1fr; gap:14px; }
-    .cat-section{ margin-bottom:30px; }
-
-    .featured-card{ gap:18px; padding:22px 20px; }
-    .about-body{ padding:22px 20px; }
-    .featured-cta{ width:100%; }
-
-    footer{ padding:22px 20px 36px 20px; flex-direction:column; gap:14px; }
-    footer span[data-footer-links]{ flex-wrap:wrap; }
-  }
-
-  /* The hover lift is a pointer affordance — on touch it just causes a stuck
-     hover state after a tap, so it's disabled where there's no hover. */
-  @media (hover: none){
-    .module:hover, .module:nth-child(odd):hover, .module:nth-child(even):hover,
-    .featured-card:hover{ transform:none; }
+    .frame{ position:static !important; width:auto !important; height:auto !important; }
+    .board{ border-radius:12px; border-color:var(--line); }
+    .hero-inner{ padding:32px 24px; }
+    h1{ font-size:34px; margin-bottom:18px; }
+    .subline{ font-size:14px; }
+    .board-foot{ display:none; }
+    .app-board{ padding:20px; }
+    .app-board .open{ padding-top:14px; }
   }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="brand">
-    <svg class="brand-mark" viewBox="0 0 30 30" fill="none">
-      <circle cx="15" cy="15" r="13" stroke="#2B2620" stroke-width="1.4"/>
-      <circle cx="15" cy="15" r="4" fill="#8B4A2B"/>
-    </svg>
-    <span>
-      <span class="brand-text">Thermalsock&nbsp;Labs</span>
-      <span class="brand-sub">Field Notes on Sound</span>
-    </span>
-  </div>
-  <div class="nav-links">
-    <a href="#instruments">Instruments</a>
-    <a href="#also-building">Also Building</a>
-    <a href="#about">About the Studio</a>
-  </div>
-  <a href="#instruments" class="stamp-btn">Enter the Studio</a>
-</nav>
+<div class="bar">
 
-<div class="hero">
-  <div class="eyebrow hero-load">Notes from the studio &nbsp;&middot;&nbsp; <span>updated most evenings</span></div>
-  <h1 class="hero-load">Thermalsock <em>Labs</em></h1>
-  <p class="hero-sub hero-load">Small tools, built for listening and monitoring soundscapes.</p>
-  <div class="hero-ctas hero-load">
-    <a href="#instruments" class="stamp-btn">See the Instruments</a>
-    <a href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener" class="btn-plain">Rudiment on Steam</a>
-  </div>
 
-  <div class="schematic hero-load" id="schematic">
-    <svg id="traceSvg" viewBox="0 0 1100 200" preserveAspectRatio="xMidYMid meet">
-      <path id="tracePath" class="trace-path" d=""/>
-      <circle id="dot1" class="trace-dot" r="4"/>
-      <circle id="dot2" class="trace-dot" r="4"/>
-    </svg>
-    <div class="trace-caption">
-      <span>CH.1 &middot; LIVE</span>
-      <span>currently: <span class="shape-name" id="shapeName">sine</span></span>
-    </div>
+<div class="mark" aria-hidden="true">
+  <svg width="22" height="24" viewBox="0 0 22 24" fill="none">
+    <!-- top-left: bold cyan -->
+    <rect x="2" y="3" width="8" height="8" rx="2"
+          fill="#00C8FF"/>
+
+    <!-- top-right: soft blue -->
+    <rect x="12" y="3" width="8" height="8" rx="2"
+          fill="#1A3A5A"/>
+
+    <!-- bottom-left: soft blue -->
+    <rect x="2" y="13" width="8" height="8" rx="2"
+          fill="#0E2236"/>
+
+    <!-- bottom-right: bold cyan (slightly different) -->
+    <rect x="12" y="13" width="8" height="8" rx="2"
+          fill="#3AE0FF"/>
+  </svg>
+</div>
+
+
+
+<button class="tool" data-tool="move" aria-pressed="true" title="Patch cable">
+  <!-- patch cable -->
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <path d="M3 4 C6 4 6 8 9 8 S12 12 13 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    <circle cx="3" cy="4" r="1.4" fill="currentColor"/>
+    <circle cx="13" cy="12" r="1.4" fill="currentColor"/>
+  </svg>
+</button>
+
+<button class="tool" data-tool="line" title="Envelope">
+  <!-- ADSR envelope -->
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <path d="M2 12 L4 4 L7 7 L11 8 L14 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+<button class="tool" data-tool="rect" title="Waveform draw">
+  <!-- waveform -->
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <path d="M1.5 8 C3 4 5 12 7 8 C9 4 11 12 13 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+<button class="tool" data-tool="ellipse" title="Mixer">
+  <!-- mixer faders -->
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <line x1="4" y1="3" x2="4" y2="13" stroke="currentColor" stroke-width="1.2"/>
+    <line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" stroke-width="1.2"/>
+    <line x1="12" y1="3" x2="12" y2="13" stroke="currentColor" stroke-width="1.2"/>
+    <rect x="3" y="7" width="2" height="3" fill="currentColor"/>
+    <rect x="7" y="5" width="2" height="3" fill="currentColor"/>
+    <rect x="11" y="9" width="2" height="3" fill="currentColor"/>
+  </svg>
+</button>
+
+<button class="tool" data-tool="pen" title="Scope">
+  <!-- oscilloscope -->
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+    <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+    <path d="M3 9 L5 7 L7 11 L9 5 L11 9 L13 7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+  <div class="sep"></div>
+  <div class="crumb">Thermalsock Labs / <b>Home</b></div>
+  <div class="bar-right">
+    <div class="avatar" title="One person, one desk">TS</div>
+    <button class="share" id="shareBtn">Share Site</button>
   </div>
 </div>
 
-<div class="section" id="instruments">
-  <div class="section-head reveal">
-    <h2>Currently in the studio</h2>
-    <span class="count" id="toolCount">11 tools</span>
-  </div>
+<div class="stage">
+  <div class="canvas-wrap" id="wrap">
+    <div class="dots" id="dots"></div>
+    <div class="canvas" id="canvas">
 
-  <div class="cat-section">
-    <div class="cat-head"><h3>Live Processing</h3><span class="rule"></span></div>
-    <div class="module-grid">
-    <a href="oscilloscope/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Web Oscilloscope</h3>
-      <div class="kicker">Real-time signal</div>
-      <p>A dual-trace oscilloscope in your browser.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="granulator/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Granulator</h3>
-      <div class="kicker">Real-time granular processor</div>
-      <p>Freeze, scatter, and stretch your live input into evolving grain clouds.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="spectral-mutation-lab/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Spectral Mutation Lab</h3>
-      <div class="kicker">FFT bin mutation</div>
-      <p>Splits your input into 2048 bins, then freezes, morphs, shifts, and scatters them into something new.</p>
-      <span class="tag">Web</span>
-    </a>
-    </div>
-  </div>
-
-  <div class="cat-section">
-    <div class="cat-head"><h3>Composition &amp; Theory</h3><span class="rule"></span></div>
-    <div class="module-grid">
-    <a href="loom/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Loom</h3>
-      <div class="kicker">Modal chord &amp; drone engine</div>
-      <p>A harmonic sketchpad for ambient and drone work.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="subharmonicon/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Subharmonicon</h3>
-      <div class="kicker">Ratio tuning aid</div>
-      <p>Play a note and get the sub-oscillator settings for the chord you want.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="modulus-studio/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Modulus Studio</h3>
-      <div class="kicker">LFO &amp; envelope modelling</div>
-      <p>Shape LFOs and envelopes exactly like the hardware.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="sound-design/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Sound Design</h3>
-      <div class="kicker">Take 5 patch reference</div>
-      <p>39 named sounds, with the knob settings and envelope shape for each.</p>
-      <span class="tag">Web</span>
-    </a>
-    </div>
-  </div>
-
-  <div class="cat-section">
-    <div class="cat-head"><h3>Training &amp; Games</h3><span class="rule"></span></div>
-    <div class="module-grid">
-    <a href="illuminated-ear/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>The Illuminated Ear</h3>
-      <div class="kicker">Ear-training game</div>
-      <p>Hear a short line of notes, play it back, and see exactly where you went wrong.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="transient-lab/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Transient Lab</h3>
-      <div class="kicker">Ear &amp; hand training</div>
-      <p>Scales, chords, and genre lessons judged live against your MIDI keyboard.</p>
-      <span class="tag">Web</span>
-    </a>
-    </div>
-  </div>
-
-  <div class="cat-section">
-    <div class="cat-head"><h3>Studio</h3><span class="rule"></span></div>
-    <div class="module-grid">
-    <a href="ambient-bloom/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Ambient Bloom</h3>
-      <div class="kicker">Audio-reactive illuminated manuscript</div>
-      <p>A live visual instrument — one painted horizon, driven by what you play.</p>
-      <span class="tag">Web</span>
-    </a>
-    <a href="signal-path/index.html" class="module reveal">
-      <div class="module-jack"></div>
-      <h3>Signal Path</h3>
-      <div class="kicker">Hardware rig mapper</div>
-      <p>Every cable in the studio, mapped out.</p>
-      <span class="tag">Web</span>
-    </a>
-    </div>
-  </div>
-
-  <div class="featured-section reveal" id="also-building">
-    <div class="featured-head"><h2>Also from the studio</h2><span class="rule"></span></div>
-    <a href="https://store.steampowered.com/app/5065240/Rudiment/" target="_blank" rel="noopener" class="featured-card">
-      <div class="module-jack"></div>
-      <div class="featured-body">
-        <div class="featured-head-row"><h3>Rudiment</h3><span class="featured-badge">Steam</span></div>
-        <div class="featured-kicker">Finger drumming trainer</div>
-        <p>Real rudiments, singles, doubles, paradiddles, built for pads instead of sticks. A native app, not a browser tool.</p>
+      <!-- hero -->
+      <div class="frame sel" id="f-hero" data-name="Home / Hero" data-w="1440" data-h="900"
+           style="left:0; top:0; width:1440px; height:900px;">
+        <div class="frame-label">Home / Hero</div>
+        <div class="frame-dims">1440 × 900</div>
+        <div class="board">
+          <div class="hero-inner">
+            <div class="eyebrow"><span class="dot"></span>Thermalsock Labs&nbsp; / &nbsp;Liverpool, UK</div>
+            <h1>Web based tools for all <span class="grey">your audio gear.</span></h1>
+            <p class="subline">
+              Browser instruments and apps for your synths and audio gear. <b>No sign‑up. No payment.</b> These are hobby projects I use myself and decided to share. Most get updated regularly.
+            </p>
+            <div class="cta-row">
+              <a class="cta" href="keystep-pro/index.html">Open the Arp Machine</a>
+              <a class="cta-ghost" href="#micro" data-scroll="f-osc">See everything else</a>
+            </div>
+            <div class="scope">
+              <svg viewBox="0 0 1100 200" preserveAspectRatio="none" aria-hidden="true">
+                <path id="tracePath" fill="none" stroke="var(--muted)" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+              </svg>
+              <i class="scope-dot" id="dot1"></i>
+              <i class="scope-dot" id="dot2"></i>
+            </div>
+            <div class="board-foot">
+              <span>CH.1 · LIVE&nbsp; ·&nbsp; 12 tools&nbsp; ·&nbsp; Web MIDI&nbsp; ·&nbsp; Web Audio</span>
+              <span class="scroll">Currently: <em id="shapeName">sine</em></span>
+            </div>
+          </div>
+        </div>
+        <i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>
+        <div class="size-badge">1440 × 900</div>
       </div>
-    </a>
+
+      <div class="measure" style="left:1440px; top:430px; width:120px; height:20px;">
+        <div class="rule"></div><div class="val">120</div>
+      </div>
+
+      <div class="note" style="left:60px; top:960px;">
+        <div class="who">TS</div>
+        <div class="bub">Everything runs local. That is the whole pitch.</div>
+      </div>
+
+
+
+    </div>
   </div>
 
-  <div class="about-section reveal" id="about">
-    <div class="featured-head"><h2>About the studio</h2><span class="rule"></span></div>
-    <div class="about-body">
-      <p>Thermalsock Labs is one person in a home studio, building small tools for the gear already on the desk. Most of them started because something was hard to tune, hard to see, or hard to remember.</p>
-      <p>Everything here runs in the browser. Nothing is uploaded, nothing is recorded, and nothing is sent anywhere — the audio never leaves your machine. There are no accounts and no tracking.</p>
-      <p>The tools are free. If one of them saves you an afternoon, <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">buy me a coffee</a>.</p>
+  <aside class="panel left">
+    <div class="panel-head">
+      <button aria-pressed="true">Layers</button>
+      <button aria-pressed="false" id="assetsTab">Assets</button>
+    </div>
+    <div class="panel-body" id="layers">
+      <div class="tree-title">Page 1 / Home</div>
+    </div>
+  </aside>
+
+<aside class="panel right">
+  <div class="panel-head">
+    <button aria-pressed="true">System</button>
+    <button aria-pressed="false" id="protoTab">Mix</button>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- MIDI -->
+    <div class="insp-label">MIDI <button class="mini" id="devConnect">Connect</button></div>
+
+    <div class="dev">
+      <label for="devMidiIn">In</label>
+      <select id="devMidiIn"><option>Not connected</option></select>
+    </div>
+    <div class="dev">
+      <label for="devMidiOut">Out</label>
+      <select id="devMidiOut"><option>Not connected</option></select>
+    </div>
+
+    <div class="insp-label">Audio</div>
+
+    <div class="dev">
+      <label for="devAudioIn">In</label>
+      <select id="devAudioIn"><option>None found</option></select>
+    </div>
+    <div class="kv">
+      <span class="k">Out</span>
+      <span class="v">System default</span>
+    </div>
+    <div class="devnote" id="devNote"></div>
+
+
+
+    <!-- CLOCK -->
+    <div class="insp-label">Clock</div>
+
+    <div class="kv">
+      <span class="k">Source</span>
+      <span class="v">Internal</span>
+    </div>
+    <div class="kv">
+      <span class="k">BPM</span>
+      <span class="v">120</span>
+    </div>
+
+    <!-- SELECTION -->
+    <div class="insp-label">Selection</div>
+    <div class="kv soft">
+      <span class="k">Name</span>
+      <span class="v" id="iName">System Panel</span>
+    </div>
+    <div class="kv soft">
+      <span class="k">Type</span>
+      <span class="v" id="iKind">Module</span>
+    </div>
+
+  </div>
+</aside>
+
+
+
+
+
+  <div class="hint">
+    <b>drag</b> to pan &nbsp;·&nbsp; <b>scroll</b> to zoom &nbsp;·&nbsp; <b>shift + scroll</b> to slide &nbsp;·&nbsp; <b>0</b> to reset
+  </div>
+
+  <div class="corner">
+    <span class="domain">thermalsocklabs.com</span>
+    <div class="zoom">
+      <button id="zOut" title="Zoom out">−</button>
+      <span class="pct" id="zPct">70%</span>
+      <button id="zIn" title="Zoom in">+</button>
     </div>
   </div>
 </div>
 
-<footer>
-  <span>&copy; 2026 Thermalsock Labs &middot; made in the studio, not in the cloud</span>
-  <span data-footer-links style="display:flex; gap:20px;">
-    <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">Buy me a coffee</a>
-    <a href="legal/privacy.html">Privacy</a>
-    <a href="legal/disclaimer.html">Disclaimer</a>
-  </span>
-</footer>
-
+<script src="shared/persist.js"></script>
+<script src="shared/devices.js"></script>
 <script>
 (function(){
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  'use strict';
 
-  // The count is derived from the cards actually on the page rather than typed
-  // by hand, so it can't drift out of date when a tool is added or removed.
-  var countEl = document.getElementById('toolCount');
-  if (countEl){
-    var n = document.querySelectorAll('#instruments .module-grid .module').length;
-    countEl.textContent = n + (n === 1 ? ' tool' : ' tools') + ' \u00b7 all free, all in the browser';
+  /* The artboards are the site. Everything on the canvas and in the layer
+     panel is generated from this one list, so a tool cannot appear in the
+     tree and be missing from the canvas. */
+  var APPS = [
+    { id:'keystep', href:'keystep-pro/index.html', name:'KeyStep Pro Arp Machine',
+      kick:'Pattern generator + sequencing school', hero:true,
+      desc:'Melody and rhythm generation for the Arturia KeyStep Pro, on a pixel-measured recreation of its panel. Seventeen styles, true polyrhythm, and one-button injection over MIDI.' },
+    { id:'signal', href:'signal-path/index.html', name:'Signal Path',
+      kick:'Hardware rig mapper', hero:true,
+      desc:'Every cable in the studio, mapped out. 135 devices in the catalog, audio, MIDI and CV on one canvas, exportable as JSON or a PNG.' },
+
+    { id:'osc',   href:'oscilloscope/index.html',          name:'Web Oscilloscope',      kick:'Real-time signal',
+      desc:'A dual-trace oscilloscope in your browser.' },
+    { id:'gran',  href:'granulator/index.html',            name:'Granulator',            kick:'Granular processor',
+      desc:'Freeze, scatter and stretch live input into grain clouds.' },
+    { id:'spec',  href:'spectral-mutation-lab/index.html', name:'Spectral Mutation Lab', kick:'FFT bin mutation',
+      desc:'2048 bins, frozen, morphed, shifted and scattered.' },
+    { id:'loom',  href:'loom/index.html',                  name:'Loom',                  kick:'Modal chord engine',
+      desc:'A harmonic sketchpad for ambient and drone work.' },
+    { id:'sub',   href:'subharmonicon/index.html',         name:'Subharmonicon',         kick:'Ratio tuning aid',
+      desc:'Play a note, get the sub-oscillator settings for the chord.' },
+    { id:'mod',   href:'modulus-studio/index.html',        name:'Modulus Studio',        kick:'LFO & envelope modelling',
+      desc:'Shape LFOs and envelopes exactly like the hardware.' },
+    { id:'sound', href:'sound-design/index.html',          name:'Sound Design',          kick:'Take 5 patch reference',
+      desc:'39 named sounds with knob settings and envelope shapes.' },
+    { id:'ear',   href:'illuminated-ear/index.html',       name:'The Illuminated Ear',   kick:'Ear-training game',
+      desc:'Hear a line, play it back, see where you went wrong.' },
+    { id:'trans', href:'transient-lab/index.html',         name:'Transient Lab',         kick:'Ear & hand training',
+      desc:'Scales, chords and genre lessons judged against your keyboard.' },
+    { id:'bloom', href:'ambient-bloom/index.html',         name:'Ambient Bloom',         kick:'Audio-reactive visuals',
+      desc:'One painted horizon, driven by whatever you play.' },
+
+    { id:'rud', href:'https://store.steampowered.com/app/5065240/Rudiment/', external:true,
+      wide:true, name:'Rudiment', kick:'Finger drumming trainer',
+      desc:'Singles, doubles and paradiddles built for pads instead of sticks. A native app, not a browser tool.' }
+  ];
+
+
+  /* ---------- card artwork ----------
+     One small piece of line art per tool, each drawing the thing the tool
+     actually does rather than a generic icon: sequencer steps for the step
+     sequencer, a grain cloud for the granulator, an ADSR for the envelope
+     modeller. Deterministic geometry, no randomness, so a card looks the same
+     on every visit. */
+  /* "meet" rather than "none": the card is close to the viewBox ratio, so the
+     art fits with a hair of side margin — and a knob stays a circle instead of
+     becoming an ellipse on a wider card. */
+  var V = 'viewBox="0 0 300 80" preserveAspectRatio="xMidYMid meet"';
+  function svg(inner){ return '<svg ' + V + ' aria-hidden="true">' + inner + '</svg>'; }
+
+  function sinePath(cycles, amp, mid, phase, w){
+    var d = '', N = 90;
+    for (var i = 0; i <= N; i++){
+      var x = i / N;
+      var y = mid - Math.sin(2 * Math.PI * (x * cycles + (phase || 0))) * amp;
+      d += (i ? ' L' : 'M') + (x * (w || 300)).toFixed(1) + ',' + y.toFixed(1);
+    }
+    return d;
   }
 
-  // Stagger module reveals. The index resets per grid, so each row of cards
-  // ripples from its own left edge instead of every card past the sixth
-  // sharing one flat delay from a single page-wide counter.
-  var reveals = document.querySelectorAll('.reveal');
-  reveals.forEach(function(el){
-    if (reduceMotion){ el.style.transitionDelay = '0s'; return; }
-    var grid = el.parentElement;
-    var i = (grid && grid.classList.contains('module-grid'))
-      ? Array.prototype.indexOf.call(grid.children, el)
-      : 0;
-    el.style.transitionDelay = (Math.min(i, 5) * 0.07) + 's';
-  });
+  var THUMBS = {
+    /* 16 steps, four of them lit, with a playhead — the KeyStep in miniature */
+    keystep: (function(){
+      var on = { 0:1, 3:1, 6:1, 8:1, 11:1, 14:1 }, o = '';
+      for (var i = 0; i < 16; i++){
+        var x = 6 + i * 18.2;
+        o += '<rect x="' + x.toFixed(1) + '" y="' + (on[i] ? 26 : 34) + '" width="13" height="' +
+             (on[i] ? 28 : 12) + '" rx="2" class="' + (on[i] ? 'fill-lit' : 'fill') + '"' +
+             (on[i] ? '' : ' opacity="0.5"') + '/>';
+      }
+      o += '<line x1="115" y1="14" x2="115" y2="70" class="lit" opacity="0.75"/>';
+      o += '<line x1="6" y1="70" x2="298" y2="70" class="ln" opacity="0.35"/>';
+      return svg(o);
+    })(),
 
-  if ('IntersectionObserver' in window){
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if (entry.isIntersecting){
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
+    /* devices and the cables between them */
+    signal: svg(
+      '<path class="ln" d="M40 22 C 110 22, 90 58, 150 58"/>' +
+      '<path class="lit" d="M40 22 C 120 22, 140 22, 258 40"/>' +
+      '<path class="ln" d="M150 58 C 200 58, 210 40, 258 40"/>' +
+      '<circle cx="40" cy="22" r="7" class="fill"/>' +
+      '<circle cx="150" cy="58" r="7" class="fill"/>' +
+      '<circle cx="258" cy="40" r="7" class="fill-lit"/>' +
+      '<circle cx="40" cy="22" r="12" class="ln" opacity="0.4"/>' +
+      '<circle cx="258" cy="40" r="12" class="lit" opacity="0.4"/>'
+    ),
+
+    /* two traces, one per channel */
+    osc: svg(
+      '<line x1="0" y1="40" x2="300" y2="40" class="ln" opacity="0.25"/>' +
+      '<path class="ln" d="' + '"/>'
+    ),
+
+    /* grains scattered around a playhead */
+    gran: (function(){
+      var o = '', seedy = [12,44,8,60,30,52,20,66,38,16,58,26,48,10,62,34,54,22,42,14];
+      for (var i = 0; i < 20; i++){
+        var x = 12 + i * 14.6, y = seedy[i], r = 1.6 + (i % 4) * 0.9;
+        var lit = (i % 7 === 3);
+        o += '<circle cx="' + x.toFixed(0) + '" cy="' + y + '" r="' + r.toFixed(1) + '" class="' +
+             (lit ? 'fill-lit' : 'fill') + '" opacity="' + (lit ? 1 : 0.45 + (i % 3) * 0.15) + '"/>';
+      }
+      o += '<line x1="150" y1="6" x2="150" y2="74" class="lit" opacity="0.55"/>';
+      return svg(o);
+    })(),
+
+    /* an FFT frame */
+    spec: (function(){
+      var h = [8,15,26,44,58,66,52,38,47,61,40,28,34,22,30,18,25,13,17,9,14,7,11,6];
+      var o = '';
+      for (var i = 0; i < h.length; i++){
+        var x = 8 + i * 12.1;
+        o += '<rect x="' + x.toFixed(1) + '" y="' + (72 - h[i]) + '" width="7" height="' + h[i] +
+             '" rx="1" class="' + (h[i] > 55 ? 'fill-lit' : 'fill') + '" opacity="' + (h[i] > 55 ? 1 : 0.55) + '"/>';
+      }
+      return svg(o);
+    })(),
+
+    /* woven threads — warp and weft */
+    loom: (function(){
+      var o = '';
+      [14,28,42,56,70].forEach(function(y, i){
+        o += '<line x1="0" y1="' + y + '" x2="300" y2="' + y + '" class="' + (i === 2 ? 'lit' : 'ln') +
+             '" opacity="' + (i === 2 ? 0.9 : 0.5) + '"/>';
+      });
+      [46,92,138,184,230,276].forEach(function(x, i){
+        o += '<line x1="' + x + '" y1="8" x2="' + x + '" y2="76" class="ln" opacity="' + (i % 2 ? 0.5 : 0.28) + '"/>';
+      });
+      o += '<circle cx="138" cy="42" r="4" class="fill-lit"/>';
+      return svg(o);
+    })(),
+
+    /* a fundamental and two subdivisions beneath it */
+    sub: svg(
+      '<path class="lit" d="' + '"/>'
+    ),
+
+    /* an ADSR */
+    mod: svg(
+      '<line x1="0" y1="72" x2="300" y2="72" class="ln" opacity="0.3"/>' +
+      '<path class="lit" d="M8 72 L60 12 L110 40 L206 44 L292 72"/>' +
+      '<circle cx="60" cy="12" r="3.5" class="fill-lit"/>' +
+      '<circle cx="110" cy="40" r="3.5" class="fill-lit"/>' +
+      '<circle cx="206" cy="44" r="3.5" class="fill-lit"/>' +
+      '<line x1="60" y1="12" x2="60" y2="72" class="ln" opacity="0.28"/>' +
+      '<line x1="110" y1="40" x2="110" y2="72" class="ln" opacity="0.28"/>' +
+      '<line x1="206" y1="44" x2="206" y2="72" class="ln" opacity="0.28"/>'
+    ),
+
+    /* three knobs at three settings */
+    sound: (function(){
+      var o = '', angles = [-125, -20, 70];
+      [64, 150, 236].forEach(function(cx, i){
+        var a = angles[i] * Math.PI / 180;
+        o += '<circle cx="' + cx + '" cy="40" r="21" class="ln"/>';
+        o += '<line x1="' + cx + '" y1="40" x2="' + (cx + Math.cos(a) * 21).toFixed(1) +
+             '" y2="' + (40 + Math.sin(a) * 21).toFixed(1) + '" class="lit"/>';
+        o += '<circle cx="' + cx + '" cy="40" r="2.6" class="fill"/>';
+      });
+      return svg(o);
+    })(),
+
+    /* an interval ladder, one step being tested */
+    ear: (function(){
+      var steps = [66,58,50,34,42,26,18,26,34,50], o = '';
+      for (var i = 0; i < steps.length; i++){
+        var x = 20 + i * 29;
+        var lit = (i === 5);
+        o += '<circle cx="' + x + '" cy="' + steps[i] + '" r="' + (lit ? 5.5 : 4) + '" class="' +
+             (lit ? 'fill-lit' : 'fill') + '" opacity="' + (lit ? 1 : 0.6) + '"/>';
+        if (i) o += '<line x1="' + (20 + (i - 1) * 29) + '" y1="' + steps[i-1] + '" x2="' + x +
+                    '" y2="' + steps[i] + '" class="ln" opacity="0.4"/>';
+      }
+      o += '<circle cx="165" cy="26" r="11" class="lit" opacity="0.5"/>';
+      return svg(o);
+    })(),
+
+    /* transients with their decay tails */
+    trans: (function(){
+      var o = '<line x1="0" y1="52" x2="300" y2="52" class="ln" opacity="0.28"/>';
+      [30, 108, 172, 246].forEach(function(x, i){
+        var top = [10, 22, 14, 30][i];
+        o += '<path class="' + (i === 0 ? 'lit' : 'ln') + '" d="M' + x + ' 52 L' + x + ' ' + top +
+             ' M' + x + ' ' + top + ' Q' + (x + 26) + ' ' + top + ', ' + (x + 44) + ' 52"/>';
+      });
+      return svg(o);
+    })(),
+
+    /* a horizon blooming */
+    bloom: (function(){
+      var o = '';
+      [30, 22, 14].forEach(function(r, i){
+        o += '<path class="' + (i === 2 ? 'lit' : 'ln') + '" opacity="' + (0.35 + i * 0.25) +
+             '" d="M' + (150 - r * 3.4) + ' 68 Q150 ' + (68 - r * 1.9) + ', ' + (150 + r * 3.4) + ' 68"/>';
+      });
+      o += '<line x1="10" y1="68" x2="290" y2="68" class="ln" opacity="0.45"/>';
+      o += '<circle cx="150" cy="30" r="5" class="fill-lit"/>';
+      return svg(o);
+    })(),
+
+    /* eight pads, two struck */
+    rud: (function(){
+      var o = '';
+      for (var r = 0; r < 2; r++){
+        for (var c = 0; c < 4; c++){
+          var lit = (r === 0 && c === 1) || (r === 1 && c === 2);
+          o += '<rect x="' + (64 + c * 46) + '" y="' + (12 + r * 34) + '" width="36" height="26" rx="4" class="' +
+               (lit ? 'lit' : 'ln') + '" opacity="' + (lit ? 1 : 0.5) + '"' +
+               (lit ? ' fill="var(--gold)" fill-opacity="0.16"' : '') + '/>';
         }
-      });
-    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-    reveals.forEach(function(el){ io.observe(el); });
-  } else {
-    reveals.forEach(function(el){ el.classList.add('is-visible'); });
-  }
+      }
+      return svg(o);
+    })()
+  };
 
-  // Subtle parallax: the schematic drifts a touch slower than the page as you
-  // scroll past it, like it's sitting slightly behind the paper.
-  if (!reduceMotion){
-    var schematic = document.getElementById('schematic');
-    var ticking = false;
-    window.addEventListener('scroll', function(){
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function(){
-        var rect = schematic.getBoundingClientRect();
-        var offset = (window.innerHeight - rect.top) * 0.02;
-        schematic.style.transform = 'translateY(' + Math.max(-10, Math.min(10, offset)) + 'px)';
-        ticking = false;
-      });
-    }, { passive: true });
-  }
-})();
+  /* Two thumbs need a computed waveform, so they are filled in afterwards. */
+  THUMBS.osc = svg(
+    '<line x1="0" y1="40" x2="300" y2="40" class="ln" opacity="0.25"/>' +
+    '<path class="ln" opacity="0.6" d="' + sinePath(2, 24, 40, 0.25) + '"/>' +
+    '<path class="lit" d="' + sinePath(2, 30, 40, 0) + '"/>'
+  );
+  THUMBS.sub = svg(
+    '<path class="lit" d="' + sinePath(4, 13, 20, 0) + '"/>' +
+    '<path class="ln" opacity="0.7" d="' + sinePath(2, 13, 44, 0) + '"/>' +
+    '<path class="ln" opacity="0.45" d="' + sinePath(1.333, 13, 68, 0) + '"/>'
+  );
 
-// ---------------- Morphing scope trace (sine -> saw -> square -> sine) ----------------
-(function(){
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var path = document.getElementById('tracePath');
-  var dot1 = document.getElementById('dot1');
-  var dot2 = document.getElementById('dot2');
-  var shapeName = document.getElementById('shapeName');
-  if (!path) return;
 
-  var W = 1100, H = 200, MID = 100, AMP = 68, CYCLES = 3, POINTS = 111;
-  var SHAPES = ['sine', 'saw', 'square'];
-  var HOLD_MS = 2600, MORPH_MS = 1800;
+  /* ---------- layout ----------
+     Positions are computed from one grid definition rather than typed per
+     card. Hand-written coordinates drifted the last time the card heights
+     changed: four of thirteen kept their old y and height, and the grid came
+     apart. This cannot happen to a formula. */
+  var CARD_W = 330, CARD_H = 300, GAP = 30, COLS = 6;
+  var GRID_TOP = 1120, HERO_X = 1560, HERO_W = 520, HERO_H = 430;
+  var COL = CARD_W + GAP, ROW = CARD_H + GAP;
 
-  function waveY(shape, frac){
-    // frac = position within the repeating cycle, any real number (not pre-wrapped)
-    var s = Math.sin(2 * Math.PI * frac);
-    if (shape === 'sine') return s;
-    if (shape === 'square') return s >= 0 ? 1 : -1;
-    // saw: linear ramp, rising zero-crossing aligned with sine's (phase-shifted by half a period)
-    var q = (frac + 0.5) % 1; if (q < 0) q += 1;
-    return 2 * q - 1;
-  }
-
-  function easeInOut(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
-
-  function blendedY(frac, shapeA, shapeB, t){
-    var a = waveY(shapeA, frac), b = waveY(shapeB, frac);
-    return a + (b - a) * t;
-  }
-
-  if (reduceMotion){
-    // Static sine, no morph, no traveling dots.
-    var d = 'M0,' + MID;
-    for (var i = 0; i <= POINTS; i++){
-      var x = i / POINTS;
-      d += ' L' + (x * W).toFixed(1) + ',' + (MID - waveY('sine', x * CYCLES) * AMP).toFixed(1);
-    }
-    path.setAttribute('d', d);
-    dot1.style.display = 'none';
-    dot2.style.display = 'none';
-    return;
-  }
-
-  var startTime = performance.now();
-  function frame(now){
-    var elapsed = now - startTime;
-    var cycleLen = HOLD_MS + MORPH_MS;
-    var totalLen = cycleLen * SHAPES.length;
-    var t = elapsed % totalLen;
-    var shapeIdx = Math.floor(t / cycleLen);
-    var withinCycle = t % cycleLen;
-    var currentShape = SHAPES[shapeIdx];
-    var nextShape = SHAPES[(shapeIdx + 1) % SHAPES.length];
-
-    var blend = 0, displayName = currentShape;
-    if (withinCycle > HOLD_MS){
-      var morphT = (withinCycle - HOLD_MS) / MORPH_MS;
-      blend = easeInOut(Math.min(1, morphT));
-      displayName = morphT > 0.5 ? nextShape : currentShape;
-    }
-    if (shapeName && shapeName.textContent !== displayName) shapeName.textContent = displayName;
-
-    var d = '';
-    for (var i = 0; i <= POINTS; i++){
-      var x = i / POINTS;
-      var frac = x * CYCLES;
-      var y = MID - blendedY(frac, currentShape, nextShape, blend) * AMP;
-      d += (i === 0 ? 'M' : ' L') + (x * W).toFixed(1) + ',' + y.toFixed(1);
-    }
-    path.setAttribute('d', d);
-
-    // Two dots ride the current blended curve, looping across the width at
-    // their own pace (independent of the shape morph timing).
-    var DOT_PERIOD = 4200;
-    [[dot1, 0], [dot2, DOT_PERIOD * 0.5]].forEach(function(pair){
-      var dot = pair[0], phaseOffset = pair[1];
-      var lap = ((now + phaseOffset) % DOT_PERIOD) / DOT_PERIOD;
-      var frac = lap * CYCLES;
-      var y = MID - blendedY(frac, currentShape, nextShape, blend) * AMP;
-      dot.setAttribute('cx', (lap * W).toFixed(1));
-      dot.setAttribute('cy', y.toFixed(1));
+  (function place(){
+    var heroes = APPS.filter(function(a){ return a.hero; });
+    heroes.forEach(function(a, i){
+      a.x = HERO_X; a.y = i * (HERO_H + 80);
+      a.w = HERO_W; a.h = HERO_H;
     });
 
-    requestAnimationFrame(frame);
+    var slot = 0;
+    APPS.filter(function(a){ return !a.hero; }).forEach(function(a){
+      var span = a.wide ? 2 : 1;
+      /* keep a wide card on one row rather than split across the wrap */
+      if ((slot % COLS) + span > COLS) slot += COLS - (slot % COLS);
+      a.x = (slot % COLS) * COL;
+      a.y = GRID_TOP + Math.floor(slot / COLS) * ROW;
+      a.w = span === 2 ? CARD_W * 2 + GAP : CARD_W;
+      a.h = CARD_H;
+      slot += span;
+    });
+
+    var rows = Math.ceil(slot / COLS);
+    window.__aboutY = GRID_TOP + rows * ROW;
+  })();
+
+  var canvas = document.getElementById('canvas');
+  var wrap   = document.getElementById('wrap');
+  var layers = document.getElementById('layers');
+
+  /* ---------- build the canvas ---------- */
+  function frameFor(a){
+    var el = document.createElement(a.external ? 'a' : 'a');
+    el.className = 'frame' + (a.hero ? ' big' : '');
+    el.id = 'f-' + a.id;
+    el.href = a.href;
+    if (a.external){ el.target = '_blank'; el.rel = 'noopener'; }
+    el.style.cssText = 'left:'+a.x+'px;top:'+a.y+'px;width:'+a.w+'px;height:'+a.h+'px;';
+    el.dataset.name = a.name;
+    el.dataset.w = a.w; el.dataset.h = a.h;
+    el.dataset.x = a.x; el.dataset.y = a.y;
+    el.dataset.kind = a.external ? 'External link' : (a.hero ? 'Component' : 'Frame');
+    el.innerHTML =
+      '<div class="frame-label">'+ (a.hero ? 'Hero / ' : 'Tool / ') + a.name +'</div>'+
+      '<div class="frame-dims">'+ a.w +' × '+ a.h +'</div>'+
+      '<div class="board"><div class="app-board">'+
+        '<div class="thumb">'+ THUMBS[a.id] +'</div>'+
+        '<h3>'+ a.name + (a.external ? '<span class="badge-ext">Steam</span>' : '') +'</h3>'+
+        '<div class="kick">'+ a.kick +'</div>'+
+        '<p>'+ a.desc +'</p>'+
+        '<div class="open">'+ (a.external ? 'Open on Steam ↗' : 'Open →') +'</div>'+
+      '</div></div>'+
+      '<i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>'+
+      '<div class="size-badge">'+ a.w +' × '+ a.h +'</div>';
+    return el;
   }
-  requestAnimationFrame(frame);
+  APPS.forEach(function(a){ canvas.appendChild(frameFor(a)); });
+
+  /* about frame, last on the canvas */
+  var about = document.createElement('div');
+  about.className = 'frame';
+  about.id = 'f-about';
+  about.dataset.name = 'About / Studio';
+  about.dataset.w = 690; about.dataset.h = 260; about.dataset.x = 0; about.dataset.y = window.__aboutY;
+  about.dataset.kind = 'Frame';
+  about.style.cssText = 'left:0;top:' + window.__aboutY + 'px;width:690px;height:260px;';
+  about.innerHTML =
+    '<div class="frame-label">About / Studio</div><div class="frame-dims">690 × 260</div>'+
+    '<div class="board"><div class="about-board">'+
+      '<h3>One person, one home studio.</h3>'+
+      '<p>Small tools for the gear already on the desk. Most of them started because '+
+      'something was hard to tune, hard to see, or hard to remember.</p>'+
+      '<p>Everything runs in the browser. Nothing is uploaded, nothing is recorded, '+
+      'nothing is sent anywhere. No accounts, no tracking.</p>'+
+      '<div class="links"><a href="legal/privacy.html">Privacy</a>'+
+      '<a href="legal/disclaimer.html">Disclaimer</a>'+
+      '<span>© 2026 Thermalsock Labs</span></div>'+
+    '</div></div>'+
+    '<i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>'+
+    '<div class="size-badge">690 × 260</div>';
+  canvas.appendChild(about);
+
+  /* ---------- layer tree ---------- */
+  function addLayer(label, target, group, child){
+    var b = document.createElement('button');
+    b.className = 'layer' + (group ? ' group' : '') + (child ? ' child' : '');
+    b.innerHTML = (group ? '<span class="hash">#</span>' : '') + label;
+    b.dataset.target = target || '';
+    layers.appendChild(b);
+    return b;
+  }
+addLayer('Master bus / Hero', 'f-hero', true);
+['transport / eyebrow','headline / main','subline / copy','cta / controls','session / meta'].forEach(function(n){
+  addLayer(n, 'f-hero', false, true);
+});
+addLayer('Hero instruments', 'f-keystep', true);
+APPS.filter(function(a){ return a.hero; }).forEach(function(a){ addLayer(a.name, 'f-'+a.id, false, true); });
+addLayer('Micro instruments', 'f-osc', true);
+APPS.filter(function(a){ return !a.hero && !a.external; }).forEach(function(a){ addLayer(a.name, 'f-'+a.id, false, true); });
+addLayer('External', 'f-rud', true);
+addLayer('Rudiment', 'f-rud', false, true);
+addLayer('About / Studio', 'f-about', true);
+
+
+  /* ---------- selection ---------- */
+  var frames = Array.prototype.slice.call(canvas.querySelectorAll('.frame'));
+  var current = document.getElementById('f-hero');
+
+  function setText(id, value){
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function select(el){
+    if (!el) return;
+    frames.forEach(function(f){ f.classList.toggle('sel', f === el); });
+    current = el;
+    /* The inspector is a surface you will keep redesigning, so read-outs are
+       optional by design. One missing id used to throw here, which aborted the
+       rest of select() — that is why the layer tree stopped highlighting and
+       the waveform never started. */
+    setText('iW', el.dataset.w || 1440);
+    setText('iH', el.dataset.h || 900);
+    setText('iX', el.dataset.x || 0);
+    setText('iY', el.dataset.y || 0);
+    setText('iName', el.dataset.name || 'Home / Hero');
+    setText('iKind', el.dataset.kind || 'Frame');
+    setText('iType', el.id === 'f-hero' ? '76 / 74' : '17 / 22');
+    /* Children all point at their parent frame, so matching on target alone
+       lights the whole branch. Only the group row is the selection. */
+    Array.prototype.forEach.call(layers.querySelectorAll('.layer'), function(b){
+      b.classList.toggle('on', b.dataset.target === el.id && b.classList.contains('group'));
+    });
+  }
+  document.getElementById('f-hero').dataset.name = 'Home / Hero';
+  document.getElementById('f-hero').dataset.kind = 'Frame';
+
+  /* Hovering inspects, clicking opens. Selection on hover keeps the software
+     conceit without hiding the fact that these are links to real pages. */
+  frames.forEach(function(f){
+    f.addEventListener('mouseenter', function(){ select(f); });
+    f.addEventListener('focus', function(){ select(f); centreOn(f); });
+  });
+
+  /* ---------- pan and zoom ---------- */
+  var scale = 0.7, tx = 90, ty = 40;
+  var minS = 0.25, maxS = 1.6;
+
+  function apply(){
+    canvas.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+scale+')';
+    document.getElementById('dots').style.backgroundSize = (26*scale)+'px '+(26*scale)+'px';
+    document.getElementById('dots').style.backgroundPosition = tx+'px '+ty+'px';
+    document.getElementById('zPct').textContent = Math.round(scale*100)+'%';
+  }
+
+  /* The panels float over the canvas, so the usable area is the gap between
+     them. Centring on the window instead parks half the artboard underneath
+     the layer tree, which is exactly what it looked like the first time. */
+  function viewport(){
+    var r = wrap.getBoundingClientRect();
+    var wide = window.innerWidth > 1000;
+    var left = wide ? 252 : 0;
+    var right = wide ? 250 : 0;
+    return { left:left, top:0, w:Math.max(200, r.width - left - right), h:r.height };
+  }
+
+  function centreOn(el, fit){
+    var v = viewport();
+    var x = parseFloat(el.style.left) || 0, y = parseFloat(el.style.top) || 0;
+    var w = parseFloat(el.style.width) || 0, h = parseFloat(el.style.height) || 0;
+    if (fit){
+      var pad = 90;
+      scale = Math.max(minS, Math.min(maxS, Math.min((v.w - pad) / w, (v.h - pad) / h)));
+    }
+    tx = v.left + v.w/2 - (x + w/2) * scale;
+    ty = v.top + v.h/2 - (y + h/2) * scale;
+    apply();
+  }
+
+  var dragging = false, sx = 0, sy = 0, stx = 0, sty = 0, moved = false;
+  wrap.addEventListener('mousedown', function(e){
+    if (e.button !== 0) return;
+    dragging = true; moved = false;
+    sx = e.clientX; sy = e.clientY; stx = tx; sty = ty;
+    wrap.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', function(e){
+    if (!dragging) return;
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+    tx = stx + dx; ty = sty + dy; apply();
+  });
+  window.addEventListener('mouseup', function(){
+    dragging = false; wrap.classList.remove('dragging');
+  });
+  /* A drag that ends on a frame must not also follow its link. */
+  canvas.addEventListener('click', function(e){
+    if (moved){ e.preventDefault(); moved = false; }
+  }, true);
+
+  wrap.addEventListener('wheel', function(e){
+    e.preventDefault();
+    /* Zoom on plain wheel. Figma pans on scroll and zooms on ctrl, but the
+       expectation here was a canvas you zoom into, so that is what it does.
+       Shift-scroll still pans sideways for trackpads. */
+    if (!e.shiftKey){
+      var r = wrap.getBoundingClientRect();
+      var mx = e.clientX - r.left, my = e.clientY - r.top;
+      var next = Math.max(minS, Math.min(maxS, scale * (1 - e.deltaY * 0.0016)));
+      tx = mx - (mx - tx) * (next / scale);
+      ty = my - (my - ty) * (next / scale);
+      scale = next;
+    } else {
+      tx -= (e.deltaY || e.deltaX);
+    }
+    apply();
+  }, { passive:false });
+
+  function zoomBy(f){
+    var v = viewport(), mx = v.left + v.w/2, my = v.h/2;
+    var next = Math.max(minS, Math.min(maxS, scale * f));
+    tx = mx - (mx - tx) * (next / scale);
+    ty = my - (my - ty) * (next / scale);
+    scale = next; apply();
+  }
+  document.getElementById('zIn').addEventListener('click', function(){ zoomBy(1.2); });
+  document.getElementById('zOut').addEventListener('click', function(){ zoomBy(1/1.2); });
+
+  /* ---------- layer clicks ---------- */
+  layers.addEventListener('click', function(e){
+    var b = e.target.closest('.layer');
+    if (!b || !b.dataset.target) return;
+    var el = document.getElementById(b.dataset.target);
+    select(el); centreOn(el, true);
+  });
+
+  document.querySelector('[data-scroll]').addEventListener('click', function(e){
+    e.preventDefault();
+    var el = document.getElementById('f-osc');
+    select(el); centreOn(el, true);
+  });
+
+  /* ---------- toolbar, kept honest ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(o){
+        o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+      });
+    });
+  });
+  document.getElementById('shareBtn').addEventListener('click', function(){
+    var btn = this;
+    var done = function(t){ btn.textContent = t; setTimeout(function(){ btn.textContent = 'Share'; }, 1400); };
+    if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function(){ done('Link copied'); })
+      .catch(function(){ done('Copy failed'); });
+    else done('thermalsocklabs.com');
+  });
+  ['assetsTab','protoTab'].forEach(function(id){
+    document.getElementById(id).addEventListener('click', function(){
+      var was = this.textContent;
+      this.textContent = 'Not built';
+      var self = this;
+      setTimeout(function(){ self.textContent = was; }, 1100);
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === '0'){ home(); }
+    if (e.key === '1'){ scale = 1; apply(); }
+    if (e.key === '+' || e.key === '=') zoomBy(1.2);
+    if (e.key === '-') zoomBy(1/1.2);
+  });
+
+  var hero = document.getElementById('f-hero');
+  function home(){ centreOn(hero, true); select(hero); }
+  home();
+  window.addEventListener('resize', function(){ if (window.innerWidth > 1000) home(); });
+
+  /* ---------- the hero scope ----------
+     Carried over from the previous homepage, because it was the best thing on
+     it. Sine morphs to saw to square and back; two dots ride the live curve on
+     their own timing. Honours prefers-reduced-motion by drawing a still sine
+     and dropping the dots, since a permanently moving line is exactly what
+     that setting exists to stop. */
+  (function(){
+    var path = document.getElementById('tracePath');
+    if (!path) return;
+    var dot1 = document.getElementById('dot1'), dot2 = document.getElementById('dot2');
+    var nameEl = document.getElementById('shapeName');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var W = 1100, MID = 100, AMP = 68, CYCLES = 3, POINTS = 111;
+    var SHAPES = ['sine', 'saw', 'square'], HOLD = 2600, MORPH = 1800;
+
+    function waveY(shape, frac){
+      var v = Math.sin(2 * Math.PI * frac);
+      if (shape === 'sine') return v;
+      if (shape === 'square') return v >= 0 ? 1 : -1;
+      var q = (frac + 0.5) % 1; if (q < 0) q += 1;
+      return 2 * q - 1;
+    }
+    function ease(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
+    function blend(frac, a, b, t){ var x = waveY(a, frac); return x + (waveY(b, frac) - x) * t; }
+
+    function draw(a, b, t){
+      var d = '';
+      for (var i = 0; i <= POINTS; i++){
+        var x = i / POINTS;
+        d += (i ? ' L' : 'M') + (x * W).toFixed(1) + ',' +
+             (MID - blend(x * CYCLES, a, b, t) * AMP).toFixed(1);
+      }
+      path.setAttribute('d', d);
+    }
+
+    if (reduce){
+      draw('sine', 'sine', 0);
+      if (dot1) dot1.style.display = 'none';
+      if (dot2) dot2.style.display = 'none';
+      return;
+    }
+
+    var t0 = performance.now();
+    function frame(now){
+      var cycle = HOLD + MORPH, span = cycle * SHAPES.length;
+      var t = (now - t0) % span;
+      var idx = Math.floor(t / cycle), within = t % cycle;
+      var cur = SHAPES[idx], next = SHAPES[(idx + 1) % SHAPES.length];
+      var mix = 0, label = cur;
+      if (within > HOLD){
+        var mt = (within - HOLD) / MORPH;
+        mix = ease(Math.min(1, mt));
+        label = mt > 0.5 ? next : cur;
+      }
+      if (nameEl && nameEl.textContent !== label) nameEl.textContent = label;
+      draw(cur, next, mix);
+
+      var PERIOD = 4200;
+      [[dot1, 0], [dot2, PERIOD * 0.5]].forEach(function(pair){
+        if (!pair[0]) return;
+        var lap = ((now + pair[1]) % PERIOD) / PERIOD;
+        var y = MID - blend(lap * CYCLES, cur, next, mix) * AMP;
+        pair[0].style.left = (lap * 100).toFixed(2) + '%';
+        pair[0].style.top = (y / 200 * 100).toFixed(2) + '%';
+      });
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  /* ---------- device panel ----------
+     The System panel is the one place on the site you pick your interface.
+     Every app reads the same choice through TSDevices, so moving from the Arp
+     Machine to the Oscilloscope no longer means choosing again.
+
+     Nothing here prompts on load: TSDevices only attaches silently if MIDI
+     permission is already on record, and the Connect button covers the first
+     time. Audio device names stay hidden until some tool has legitimately been
+     granted the microphone, which the note below the list explains rather than
+     leaving you looking at a list of blanks. */
+  (function(){
+    var D = window.TSDevices;
+    if (!D || !document.getElementById('devMidiOut')) return;
+
+    function fill(sel, items, chosen, blank){
+      sel.innerHTML = '';
+      if (!items.length){
+        var none = document.createElement('option');
+        none.textContent = blank; sel.appendChild(none);
+        sel.disabled = true; return;
+      }
+      sel.disabled = false;
+      items.forEach(function(it, i){
+        var o = document.createElement('option');
+        o.value = it.id || it.deviceId;
+        o.textContent = it.name || it.label || ('Input ' + (i + 1));
+        sel.appendChild(o);
+      });
+      if (chosen) sel.value = chosen.id || chosen.deviceId;
+    }
+
+    function paint(){
+      var st = D.state();
+      fill(document.getElementById('devMidiIn'),  D.midiInputs(),  D.input(),
+           st === 'ready' ? 'No inputs' : 'Not connected');
+      fill(document.getElementById('devMidiOut'), D.midiOutputs(), D.output(),
+           st === 'ready' ? 'No outputs' : 'Not connected');
+      fill(document.getElementById('devAudioIn'), D.audioInputs(), D.audioInput(), 'None found');
+
+      document.getElementById('devConnect').hidden = (st === 'ready' || st === 'unsupported');
+
+      var note = document.getElementById('devNote'), msg = '';
+      if (st === 'unsupported') msg = 'Web MIDI needs Chrome or Edge over https or localhost.';
+      else if (st === 'denied') msg = 'MIDI permission was refused. Reload to try again.';
+      else if (st !== 'ready') msg = 'Press Connect to let the site see your MIDI ports.';
+      else if (D.audioInputs().length && !D.audioLabelsAvailable())
+        msg = 'Audio inputs are listed but unnamed until a tool has been given microphone access.';
+      note.textContent = msg;
+    }
+
+    document.getElementById('devMidiIn').addEventListener('change', function(){ D.setInput(this.value); });
+    document.getElementById('devMidiOut').addEventListener('change', function(){ D.setOutput(this.value); });
+    document.getElementById('devAudioIn').addEventListener('change', function(){ D.setAudioInput(this.value); });
+    document.getElementById('devConnect').addEventListener('click', function(){ D.connect(); });
+
+    D.onChange(paint);
+    D.init();
+    paint();
+  })();
+
 })();
 </script>
 </body>

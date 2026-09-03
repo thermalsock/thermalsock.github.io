@@ -160,7 +160,7 @@ export class WaveformView {
       ctx.stroke();
 
       ctx.fillStyle = '#7fb8e0';
-      ctx.font = '600 9px "IBM Plex Mono", monospace';
+      ctx.font = '600 9px "JetBrains Mono", monospace';
       ctx.textBaseline = 'bottom';
       ctx.textAlign = 'left';
       ctx.fillText('START', sx + 3, h - 4);
@@ -201,7 +201,7 @@ export class WaveformView {
     if (this.frozen) {
       ctx.fillStyle = 'rgba(127, 184, 168, 0.10)';
       ctx.fillRect(0, 0, w, h);
-      ctx.font = '600 11px "IBM Plex Mono", monospace';
+      ctx.font = '600 11px "JetBrains Mono", monospace';
       ctx.fillStyle = '#7fb8a8';
       ctx.textBaseline = 'top';
       ctx.fillText('FROZEN — drag to scan', 10, 8);

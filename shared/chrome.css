@@ -10,46 +10,45 @@
  * an app can still override a specific rule where it genuinely needs to —
  * but the default should be to use these as-is.
  *
- * Per-app identity colour comes from --app-accent, set on <html> via
- * data-app. Nothing here should be restyled per app; fill the header's
- * slots instead.
+ * ---- 2026 retheme ----
+ * The palette moved from Field Notes (cream paper, rust ink) to the console
+ * theme (deep navy, cyan). The variable NAMES were kept even though several
+ * are now misleading — --paper is dark and --rust is cyan. Renaming them
+ * would have meant touching every var() reference in fourteen pages for no
+ * visual gain, and a half-finished rename is worse than an odd name. The
+ * semantics are unchanged: --paper is the page, --ink is text on it, --rust
+ * is the accent.
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 :root {
-  /* Field Notes palette — the canonical values. */
-  --paper: #EDE6D6;
-  --paper-deep: #E4DBC7;
-  --grid-line: rgba(43, 38, 32, 0.09);
-  --ink: #2B2620;
-  --ink-soft: #5C5346;
-  --ink-faint: #8A8070;
-  --rust: #8B4A2B;
-  --rust-hi: #A0562F;
-  --hairline: rgba(43, 38, 32, 0.14);
-  --danger: #b8402a;
+  /* Console palette — the canonical values. */
+  --paper: #0B0D12;                        /* the page */
+  --paper-deep: #0F1118;                   /* panels and cards */
+  --void: #05060A;                         /* deepest surface */
+  --grid-line: rgba(138, 160, 184, 0.07);
+  --ink: #E7F4FF;
+  --ink-soft: #8AA0B8;
+  --ink-faint: #5E6A7A;
+  --rust: #00C8FF;                         /* the accent */
+  --rust-hi: #6FE0FF;
+  --hairline: rgba(138, 160, 184, 0.16);
+  --danger: #FF5A6E;
 
-  --serif-display: 'Fraunces', Georgia, serif;
-  --serif-body: 'Newsreader', Georgia, serif;
-  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --serif-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --serif-body: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Default identity colour; each app overrides via [data-app]. */
-  --app-accent: #8B4A2B;
+  --app-accent: #00C8FF;
+
+  color-scheme: dark;
 }
 
-/* Per-app identity colours. Previously these were inline
-   style="color:#2f7a72" attributes on the app name, so the colour lived in
-   the markup and nothing else could use it. */
-[data-app="oscilloscope"]          { --app-accent: #8B4A2B; }
-[data-app="granulator"]            { --app-accent: #8B4A2B; }
-[data-app="spectral-mutation-lab"] { --app-accent: #7A5230; }
-[data-app="loom"]                  { --app-accent: #2f7a72; }
-[data-app="subharmonicon"]         { --app-accent: #8B4A2B; }
-[data-app="modulus-studio"]        { --app-accent: #6B4E9E; }
-[data-app="sound-design"]          { --app-accent: #8B4A2B; }
-[data-app="illuminated-ear"]       { --app-accent: #8B4A2B; }
-[data-app="transient-lab"]         { --app-accent: #8B4A2B; }
-[data-app="ambient-bloom"]         { --app-accent: #8B4A2B; }
-[data-app="signal-path"]           { --app-accent: #8B4A2B; }
+/* The apps used to carry individual identity colours — teal for Loom and
+   KeyStep, purple for Modulus, rust for the rest. The console theme has one
+   accent, so those overrides are gone rather than left set to the same value
+   twelve times. If per-app hues come back they belong here. */
 
 /* ---------- The header ----------
    Three regions: brand lockup, app switcher, then a right-hand slot the app
@@ -66,7 +65,7 @@
   gap: 16px;
   padding: 13px 22px;
   border-bottom: 1px solid var(--hairline);
-  background: linear-gradient(180deg, rgba(43, 38, 32, 0.03), transparent);
+  background: linear-gradient(180deg, rgba(138, 160, 184, 0.05), transparent);
 }
 
 .brand-lockup {
@@ -115,7 +114,7 @@
   font-size: 10.5px;
   letter-spacing: 0.05em;
   color: var(--ink-soft);
-  background: rgba(43, 38, 32, 0.04);
+  background: rgba(138, 160, 184, 0.06);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 6px 12px;
@@ -141,8 +140,8 @@
   font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-soft);
-  background: rgba(139, 74, 43, 0.07);
-  border: 1px solid rgba(139, 74, 43, 0.22);
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.28);
   border-radius: 8px;
   padding: 9px 12px;
   margin: 0 0 14px 0;
@@ -189,7 +188,7 @@
   gap: 6px;
   color: var(--ink-soft);
   text-decoration: none;
-  background: rgba(43, 38, 32, 0.04);
+  background: rgba(138, 160, 184, 0.06);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 5px 11px;
@@ -205,4 +204,228 @@
   .ts-topbar, .topbar { padding: 11px 16px; gap: 10px; }
   .brand-appname { font-size: 14px; }
   .topbar-right { gap: 8px; }
+}
+
+/* ==========================================================================
+   Control panel components
+   ==========================================================================
+   Lifted from the Oscilloscope, which had the most carefully worked-out
+   panel on the site, and promoted here because seven app stylesheets had
+   already grown their own near-copies. Those copies had drifted: different
+   paddings, different heading sizes, some with icon chips and some without.
+   This is now the definition; an app should use these classes rather than
+   redeclaring them.
+
+   The vocabulary is small on purpose:
+
+     .card            a bordered panel holding one group of controls
+     .card-title      mono uppercase heading with an icon chip
+     .chip            the 18px tinted square the icon sits in
+     .row             one label + one control, label left, control right
+     .readout         a definition list of live values, right-aligned
+     .field           a stacked label-above-control, for wider inputs
+
+   The chip hues carry meaning across the site — amber for oscillators and
+   sources, violet for modulation, teal for envelopes and time, pink for
+   randomness, blue for routing, cyan for output. Keep that mapping rather
+   than picking a colour per app.
+   ========================================================================== */
+
+.panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  background: var(--paper-deep);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+/* Only h3 is claimed inside a card. Several apps use h2 there as a readable
+   content title — "Tune Up", "Choose what to test" — and blanket-styling it as
+   an 11px mono micro-label produced a hybrid: the app's own font-size won but
+   the shared text-transform did not, giving a 17px uppercase serif nobody
+   asked for. Control-group labels are h3 or .card-title. */
+.card-title,
+.card > h3,
+.panel-group h2,
+.panel-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  margin: 0 0 12px;
+}
+
+.chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.chip svg { width: 11px; height: 11px; }
+.chip.amber  { background: rgba(255, 180, 84, 0.15);  color: #FFB454; }
+.chip.violet { background: rgba(169, 140, 255, 0.15); color: #A98CFF; }
+.chip.teal   { background: rgba(63, 217, 196, 0.15);  color: #3FD9C4; }
+.chip.pink   { background: rgba(255, 123, 176, 0.15); color: #FF7BB0; }
+.chip.blue   { background: rgba(111, 168, 255, 0.15); color: #6FA8FF; }
+.chip.cyan   { background: rgba(0, 200, 255, 0.15);   color: var(--rust); }
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.row:last-child { margin-bottom: 0; }
+.row label { font-size: 12px; color: var(--ink); }
+.row select { width: auto; flex: 1; }
+.row input[type="range"] { flex: 1; accent-color: var(--rust); }
+.row input[type="checkbox"] { accent-color: var(--rust); }
+
+/* A stacked field, for controls too wide to sit beside their label. */
+.field { display: block; margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+/* Apps use both <span> and <label> for the caption above a stacked control,
+   so both are covered rather than forcing a markup change per app. */
+.field > span,
+.field > label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.field select, .field input[type="text"], .field input[type="number"] { width: 100%; }
+
+/* Live values. The label is dim and set in the body face; the number is mono
+   and accented, so a column of them reads as data rather than as prose. */
+.readout dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+}
+.readout dt { font-size: 12px; color: var(--ink-soft); }
+.readout dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--rust);
+  text-align: right;
+}
+
+/* The same thing as a single line, where a <dl> would be overkill. */
+.readout-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 7px;
+}
+.readout-line b {
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--rust);
+}
+
+/* Form controls, so every app's select and slider match. */
+.card select,
+.card input[type="text"],
+.card input[type="number"],
+.card input[type="search"] {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--serif-body);
+  font-size: 13px;
+  outline: none;
+}
+.card select:focus,
+.card input:focus { border-color: var(--rust); }
+.card input[type="range"] { accent-color: var(--rust); }
+
+/* Sliders are styled rather than left native because the native track is a
+   different height in every browser, and a column of them reads as ragged. */
+input[type="range"].tsl-range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 2px;
+  background: var(--hairline); outline: none;
+}
+input[type="range"].tsl-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--rust); cursor: pointer; border: 2px solid var(--paper);
+}
+input[type="range"].tsl-range::-moz-range-thumb {
+  width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--paper);
+  background: var(--rust); cursor: pointer;
+}
+
+/* A slider with its value beside it. Three columns — caption, track, reading —
+   so a stack of them lines up on both edges instead of the numbers wandering
+   with the length of each label. */
+.slider-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 46px;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+}
+.slider-row > label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.slider-row > .val {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--rust);
+  text-align: right;
+}
+
+/* A segmented button group — the pattern several apps grew independently. */
+.seg { display: flex; gap: 4px; flex-wrap: wrap; }
+.seg button {
+  flex: 1; min-width: 60px;
+  background: var(--paper); border: 1px solid var(--hairline);
+  color: var(--ink-soft); border-radius: 6px; padding: 7px 6px;
+  font-family: var(--mono); font-size: 10.5px; cursor: pointer;
+}
+.seg button:hover { color: var(--ink); border-color: var(--rust); }
+.seg button.active {
+  background: var(--rust); border-color: var(--rust);
+  color: var(--paper); font-weight: 600;
+}
+
+.card .hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  margin: 8px 0 0;
 }

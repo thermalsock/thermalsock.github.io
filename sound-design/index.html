@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thermalsock Labs — Sound Design</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/synth-panel.css" />
   <meta name="description" content="A patch reference for the Sequential Take 5 — 39 named sounds with the knob settings and envelope shape for each.">
   <link rel="canonical" href="https://thermalsocklabs.com/sound-design/">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <meta name="theme-color" content="#EDE6D6">
+  <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Thermalsock Labs">
   <meta property="og:title" content="Sound Design — Thermalsock Labs">
@@ -29,8 +28,8 @@
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
       <radialGradient id="knobBodyGrad" cx="35%" cy="30%" r="75%">
-        <stop offset="0%" stop-color="#F3ECDD" />
-        <stop offset="55%" stop-color="#DED2B4" />
+        <stop offset="0%" stop-color="var(--paper-deep)" />
+        <stop offset="55%" stop-color="var(--paper-deep)" />
         <stop offset="100%" stop-color="#4A4030" />
       </radialGradient>
     </defs>
@@ -40,10 +39,10 @@
     <header class="topbar">
       <a href="../index.html" class="brand-lockup">
         <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="#8B4A2B"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
           <span class="brand-appname">Sound Design</span>
@@ -51,9 +50,8 @@
         </span>
       </a>
 
-      <nav class="page-nav" data-app-switcher="sound-design" data-base="../" aria-label="Thermalsock Labs apps"></nav>
-
       <div class="topbar-right">
+        <div data-device-bar></div>
         <button class="pill action" id="prevPresetBtn" type="button" title="Previous sound (left arrow)" aria-label="Previous sound">&larr;</button>
         <button class="pill audition" id="auditionBtn" type="button" aria-pressed="false" title="Hear this patch (Space)">
           <span class="aud-icon" aria-hidden="true">&#9654;</span><span id="auditionLabel">Audition</span>
@@ -69,6 +67,7 @@
           </select>
         </label>
         <span class="pill mode">Sequential Take 5 &mdash; patch reference</span>
+              <nav class="page-nav" data-app-switcher="sound-design" data-base="../" aria-label="Thermalsock Labs apps"></nav>
       </div>
     </header>
 
@@ -209,6 +208,8 @@
   </div>
 
 <script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/soundDesign.js"></script>

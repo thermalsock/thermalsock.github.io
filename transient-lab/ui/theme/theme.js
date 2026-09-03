@@ -222,10 +222,65 @@ const fieldNotes = {
   buttonActiveBorder: "#33475C"
 };
 
-export const themeVariants = { fieldNotes, light, mid, dark };
-const THEME_ORDER = ["fieldNotes", "light", "mid", "dark"];
 
-export const theme = { ...fieldNotes };
+// The site theme, as a fifth variant rather than a replacement.
+//
+// This file already had a working four-way theme system with a cycle button,
+// so overwriting fieldNotes would have thrown away a feature to save an edit.
+// `console` mirrors the palette the rest of the site now uses, and becomes
+// the default; the other four are still one press of the theme button away.
+//
+// Two families are deliberately NOT tinted, and they were already exempt for
+// the same reason: the scope colours (real analyser hardware has its own dark
+// screen whatever the room is doing) and pianoKeyBlack (black keys do not get
+// lighter in a light room). Those live in `semantics` and are inherited here
+// untouched.
+const consoleTheme = {
+  ...semantics,
+  appBg:        "#0B0D12",
+  panelBg:      "#0F1118",
+  panelBgAlt:   "#141821",
+  gridBgA:      "#0F1118",
+  gridBgB:      "#12151D",
+  gridBgInactive: "#0A0C11",
+  moduleBg:     "#101420",
+  fieldBg:      "#161A22",
+  fieldBgActive: "#1C222C",
+
+  border:       "#242A35",
+  borderStrong: "#3A4350",
+  gridLineMinor: "rgba(138,160,184,0.06)",
+  gridLineMajor: "rgba(138,160,184,0.14)",
+  midLine:      "rgba(138,160,184,0.10)",
+  midLineDim:   "rgba(138,160,184,0.04)",
+
+  textPrimary:  "#E7F4FF",
+  textSecondary:"#8AA0B8",
+  textDim:      "#5E6A7A",
+  textOnAccent: "#04222C",
+
+  accent:       "#00C8FF",
+  accentDeep:   "#6FE0FF",
+  accentBg:     "rgba(0, 200, 255, 0.18)",
+  accentBgSubtle: "rgba(0, 200, 255, 0.08)",
+
+  toggleOnBg:   "#00C8FF",
+  toggleOnText: "#04222C",
+  toggleOffBg:  "#242A35",
+  toggleOffText:"#8AA0B8",
+
+  playhead:     "#FF5A6E",
+
+  buttonBg:     "#161A22",
+  buttonBorder: "#242A35",
+  buttonActiveBg: "rgba(0, 200, 255, 0.20)",
+  buttonActiveBorder: "#00C8FF"
+};
+
+export const themeVariants = { console: consoleTheme, fieldNotes, light, mid, dark };
+const THEME_ORDER = ["console", "fieldNotes", "light", "mid", "dark"];
+
+export const theme = { ...consoleTheme };
 
 export let currentThemeName = (() => {
   try {
@@ -234,7 +289,7 @@ export let currentThemeName = (() => {
   } catch (e) {
     // localStorage unavailable — fall back to default silently
   }
-  return "fieldNotes";
+  return "console";
 })();
 
 Object.assign(theme, themeVariants[currentThemeName]);

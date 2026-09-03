@@ -53,7 +53,7 @@ export class ModMatrixView {
       const y0 = idx * rowH + rowH / 2;
       const color = colors[idx % colors.length];
 
-      ctx.font = '10px "IBM Plex Mono", monospace';
+      ctx.font = '10px "JetBrains Mono", monospace';
       ctx.fillStyle = 'rgba(255,255,255,0.55)';
       ctx.fillText(s.label, 4, y0 - rowH / 2 + 10);
 

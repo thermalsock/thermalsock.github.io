@@ -6,13 +6,12 @@
   <title>Thermalsock Labs — Subharmonicon</title>
   <meta name="description" content="A tuning companion for the Moog Subharmonicon — detect or enter each VCO's root note, and see exactly which sub-oscillator divide setting produces the chord you want.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/ratio.css" />
   <link rel="canonical" href="https://thermalsocklabs.com/subharmonicon/">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <meta name="theme-color" content="#EDE6D6">
+  <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Thermalsock Labs">
   <meta property="og:title" content="Subharmonicon — Thermalsock Labs">
@@ -57,10 +56,10 @@
     <header class="topbar">
       <a href="../index.html" class="brand-lockup">
         <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#6b7280" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="#8B4A2B"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
           <span class="brand-appname">Subharmonicon</span>
@@ -68,13 +67,13 @@
         </span>
       </a>
 
-      <nav class="page-nav" data-app-switcher="subharmonicon" data-base="../" aria-label="Thermalsock Labs apps"></nav>
-
       <div class="topbar-right">
+        <div data-device-bar></div>
         <span class="pill live">
           <span id="statusDot" class="status-dot"></span>
           <span id="statusText">Manual entry</span>
         </span>
+              <nav class="page-nav" data-app-switcher="subharmonicon" data-base="../" aria-label="Thermalsock Labs apps"></nav>
       </div>
     </header>
 
@@ -102,7 +101,7 @@
       <!-- ============ Combined ============ -->
       <section id="view-combined" class="view">
         <section class="card">
-          <h2 class="section-title">Osc 2 tuning, relative to Osc 1</h2>
+          <h2 class="section-title"><span class="chip amber" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M6 5.2v5.6M10 5.2v5.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>Osc 2 tuning, relative to Osc 1</h2>
           <p class="hint">Set how far Osc 2 sits from Osc 1's root. This does not require re-detecting Osc 2 &mdash; it's calculated straight from Osc 1's root plus the interval you pick, and overrides whatever root Osc 2's own tab has set.</p>
           <div class="combined-tuning-row">
             <select id="combinedIntervalSelect"></select>
@@ -111,13 +110,13 @@
         </section>
 
         <section class="card">
-          <h2 class="section-title">Resulting chord &mdash; all 6 voices</h2>
+          <h2 class="section-title"><span class="chip teal" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="4.5" cy="10.5" r="2" fill="currentColor"/><circle cx="11.5" cy="7.5" r="2" fill="currentColor"/><path d="M6.5 10.5V4l5 1.4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span>Resulting chord &mdash; all 6 voices</h2>
           <p class="hint">Every voice across both VCOs and both pairs of subs, low to high.</p>
           <div id="chordList" class="chord-list"></div>
         </section>
 
         <section class="card map-card">
-          <h2 class="section-title">Chord on the series ladder</h2>
+          <h2 class="section-title"><span class="chip violet" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 2v12M12 2v12M4 5h8M4 8h8M4 11h8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>Chord on the series ladder</h2>
           <div class="ladder-wrap">
             <svg id="ladderSvg" viewBox="0 0 900 320" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
@@ -148,6 +147,8 @@
   </div>
 
 <script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/main.js"></script>

@@ -7,31 +7,30 @@
 <meta name="description" content="Loom - a modal chord and drone generator for ambient, drone, and psybient music. Modal harmony, open voicings, drone integration, and slow non-functional movement, with real audio playback.">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/chrome.css">
 <style>
   /* Header and brand rules live in ../shared/chrome.css. */
 
   :root{
-    --chassis: #EDE6D6;
-    --panel: #E4DBC7;
-    --panel-raised: #DED2B4;
-    --hairline: rgba(43,38,32,0.14);
-    --hairline-strong: rgba(43,38,32,0.24);
-    --text: #2B2620;
-    --text-dim: #6b6153;
-    --text-faint: #8A8070;
-    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
-    --sans: 'Newsreader', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --serif-display: 'Fraunces', serif;
-    --accent-fg: #FBF6EC;
+    --chassis: #0B0D12;
+    --panel: #0F1118;
+    --panel-raised: #161A22;
+    --hairline: rgba(138,160,184,0.16);
+    --hairline-strong: rgba(138,160,184,0.30);
+    --text: #E7F4FF;
+    --text-dim: #8AA0B8;
+    --text-faint: #5E6A7A;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --serif-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+    --accent-fg: #04222C;
 
-    --accent: #2f7a72;
-    --accent-hi: #3d9a8f;
-    --danger: #b8402a;
-    --violet: #6a5a9c;
-    --amber: #9a6a1f;
-    --cyan: #2f7ab0;
+    --accent: #00C8FF;
+    --accent-hi: #6FE0FF;
+    --danger: #FF5A6E;
+    --violet: #A98CFF;
+    --amber: #FFB454;
+    --cyan: #6FA8FF;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -41,7 +40,7 @@
   }
   a{color:inherit;}
   input,select,button{font-family:inherit;}
-  .page-nav{ display:flex; gap:4px; flex-wrap:wrap; background:rgba(43,38,32,0.04); border:1px solid var(--hairline); border-radius:999px; padding:3px; }
+  .page-nav{ display:flex; gap:4px; flex-wrap:wrap; background:rgba(138,160,184,0.05); border:1px solid var(--hairline); border-radius:999px; padding:3px; }
   .page-nav-link{ font-family:var(--sans); font-size:11px; letter-spacing:0.04em; text-decoration:none; color:var(--text-dim); padding:6px 14px; border-radius:999px; }
   .page-nav-link:hover{ color:var(--text); }
   .page-nav-link.active{ color:var(--accent-fg); background:var(--accent); font-weight:600; }
@@ -59,52 +58,19 @@
   .stage{ display:flex; gap:16px; padding:16px 18px; height:calc(100vh - 49px); min-height:0; }
 
   .sidebar{ width:330px; flex:none; display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding-right:4px; }
-  .card{
-    background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:14px 15px 15px 15px;
-  }
-  .card h3{
-    margin:0 0 10px 0; font-family:var(--mono); font-size:11px; letter-spacing:0.09em; text-transform:uppercase;
-    color:var(--text-dim); display:flex; align-items:center; gap:8px;
-  }
-  .chip{
-    width:18px; height:18px; border-radius:6px; flex-shrink:0;
-    display:inline-flex; align-items:center; justify-content:center;
-  }
-  .chip svg{ width:11px; height:11px; }
-  .chip.teal{ background:rgba(62,207,207,0.15); color:var(--accent); }
   .chip.violet{ background:rgba(167,139,250,0.15); color:var(--violet); }
-  .chip.amber{ background:rgba(232,163,61,0.15); color:var(--amber); }
   .chip.pink{ background:rgba(163,74,114,0.15); color:#a34a72; }
-  .chip.blue{ background:rgba(51,71,92,0.15); color:#33475C; }
   .chip.cyan{ background:rgba(47,122,176,0.15); color:var(--cyan); }
-  .field-row{ margin:0 0 12px 0; }
-  .field-row:last-child{ margin-bottom:0; }
-  .field-row label{ display:block; font-size:10.5px; color:var(--text-dim); font-family:var(--mono); margin-bottom:6px; }
   select{
     width:100%; background:var(--panel-raised); color:var(--text); border:1px solid var(--hairline-strong);
     border-radius:6px; padding:8px 9px; font-size:12.5px;
   }
   .mode-desc{ font-size:11px; color:var(--text-faint); margin-top:6px; line-height:1.5; }
 
-  .seg{ display:flex; gap:4px; flex-wrap:wrap; }
-  .seg button{
-    flex:1; min-width:60px; background:var(--panel-raised); border:1px solid var(--hairline-strong);
-    color:var(--text-dim); border-radius:6px; padding:7px 6px; font-size:10.5px; cursor:pointer;
-  }
-  .seg button.active{ background:var(--accent); border-color:var(--accent); color:var(--accent-fg); font-weight:700; }
 
-  .toggle-row{ display:flex; align-items:center; justify-content:space-between; }
-  .toggle-row label{ font-size:12px; color:var(--text); font-family:var(--sans); margin:0; }
-  input[type=range]{
-    -webkit-appearance:none; width:100%; height:4px; border-radius:2px;
-    background:var(--hairline-strong); outline:none; margin-top:8px;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
-    background:var(--accent); cursor:pointer; border:2px solid var(--chassis);
-  }
-  .slider-val{ font-family:var(--mono); font-size:10.5px; color:var(--text-dim); float:right; }
+  /* Matches .readout-line in chrome.css: mono, accented, right-aligned, so a
+     slider's current value reads the same here as a live value anywhere else. */
+  .slider-val{ font-family:var(--mono); font-size:12px; color:var(--accent); float:right; }
 
   .gen-btn{
     width:100%; background:var(--accent); color:var(--accent-fg); border:none; border-radius:8px;
@@ -213,10 +179,10 @@
     display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px;
     transition:background 0.12s ease;
   }
-  .pkey.white{ background:#F3ECDD; z-index:1; }
-  .pkey.white .pkey-label{ color:#6b6153; }
-  .pkey.black{ background:#4A4030; z-index:2; height:60%; border-radius:0 0 3px 3px; border:1px solid #2B2620; }
-  .pkey.black .pkey-label{ color:#DED2B4; }
+  .pkey.white{ background:var(--paper-deep); z-index:1; }
+  .pkey.white .pkey-label{ color:var(--text-dim); }
+  .pkey.black{ background:#4A4030; z-index:2; height:60%; border-radius:0 0 3px 3px; border:1px solid var(--text); }
+  .pkey.black .pkey-label{ color:var(--panel-raised); }
   .pkey-label{ font-family:var(--mono); font-size:9.5px; font-weight:700; opacity:0; transition:opacity 0.12s ease; pointer-events:none; }
   .pkey.active{ background:var(--accent) !important; }
   .pkey.active .pkey-label{ opacity:1; color:var(--accent-fg); }
@@ -241,7 +207,7 @@
     position:fixed; left:0; right:0; bottom:0; z-index:9;
     display:flex; align-items:center; justify-content:center; gap:14px;
     padding:4px 12px; font-size:10px; color:var(--text-faint);
-    background:rgba(237,230,214,0.92); border-top:1px solid var(--hairline);
+    background:rgba(11,13,18,0.92); border-top:1px solid var(--hairline);
     font-family:var(--mono);
   }
   #legalBar a{ color:var(--text-faint); text-decoration:none; }
@@ -261,7 +227,7 @@
   #tutorialBox{
     width:min(560px, 92vw); max-height:86vh; overflow-y:auto;
     background:var(--panel); border:1px solid var(--hairline-strong);
-    border-radius:12px; box-shadow:0 24px 50px rgba(43,38,32,0.22);
+    border-radius:12px; box-shadow:0 24px 50px rgba(138, 160, 184,0.22);
     position:relative;
   }
   #tutorialAccent{ height:4px; width:100%; border-radius:12px 12px 0 0; background:var(--accent); }
@@ -296,7 +262,7 @@
   ::-webkit-scrollbar-thumb{ background:var(--hairline-strong); border-radius:4px; }
 </style>
   <link rel="canonical" href="https://thermalsocklabs.com/loom/">
-  <meta name="theme-color" content="#EDE6D6">
+  <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Thermalsock Labs">
   <meta property="og:title" content="Loom — Thermalsock Labs">
@@ -311,27 +277,25 @@
 <body>
 
   <div class="topbar">
-    <div class="brand">
-      <a href="../index.html" class="brand-lockup">
+    <a href="../index.html" class="brand-lockup">
         <svg width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="#2f7a72"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
           <span class="brand-appname">Loom</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
-    </div>
-
-    <nav class="page-nav" data-app-switcher="loom" data-base="../" aria-label="Thermalsock Labs apps"></nav>
 
     <div class="topbar-right">
+        <div data-device-bar></div>
       <button class="pill help-btn" id="helpBtn" type="button">? How this works</button>
       <span class="pill live"><span class="status-dot"></span>Running</span>
-    </div>
+            <nav class="page-nav" data-app-switcher="loom" data-base="../" aria-label="Thermalsock Labs apps"></nav>
+      </div>
   </div>
 
   <div class="stage">
@@ -342,12 +306,12 @@
 
       <div class="card">
         <h3><span class="chip teal" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="5" cy="11" r="2.2" fill="currentColor"/><path d="M7.2 11V3.5L12 5v2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Mode</h3>
-        <div class="field-row">
-          <label>Root note</label>
+        <div class="field">
+          <span>Root note</span>
           <select id="rootSelect"></select>
         </div>
-        <div class="field-row" style="margin-bottom:0;">
-          <label>Scale / mode</label>
+        <div class="field" style="margin-bottom:0;">
+          <span>Scale / mode</span>
           <select id="modeSelect"></select>
           <div class="mode-desc" id="modeDesc"></div>
         </div>
@@ -355,8 +319,8 @@
 
       <div class="card">
         <h3><span class="chip violet" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 12 5 6 8 10 11 4 14 8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Movement</h3>
-        <div class="field-row" style="margin-bottom:0;">
-          <label>How chords move</label>
+        <div class="field" style="margin-bottom:0;">
+          <span>How chords move</span>
           <select id="movementSelect"></select>
           <div class="mode-desc" id="movementDesc"></div>
         </div>
@@ -364,12 +328,12 @@
 
       <div class="card">
         <h3><span class="chip amber" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2 2 5.5 8 9 14 5.5 8 2Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M2 9.5 8 13 14 9.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></span>Voicing</h3>
-        <div class="field-row">
-          <label>Chord-tone stacking</label>
+        <div class="field">
+          <span>Chord-tone stacking</span>
           <select id="voicingSelect"></select>
           <div class="mode-desc" id="voicingDesc"></div>
         </div>
-        <div class="toggle-row">
+        <div class="row">
           <label for="doubleRootCb">Double the root an octave down</label>
           <input type="checkbox" id="doubleRootCb">
         </div>
@@ -377,25 +341,25 @@
 
       <div class="card">
         <h3><span class="chip pink" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.8" fill="currentColor"/><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.7"/></svg></span>Drone</h3>
-        <div class="toggle-row" style="margin-bottom:10px;">
+        <div class="row" style="margin-bottom:10px;">
           <label for="droneCb">Sustain a drone root underneath</label>
           <input type="checkbox" id="droneCb" checked>
         </div>
-        <div class="field-row" style="margin-bottom:0;">
+        <div class="field" style="margin-bottom:0;">
           <label>Drone octave <span class="slider-val" id="droneOctVal">-2</span></label>
-          <input type="range" id="droneOctSlider" min="-3" max="-1" step="1" value="-2">
+          <input class="tsl-range" type="range" id="droneOctSlider" min="-3" max="-1" step="1" value="-2">
         </div>
       </div>
 
       <div class="card">
         <h3><span class="chip cyan" aria-hidden="true"><svg viewBox="0 0 16 16"><rect x="3" y="6" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M6 6V4.5M10 6V4.5M8 6V4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>MIDI Input</h3>
         <div class="mode-desc" id="midiStatus" style="margin-top:0; margin-bottom:10px;">Checking for MIDI access...</div>
-        <div class="toggle-row" style="margin-bottom:10px;">
+        <div class="row" style="margin-bottom:10px;">
           <label for="midiPlayThroughCb">Play through keyboard</label>
           <input type="checkbox" id="midiPlayThroughCb" checked>
         </div>
-        <div class="field-row" style="margin-bottom:0;">
-          <label>Detected</label>
+        <div class="field" style="margin-bottom:0;">
+          <span>Detected</span>
           <div id="midiDetected" class="midi-detected">Play something on your MIDI keyboard, or click the keybed below once a progression exists.</div>
           <div id="midiSuggestions" class="midi-suggestions"></div>
           <button class="io-btn" id="midiBuildBtn" style="width:100%; margin-top:10px;" disabled>Build progression around this</button>
@@ -433,7 +397,7 @@
         <button class="transport-btn" id="nextChordBtn" title="Next chord (right arrow)" aria-label="Next chord">&rarr;</button>
         <div class="transport-tempo">
           <label>Seconds / chord</label>
-          <input type="range" id="tempoSlider" min="1.5" max="8" step="0.5" value="3.5">
+          <input class="tsl-range" type="range" id="tempoSlider" min="1.5" max="8" step="0.5" value="3.5">
           <span class="slider-val" id="tempoVal">3.5s</span>
         </div>
         <span class="transport-status" id="transportStatus">Nothing generated yet</span>
@@ -486,6 +450,8 @@
   </div>
 
 <script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
 <script>
@@ -1519,6 +1485,37 @@ tutNext.addEventListener('click', () => {
 try{
   if(!localStorage.getItem('loom-tutorial-seen')) openTutorial(true);
 }catch(e){ /* localStorage unavailable -- skip auto-open, help button still works */ }
+
+/* ---- bridge to the MIDI OUTPUT block ----
+   Everything above lives inside an IIFE, so its bindings are private. The
+   MIDI output block below is a separate <script> written as though these were
+   globals, and it has been throwing ReferenceError on load ever since —
+   which silently disabled the previous/next chord buttons and the whole MIDI
+   send path.
+
+   Rather than dissolve the IIFE (which would leak sixty-odd names) or merge
+   the blocks (a large, risky move for a retheme), the handful of identifiers
+   that block genuinely needs are published here. `currentProgression` and
+   `isPlaying` are exposed through getters because they are reassigned up here
+   and a copied value would go stale the moment you pressed Generate. The
+   other block only ever reads them. */
+Object.defineProperty(window, 'currentProgression', {
+  configurable: true, get: function(){ return currentProgression; }
+});
+Object.defineProperty(window, 'isPlaying', {
+  configurable: true, get: function(){ return isPlaying; }
+});
+window.el = el;
+window.rootSelect = rootSelect;
+window.modeSelect = modeSelect;
+window.movementSelect = movementSelect;
+window.voicingSelect = voicingSelect;
+window.droneOctSlider = droneOctSlider;
+window.tempoSlider = tempoSlider;
+window.generateProgression = generateProgression;
+window.ensureAudioCtx = ensureAudioCtx;
+window.playChordAtStep = playChordAtStep;
+window.stopPlayback = stopPlayback;
 
 })();
 </script>

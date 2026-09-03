@@ -7,12 +7,11 @@
   <meta name="description" content="A live visual instrument. One continuous painted horizon, driven entirely by what you play — bass swells it, transients shock it, noise dissolves it.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/chrome.css">
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/visual.css" />
   <link rel="canonical" href="https://thermalsocklabs.com/ambient-bloom/">
-  <meta name="theme-color" content="#EDE6D6">
+  <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Thermalsock Labs">
   <meta property="og:title" content="Ambient Bloom — Thermalsock Labs">
@@ -54,10 +53,10 @@
     <header class="topbar">
       <a href="../index.html" class="brand-lockup">
         <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
           <rect x="23" y="2" width="9" height="9" fill="currentColor"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#b8402a" stroke-width="1.6"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="var(--danger)" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
           <span class="brand-appname">Ambient Bloom</span>
@@ -65,9 +64,8 @@
         </span>
       </a>
 
-      <nav class="page-nav" data-app-switcher="ambient-bloom" data-base="../" aria-label="Thermalsock Labs apps"></nav>
-
       <div class="topbar-right">
+        <div data-device-bar></div>
         <label class="gain-control" title="Input gain — raise this if the visual stays dark while you play">
           <span>Gain</span>
           <input type="range" id="gainSlider" min="0.5" max="16" step="0.5" value="4" aria-label="Input gain" />
@@ -87,6 +85,7 @@
           <span id="statusDot" class="status-dot"></span>
           <span id="statusText">Not running</span>
         </span>
+              <nav class="page-nav" data-app-switcher="ambient-bloom" data-base="../" aria-label="Thermalsock Labs apps"></nav>
       </div>
     </header>
 
@@ -121,6 +120,8 @@
   </div>
 
 <script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
   <script type="module" src="js/main.js"></script>

@@ -121,6 +121,17 @@ async function populateDevices() {
       opt.textContent = d.label || `Input ${i + 1}`;
       select.appendChild(opt);
     });
+
+    /* Preselect whatever was chosen site-wide (home page System panel), and
+       remember any change here for the next app. TSDevices is optional — if
+       the module has not loaded, this falls through to the default input. */
+    const sharedIn = window.TSDevices && window.TSDevices.audioInput();
+    if (sharedIn && [...select.options].some(o => o.value === sharedIn.deviceId)) {
+      select.value = sharedIn.deviceId;
+    }
+    select.addEventListener('change', () => {
+      if (window.TSDevices) window.TSDevices.setAudioInput(select.value || null);
+    }, { once: false });
   } catch (err) {
     // enumerateDevices without prior permission may throw in some browsers; non-fatal.
   }

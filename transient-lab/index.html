@@ -6,14 +6,12 @@
   <title>Transient Lab</title>
   <meta name="description" content="A MIDI synth training app -- scales, chords, and genre-based ear/hand training with real-time audio analysis.">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/chrome.css">
 
   <style>
     html, body {
       margin: 0;
-      background: #EDE6D6;
+      background: var(--paper);
       height: 100%;
       overflow: hidden;
     }
@@ -34,16 +32,16 @@
       justify-content: center;
       gap: 12px;
       padding: 8px 16px;
-      background: #DED2B4;
-      color: #6b3a20;
-      font: 600 13px 'Newsreader', -apple-system, system-ui, sans-serif;
+      background: rgba(138,160,184,0.10);
+      color: var(--rust);
+      font: 600 13px var(--serif-body);
       text-align: center;
     }
     #compat-banner button {
       flex: 0 0 auto;
       background: none;
-      border: 1px solid #8B4A2B;
-      color: #6b3a20;
+      border: 1px solid var(--rust);
+      color: var(--rust);
       border-radius: 3px;
       padding: 2px 8px;
       font: inherit;
@@ -86,13 +84,13 @@
       justify-content: center;
       gap: 14px;
       padding: 5px 12px;
-      font: 400 10.5px 'IBM Plex Mono', ui-monospace, monospace;
-      color: #8A8070;
-      background: rgba(237, 230, 214, 0.92);
-      border-top: 1px solid rgba(43, 38, 32, 0.14);
+      font: 400 10.5px 'JetBrains Mono', ui-monospace, monospace;
+      color: var(--ink-faint);
+      background: rgba(11, 13, 18, 0.92);
+      border-top: 1px solid rgba(138, 160, 184, 0.14);
     }
-    #legalBar a { color: #8A8070; text-decoration: none; }
-    #legalBar a:hover { color: #8B4A2B; }
+    #legalBar a { color: var(--ink-faint); text-decoration: none; }
+    #legalBar a:hover { color: var(--rust); }
 
     #support-widget {
       position: fixed;
@@ -109,18 +107,18 @@
     }
     #support-widget .store-link {
       display: block;
-      font: 600 12px 'Newsreader', -apple-system, system-ui, sans-serif;
-      background: #E4DBC7;
-      color: #2B2620;
-      border: 1px solid #C9BFA0;
+      font: 600 12px var(--serif-body);
+      background: var(--paper-deep);
+      color: var(--ink);
+      border: 1px solid var(--hairline);
       border-radius: 6px;
       padding: 7px 12px;
       text-decoration: none;
       white-space: nowrap;
     }
-    #support-widget .store-link:hover { border-color: #8B4A2B; }
+    #support-widget .store-link:hover { border-color: var(--rust); }
     #support-widget .store-link.pending {
-      color: #8A8070;
+      color: var(--ink-faint);
       cursor: default;
       pointer-events: none;
     }
@@ -139,54 +137,54 @@
       align-items: center;
       gap: 10px;
       padding: 7px 14px;
-      background: #E4DBC7;
-      border-bottom: 1px solid #C9BFA0;
+      background: var(--paper-deep);
+      border-bottom: 1px solid var(--hairline);
     }
     #hub-strip .hs-spacer { flex: 1 1 auto; }
     #hub-strip .hs-progress {
-      font: 500 10.5px 'IBM Plex Mono', ui-monospace, monospace;
-      letter-spacing: 0.05em; color: #8B4A2B; white-space: nowrap;
+      font: 500 10.5px 'JetBrains Mono', ui-monospace, monospace;
+      letter-spacing: 0.05em; color: var(--rust); white-space: nowrap;
     }
     #hub-strip .hs-btn {
-      font: 400 10px 'IBM Plex Mono', ui-monospace, monospace;
+      font: 400 10px 'JetBrains Mono', ui-monospace, monospace;
       letter-spacing: 0.05em; text-transform: uppercase;
-      color: #5C5346; background: transparent;
-      border: 1px solid rgba(43,38,32,0.22); border-radius: 999px;
+      color: var(--ink-soft); background: transparent;
+      border: 1px solid rgba(138, 160, 184,0.22); border-radius: 999px;
       padding: 6px 12px; cursor: pointer; white-space: nowrap;
       transition: color .2s, border-color .2s;
     }
-    #hub-strip .hs-btn:hover { color: #2B2620; border-color: #8B4A2B; }
-    #hub-strip .hs-btn.danger:hover { color: #b8402a; border-color: #b8402a; }
+    #hub-strip .hs-btn:hover { color: var(--ink); border-color: var(--rust); }
+    #hub-strip .hs-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
 
     /* Lesson search — 216 scale packs with no filter meant browsing a
        canvas-drawn dropdown to find anything. */
     #hub-strip .hs-search { position: relative; }
     #hub-strip .hs-search input {
-      font: 400 11px 'IBM Plex Mono', ui-monospace, monospace;
-      color: #2B2620; background: #EDE6D6;
-      border: 1px solid rgba(43,38,32,0.22); border-radius: 999px;
+      font: 400 11px 'JetBrains Mono', ui-monospace, monospace;
+      color: var(--ink); background: var(--paper);
+      border: 1px solid rgba(138, 160, 184,0.22); border-radius: 999px;
       padding: 6px 12px; width: 150px; outline: none;
     }
-    #hub-strip .hs-search input:focus { border-color: #8B4A2B; }
+    #hub-strip .hs-search input:focus { border-color: var(--rust); }
     #lessonSearchResults {
       position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
-      background: #EDE6D6; border: 1px solid rgba(43,38,32,0.22);
+      background: var(--paper); border: 1px solid rgba(138, 160, 184,0.22);
       border-radius: 10px; padding: 4px; min-width: 260px;
       max-height: 300px; overflow-y: auto; display: none;
-      box-shadow: 0 12px 30px rgba(43,38,32,0.22);
+      box-shadow: 0 12px 30px rgba(138, 160, 184,0.22);
     }
     #lessonSearchResults.open { display: block; }
     #lessonSearchResults button {
       display: block; width: 100%; text-align: left; background: none;
       border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer;
-      font: 400 12px 'Newsreader', Georgia, serif; color: #2B2620;
+      font: 400 12px var(--serif-body); color: var(--ink);
     }
-    #lessonSearchResults button:hover { background: rgba(139,74,43,0.12); }
+    #lessonSearchResults button:hover { background: rgba(0, 200, 255,0.12); }
     #lessonSearchResults .ls-pack {
-      display: block; font: 400 9.5px 'IBM Plex Mono', monospace;
-      color: #8A8070; letter-spacing: 0.05em;
+      display: block; font: 400 9.5px 'JetBrains Mono', monospace;
+      color: var(--ink-faint); letter-spacing: 0.05em;
     }
-    #lessonSearchResults .ls-empty { padding: 8px 10px; color: #8A8070; font-size: 11px; }
+    #lessonSearchResults .ls-empty { padding: 8px 10px; color: var(--ink-faint); font-size: 11px; }
 
     /* Progress panel */
     #progressPanel {
@@ -196,41 +194,41 @@
     }
     #progressPanel[hidden] { display: none; }
     #progressPanel .pp-inner {
-      background: #EDE6D6; border: 1px solid rgba(43,38,32,0.22);
+      background: var(--paper); border: 1px solid rgba(138, 160, 184,0.22);
       border-radius: 14px; padding: 24px 26px; width: 100%; max-width: 520px;
       max-height: 78vh; overflow-y: auto;
-      box-shadow: 0 20px 50px rgba(43,38,32,0.28);
+      box-shadow: 0 20px 50px rgba(138, 160, 184,0.28);
     }
     #progressPanel .pp-head {
       display: flex; align-items: baseline; justify-content: space-between;
       margin-bottom: 16px;
     }
     #progressPanel h2 {
-      font: 600 21px 'Fraunces', Georgia, serif; color: #2B2620; margin: 0;
+      font: 600 21px var(--serif-display); color: var(--ink); margin: 0;
     }
     #progressPanel .pp-close {
       background: none; border: none; cursor: pointer;
-      font-size: 17px; color: #8A8070; padding: 4px 6px; border-radius: 6px;
+      font-size: 17px; color: var(--ink-faint); padding: 4px 6px; border-radius: 6px;
     }
-    #progressPanel .pp-close:hover { color: #8B4A2B; background: rgba(139,74,43,0.10); }
+    #progressPanel .pp-close:hover { color: var(--rust); background: rgba(0, 200, 255,0.10); }
     #progressPanel .pp-actions {
       display: flex; gap: 8px; margin-top: 18px;
-      padding-top: 14px; border-top: 1px solid rgba(43,38,32,0.14);
+      padding-top: 14px; border-top: 1px solid rgba(138, 160, 184,0.14);
     }
     .pp-summary {
-      font: 400 14px 'Newsreader', Georgia, serif; color: #5C5346; margin: 0 0 16px 0;
+      font: 400 14px var(--serif-body); color: var(--ink-soft); margin: 0 0 16px 0;
     }
     .pp-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 8px 0; border-bottom: 1px solid rgba(43,38,32,0.10);
+      padding: 8px 0; border-bottom: 1px solid rgba(138, 160, 184,0.10);
     }
     .pp-row:last-child { border-bottom: none; }
-    .pp-name { flex: 1; font: 400 13px 'Newsreader', Georgia, serif; color: #2B2620; }
-    .pp-name small { display: block; font: 400 9.5px 'IBM Plex Mono', monospace; color: #8A8070; }
-    .pp-bar { width: 90px; height: 6px; background: rgba(43,38,32,0.12); border-radius: 3px; overflow: hidden; }
-    .pp-bar-fill { height: 100%; background: #8B4A2B; }
-    .pp-pct { width: 38px; text-align: right; font: 500 11px 'IBM Plex Mono', monospace; color: #5C5346; }
-    .pp-empty { color: #8A8070; font: 400 13px 'Newsreader', Georgia, serif; }
+    .pp-name { flex: 1; font: 400 13px var(--serif-body); color: var(--ink); }
+    .pp-name small { display: block; font: 400 9.5px 'JetBrains Mono', monospace; color: var(--ink-faint); }
+    .pp-bar { width: 90px; height: 6px; background: rgba(138, 160, 184,0.12); border-radius: 3px; overflow: hidden; }
+    .pp-bar-fill { height: 100%; background: var(--rust); }
+    .pp-pct { width: 38px; text-align: right; font: 500 11px 'JetBrains Mono', monospace; color: var(--ink-soft); }
+    .pp-empty { color: var(--ink-faint); font: 400 13px var(--serif-body); }
 
     /* The canvas is a fixed 1920x1080 scaled to fit, so on a 1366-wide
        laptop everything renders at ~71% — including the small note-name and
@@ -254,18 +252,18 @@
     #hub-strip .hs-mark { flex: none; display: block; }
     #hub-strip .hs-text { display: flex; flex-direction: column; line-height: 1.15; }
     #hub-strip .hs-appname {
-      font: 600 13px 'Fraunces', serif;
-      color: #8B4A2B;
+      font: 600 13px var(--serif-display);
+      color: var(--rust);
       letter-spacing: 0.005em;
     }
     #hub-strip .hs-sub {
-      font: 500 9.5px 'IBM Plex Mono', monospace;
-      color: #6b6153;
+      font: 500 9.5px 'JetBrains Mono', monospace;
+      color: var(--ink-soft);
       letter-spacing: 0.02em;
     }
   </style>
   <link rel="canonical" href="https://thermalsocklabs.com/transient-lab/">
-  <meta name="theme-color" content="#EDE6D6">
+  <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Thermalsock Labs">
   <meta property="og:title" content="Transient Lab — Thermalsock Labs">
@@ -282,10 +280,10 @@
   <div id="hub-strip">
     <a href="../index.html" class="brand-lockup" style="color:var(--app-accent)">
         <svg class="brand-mark" width="34" height="12" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#8A8070" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="currentColor"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#b8402a" stroke-width="1.6"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
         </svg>
       <span class="brand-lockup-text">
         <span class="brand-appname">Transient Lab</span>
@@ -300,7 +298,8 @@
     </div>
     <button class="hs-btn" id="progressBtn" type="button" title="Progress &amp; accuracy">Progress</button>
     <button class="hs-btn" id="shortcutsBtn" type="button" title="Keyboard shortcuts (?)">Shortcuts</button>
-    <nav data-app-switcher="transient-lab" data-base="../" aria-label="Thermalsock Labs apps"></nav>
+    <div data-device-bar></div>
+    <nav class="page-nav" data-app-switcher="transient-lab" data-base="../" aria-label="Thermalsock Labs apps"></nav>
   </div>
 
   <div id="compat-banner">
@@ -342,6 +341,8 @@
   </div>
 
 <script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
   <script>

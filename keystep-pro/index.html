@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en" data-app="keystep-pro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyStep Pro Arp Machine — Thermalsock Labs</title>
+  <meta name="description" content="A pattern and melody generator for the Arturia KeyStep Pro, with a working recreation of the panel in the browser.">
+  <link rel="canonical" href="https://thermalsocklabs.com/keystep-pro/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#0B0D12">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="KeyStep Pro Arp Machine — Thermalsock Labs">
+  <meta property="og:description" content="A pattern and melody generator for the Arturia KeyStep Pro, with a working recreation of the panel in the browser.">
+  <meta property="og:url" content="https://thermalsocklabs.com/keystep-pro/">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="KeyStep Pro Arp Machine — Thermalsock Labs">
+  <meta name="twitter:description" content="A pattern and melody generator for the Arturia KeyStep Pro, with a working recreation of the panel in the browser.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  /* The panel's own typeface. Arturia's panel silkscreen is a humanist sans;
+     Titillium is the closest thing on Google Fonts and matches the width of
+     the real labels well enough that the measured x positions still work. */
+  :root{
+    /* The panel's own typefaces stay put. They are chosen to match the
+       silkscreen on the hardware, not the website, and the whole point of the
+       recreation is that it looks like the box in front of you. */
+    --ksp-face: 'Titillium Web', 'Segoe UI', system-ui, sans-serif;
+    --ksp-seg: 'JetBrains Mono', ui-monospace, monospace;
+    --bg: var(--paper);
+    --panel-card: var(--paper-deep);
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; background: var(--paper); color: var(--ink); font-family: var(--serif-body); }
+
+  .wrap{ max-width: 1560px; margin: 0 auto; padding: 22px 24px 60px; }
+
+  .lede{ font-size: 15px; color: var(--ink-soft); max-width: 68ch; margin: 4px 0 20px; line-height:1.55; }
+
+  /* ---------- the panel ---------- */
+  .schoolbar{
+    display:flex; align-items:center; gap:13px; text-decoration:none;
+    border:1px solid var(--app-accent); border-radius:11px;
+    background:rgba(0,200,255,0.08); padding:13px 16px; margin-bottom:16px;
+  }
+  .schoolbar:hover{ background:rgba(0,200,255,0.14); }
+  .schoolbar .tag{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--paper); background:var(--app-accent); border-radius:999px;
+    padding:5px 11px; white-space:nowrap;
+  }
+  .schoolbar .txt{ font-size:14px; color:var(--ink-soft); line-height:1.5; }
+  .schoolbar .txt b{ color:var(--ink); font-weight:600; }
+  .schoolbar .arrow{ margin-left:auto; color:var(--app-accent); font-size:18px; }
+  @media (max-width: 640px){ .schoolbar .arrow{ display:none; } }
+  /* The KeyStep Pro panel itself is deliberately NOT rethemed. It is a
+     pixel-measured replica of a white device; recolouring it would stop it
+     matching the hardware on the desk, which is the only reason it exists.
+     What changes is the surface it sits on. */
+  .ksp-stage{
+    background: linear-gradient(180deg, rgba(138,160,184,0.07), rgba(138,160,184,0.03));
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+    overflow-x: auto;
+  }
+  .ksp-holder{ min-width: 900px; }
+  .ksp-svg{ width: 100%; height: auto; display: block; user-select: none; }
+
+  /* interaction states, all driven by data-* from panel.js */
+  .ksp-hit{ cursor: pointer; }
+  .ksp-hit:hover{ filter: brightness(1.06); }
+
+  .ksp-step[data-state="on"]     rect:nth-of-type(2){ fill:#8FD3A8; }
+  .ksp-step[data-state="accent"] rect:nth-of-type(2){ fill:#F0A24B; }
+  .ksp-step[data-state="cursor"] rect:nth-of-type(2){ fill:#FFFFFF; stroke:#DE2D3F; stroke-width:4; }
+
+  .ksp-key[data-lit] rect:first-of-type{ fill:#B8DCEF; }
+  .ksp-key-black[data-lit] rect:first-of-type{ fill:#2E6E92; }
+  .ksp-key[data-lit="root"] rect:first-of-type{ fill:#7FC4A6; }
+
+  .ksp-track[data-dim="yes"]{ opacity: 0.42; transition: opacity .25s; }
+  .ksp-track[data-dim="no"]{ opacity: 1; }
+
+  /* ---------- dev/demo strip under the panel ---------- */
+  .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:16px; }
+  .row .lbl{ font-family: var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase; color: var(--ink-faint); margin-right:2px; }
+  button.tsl{
+    font-family: var(--mono); font-size:11px; letter-spacing:.04em;
+    color: var(--ink-soft); background: rgba(138,160,184,0.05);
+    border: 1px solid var(--hairline); border-radius: 999px;
+    padding: 7px 13px; cursor: pointer;
+  }
+  button.tsl:hover{ color: var(--ink); border-color: var(--app-accent); }
+  button.pill{ cursor:pointer; font-family:var(--mono); }
+  button.pill:hover{ color:var(--ink); border-color:var(--app-accent); }
+  button.pill[disabled]{ cursor:default; opacity:.65; }
+  .controls{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px 16px; margin-top:18px; padding:15px 17px;
+    background:rgba(138,160,184,0.05); border:1px solid var(--hairline); border-radius:10px;
+  }
+  .ctl{ display:flex; flex-direction:column; gap:5px; }
+  .ctl label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--ink-faint);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .ctl .out{ text-transform:none; letter-spacing:0; color:var(--ink-soft); }
+  .ctl select, .ctl input[type=number]{
+    font-family:var(--mono); font-size:12px; color:var(--ink);
+    background:var(--paper); border:1px solid var(--hairline);
+    border-radius:6px; padding:7px 8px; outline:none; width:100%;
+  }
+  .ctl select:focus, .ctl input:focus{ border-color:var(--app-accent); }
+  .ctl input[type=range]{ width:100%; accent-color:var(--app-accent); }
+  .blurb{ font-size:13.5px; color:var(--ink-soft); margin:9px 2px 0; line-height:1.5; }
+
+  .row .gap{ flex:1; }
+  .row .inline{ font-family:var(--mono); font-size:11px; color:var(--ink-soft); display:flex; align-items:center; gap:5px; }
+  .row .inline input[type=number]{
+    width:62px; font-family:var(--mono); font-size:11px; padding:5px 7px;
+    border:1px solid var(--hairline); border-radius:6px; background:var(--paper); color:var(--ink);
+  }
+  button.tsl.primary{ background:var(--app-accent); border-color:var(--app-accent); color:var(--paper); font-weight:600; }
+  button.tsl.primary:hover{ filter:brightness(1.1); color:var(--paper); }
+  button.tsl[data-playing]{ background:var(--app-accent); border-color:var(--app-accent); color:var(--paper); }
+
+  .warn{
+    font-family:var(--mono); font-size:11.5px; line-height:1.6;
+    background:rgba(255,90,110,0.10); border:1px solid rgba(255,90,110,0.34);
+    border-radius:8px; padding:11px 13px; margin-top:14px;
+  }
+
+  #phraseMap{ display:flex; gap:3px; margin-top:13px; }
+  #phraseMap .ph{
+    border-radius:6px; padding:7px 9px; font-family:var(--mono); font-size:10px;
+    color:var(--ink-soft); background:rgba(138,160,184,0.07);
+    border:1px solid var(--hairline); white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #phraseMap .ph b{ display:block; color:var(--ink); font-size:11px; margin-bottom:2px; }
+  #phraseMap .ph:nth-child(odd){ background:rgba(0,200,255,0.11); border-color:rgba(0,200,255,0.34); }
+  #meta{
+    font-family:var(--mono); font-size:11.5px; color:var(--ink-soft);
+    margin-top:16px; padding-bottom:9px; border-bottom:1px solid var(--hairline);
+  }
+
+  #grid{
+    display:grid; grid-template-columns:repeat(16,1fr);
+    gap:3px; margin-top:12px;
+  }
+  /* At 64 steps the grid wraps to four rows of sixteen, which is how the
+     hardware thinks about it: four bars, not one long ribbon. */
+  #grid[data-len="64"] .cell{ min-height:62px; }
+  #grid[data-len="64"] .cell .note{ font-size:10px; }
+  @media (max-width: 720px){
+    #grid{ grid-template-columns:repeat(8,1fr); }
+    .cell{ min-height:62px; }
+  }
+  .cell{
+    position:relative; min-height:74px; border-radius:5px;
+    background:rgba(138,160,184,0.06); border:1px solid transparent;
+    padding:5px 4px 4px; display:flex; flex-direction:column; align-items:center;
+    transition:background .12s, border-color .12s;
+  }
+  .cell.strong{ background:rgba(138,160,184,0.10); }
+  .cell.rest{ background:rgba(138,160,184,0.03); }
+  .cell.accent{ border-color:var(--app-accent); }
+  .cell.bar{ box-shadow:inset 2px 0 0 var(--app-accent); }
+  .cell.now{ background:var(--app-accent); }
+  .cell.now .note, .cell.now .num{ color:var(--paper); }
+  .cell .num{ font-family:var(--mono); font-size:8.5px; color:var(--ink-faint); }
+  .cell .note{ font-family:var(--mono); font-size:11px; color:var(--ink); margin-top:2px; }
+  .cell.rest .note{ color:var(--ink-faint); }
+  .cell .extra{ font-family:var(--mono); font-size:8px; color:var(--app-accent); }
+  .cell .bars{ margin-top:auto; height:26px; display:flex; gap:2px; align-items:flex-end; }
+  .cell .bars i{ display:block; width:5px; border-radius:1px; }
+  .cell .bars .v{ background:var(--app-accent); }
+  .cell .bars .g{ background:rgba(138,160,184,0.30); }
+
+  .panel{
+    margin-top:20px; border:1px solid var(--hairline); border-radius:11px;
+    background:rgba(138,160,184,0.03); overflow:hidden;
+  }
+  .panel + .panel{ margin-top:10px; }
+  .panel > summary{
+    list-style:none; cursor:pointer; padding:14px 17px;
+    font-family:var(--serif-display); font-size:16px; font-weight:600; color:var(--ink);
+    display:flex; align-items:center; gap:11px; user-select:none;
+  }
+  .panel > summary::-webkit-details-marker{ display:none; }
+  .panel > summary:hover{ background:rgba(138,160,184,0.04); }
+  .panel > summary .tag{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--app-accent); border:1px solid var(--app-accent); border-radius:999px;
+    padding:3px 9px; font-weight:500;
+  }
+  .panel > summary i{
+    margin-left:auto; width:9px; height:9px; border-right:2px solid var(--ink-faint);
+    border-bottom:2px solid var(--ink-faint); transform:rotate(45deg); transition:transform .18s;
+  }
+  .panel[open] > summary i{ transform:rotate(-135deg); }
+  .panel[open] > summary{ border-bottom:1px solid var(--hairline); }
+  .panelbody{ padding:4px 17px 18px; }
+  .panelbody .controls{ margin-top:14px; }
+
+  h2.sect{
+    font-family:var(--serif-display); font-size:19px; font-weight:600;
+    margin:34px 0 2px; padding-top:22px; border-top:1px solid var(--hairline);
+  }
+  .controls.send{ margin-top:14px; }
+  #preflight{ margin-top:14px; display:flex; flex-direction:column; gap:7px; }
+  .pf{
+    font-family:var(--mono); font-size:11.5px; line-height:1.55;
+    border-radius:8px; padding:10px 12px; display:flex; gap:9px; align-items:flex-start;
+  }
+  .pf.stop{ background:rgba(255, 90, 110,0.09); border:1px solid rgba(255,90,110,0.36); }
+  .pf.warn{ background:rgba(138,160,184,0.06); border:1px solid var(--hairline); color:var(--ink-soft); }
+  .pf b{ font-weight:600; flex:0 0 auto; }
+  #sendStatus{ font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); }
+  .setupsteps{
+    margin-top:16px; font-size:14px; color:var(--ink-soft); line-height:1.65;
+    background:rgba(138,160,184,0.05); border:1px solid var(--hairline);
+    border-radius:10px;
+  }
+  .setupsteps > summary{
+    list-style:none; cursor:pointer; padding:11px 15px; user-select:none;
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-faint);
+    display:flex; align-items:center; gap:9px;
+  }
+  .setupsteps > summary::-webkit-details-marker{ display:none; }
+  .setupsteps > summary::after{
+    content:''; margin-left:auto; width:8px; height:8px;
+    border-right:2px solid var(--ink-faint); border-bottom:2px solid var(--ink-faint);
+    transform:rotate(45deg); transition:transform .18s;
+  }
+  .setupsteps[open] > summary::after{ transform:rotate(-135deg); }
+  .setupsteps > summary:hover{ color:var(--ink); }
+  .setupsteps > div{ padding:0 15px 14px; }
+  .setupsteps b{ display:none; }
+  .setupsteps ol{ margin:0; padding-left:20px; }
+  .setupsteps li{ margin-bottom:5px; }
+  .setupsteps code{
+    font-family:var(--mono); font-size:12px; background:rgba(138,160,184,0.08);
+    padding:1px 5px; border-radius:4px;
+  }
+  .lib{
+    display:flex; align-items:center; gap:11px; flex-wrap:wrap;
+    border:1px solid var(--hairline); border-radius:9px;
+    padding:10px 13px; margin-top:9px; background:rgba(138,160,184,0.03);
+  }
+  .lib .nm{ font-family:var(--serif-display); font-size:14.5px; color:var(--ink); }
+  .lib .sub{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); }
+  .lib .acts{ margin-left:auto; display:flex; gap:6px; }
+  .lib button{
+    font-family:var(--mono); font-size:10.5px; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--hairline);
+    border-radius:999px; padding:5px 11px; cursor:pointer;
+  }
+  .lib button:hover{ color:var(--ink); border-color:var(--app-accent); }
+  .lib button.del:hover{ color:var(--danger); border-color:var(--danger); }
+  .lib.ens{ border-left:3px solid var(--app-accent); }
+  #libUsage{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); }
+  #library:empty::after{
+    content:'Nothing saved yet. Generate something you like and press Save.';
+    display:block; font-family:var(--mono); font-size:11.5px;
+    color:var(--ink-faint); padding:16px 2px;
+  }
+  .trk{
+    margin-top:11px; border:1px solid var(--hairline); border-radius:9px;
+    padding:11px 13px; background:rgba(138,160,184,0.03);
+  }
+  .trk .hd{
+    display:flex; gap:11px; align-items:baseline; flex-wrap:wrap;
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-bottom:8px;
+  }
+  .trk .hd b{ color:var(--ink); font-size:12px; }
+  .trk .hd .send{
+    margin-left:auto; font-family:var(--mono); font-size:10.5px; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--hairline); border-radius:999px;
+    padding:5px 11px; cursor:pointer;
+  }
+  .trk .hd .send:hover{ color:var(--ink); border-color:var(--app-accent); }
+  .lane{ display:flex; gap:2px; }
+  .lane i{
+    flex:1; height:26px; border-radius:3px; background:rgba(138,160,184,0.07);
+    font-family:var(--mono); font-size:8px; color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; font-style:normal;
+  }
+  .lane i.on{ background:var(--app-accent); color:var(--paper); }
+  .lane i.strong{ box-shadow:inset 0 -2px 0 rgba(0,0,0,0.5); }
+  .lane i.now{ outline:2px solid var(--ink); }
+  #prRatio{ font-family:var(--mono); font-size:12px; color:var(--ink); font-weight:600; }
+  #prAnalysis{
+    font-family:var(--mono); font-size:11.5px; line-height:1.6; color:var(--ink-soft);
+    background:rgba(138,160,184,0.05); border:1px solid var(--hairline);
+    border-radius:8px; padding:11px 13px; margin-top:12px;
+  }
+  #prVoices{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .pv{
+    display:flex; align-items:center; gap:8px; border:1px solid var(--hairline);
+    border-radius:8px; padding:8px 11px; background:rgba(138,160,184,0.03);
+  }
+  .pv label{ font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+             text-transform:uppercase; color:var(--ink-faint); }
+  .pv input, .pv select{
+    width:62px; font-family:var(--mono); font-size:11.5px; padding:5px 7px;
+    border:1px solid var(--hairline); border-radius:6px;
+    background:var(--paper); color:var(--ink);
+  }
+  .pv .kill{
+    border:none; background:none; color:var(--ink-faint); cursor:pointer;
+    font-family:var(--mono); font-size:14px; padding:0 2px;
+  }
+  .pv .kill:hover{ color:var(--danger); }
+  .prlane{ margin-top:10px; }
+  .prlane .hd{
+    display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+    font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); margin-bottom:5px;
+  }
+  .prlane .hd b{ color:var(--ink); font-size:11.5px; }
+  .prlane .hd .send{
+    margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--hairline); border-radius:999px;
+    padding:4px 10px; cursor:pointer;
+  }
+  .prlane .hd .send:hover{ color:var(--ink); border-color:var(--app-accent); }
+  .prcells{ display:flex; gap:2px; }
+  .prcells i{
+    flex:1; min-width:6px; height:24px; border-radius:3px;
+    background:rgba(138,160,184,0.08); font-style:normal;
+  }
+  .prcells i.on{ background:var(--app-accent); }
+  .prcells i.first{ background:var(--ink); }
+  .prcells i.meet{ box-shadow:inset 0 0 0 2px var(--danger); }
+  .prcells i.now{ outline:2px solid var(--ink); }
+  .lanestatus{
+    font-family:var(--mono); font-size:10px; color:var(--app-accent);
+    margin-left:8px; white-space:nowrap;
+  }
+  #ensCycle{ font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); }
+  #editTools{ margin-top:16px; }
+  #lockCount{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); }
+  .cell{ position:relative; }
+  .cell.sel{ outline:2px solid var(--ink); outline-offset:1px; z-index:2; }
+  .cell.locked::before{
+    content:''; position:absolute; top:3px; right:3px; width:6px; height:6px;
+    border-radius:50%; background:var(--app-accent);
+  }
+  .cell.locked{ border-color:var(--app-accent); }
+  #stepEditor{
+    margin-top:12px; border:1px solid var(--app-accent); border-radius:11px;
+    background:rgba(0,200,255,0.06); padding:13px 16px 16px;
+  }
+  .se-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:11px; flex-wrap:wrap; }
+  .se-head b{ font-family:var(--serif-display); font-size:16px; color:var(--ink); }
+  #seHint{ font-family:var(--mono); font-size:10px; color:var(--ink-faint); }
+  .se-head button{ margin-left:auto; }
+  .se-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px 16px; }
+  .se-row{ display:flex; gap:5px; }
+  .se-row button{ flex:1; padding:6px 4px; font-size:10.5px; }
+  .se-row button[aria-pressed="true"]{
+    background:var(--app-accent); border-color:var(--app-accent); color:var(--paper);
+  }
+  #ops{
+    margin-top:16px; font-size:13.5px; color:var(--ink-soft); line-height:1.6;
+    background:rgba(138,160,184,0.05); border:1px solid var(--hairline);
+    border-radius:10px; padding:13px 16px;
+  }
+  #ops b{ display:block; color:var(--ink); font-family:var(--serif-display); font-size:15px; margin-bottom:7px; }
+  #ops span{ display:block; }
+  #ops i{
+    font-family:var(--mono); font-style:normal; font-size:10px;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint);
+    display:inline-block; width:58px;
+  }
+
+
+  #legalBar{
+    display:flex; gap:14px; align-items:center; justify-content:center;
+    font-family: var(--mono); font-size:10px; letter-spacing:.05em;
+    color: var(--ink-faint); padding: 26px 0 8px;
+  }
+  #legalBar a{ color: var(--ink-faint); text-decoration:none; }
+  #legalBar a:hover{ color: var(--ink); }
+  #supportWidget{ display:flex; justify-content:center; padding-top: 20px; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a href="../index.html" class="brand-lockup">
+        <svg width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname">KeyStep Pro Arp Machine</span>
+          <span class="brand-sub">Thermalsock Labs</span>
+        </span>
+      </a>
+    <div class="topbar-right">
+        <div data-device-bar></div>
+      <a class="pill" href="guide.html" style="text-decoration:none">Sequencing school</a>
+      <a class="pill" href="probe.html" style="text-decoration:none">MIDI probe</a>
+            <nav class="page-nav" data-app-switcher="keystep-pro" data-base="../" aria-label="Thermalsock Labs apps"></nav>
+      </div>
+  </div>
+
+  <div class="wrap">
+
+    <a class="schoolbar" href="guide.html">
+      <span class="tag">Sequencing School</span>
+      <span class="txt"><b>New to this, or wondering what a ratchet actually does?</b>
+      Twenty-eight ideas, each one an A/B switch you can hear through your own hardware.</span>
+      <span class="arrow">&rarr;</span>
+    </a>
+
+    <div class="ksp-stage">
+      <div class="ksp-holder" id="panelHolder"></div>
+    </div>
+
+    <div class="controls">
+      <div class="ctl">
+        <label for="style">Style</label>
+        <select id="style"></select>
+      </div>
+      <div class="ctl">
+        <label for="phrasing">Phrasing</label>
+        <select id="phrasing"></select>
+      </div>
+      <div class="ctl" id="strategyCtl">
+        <label for="lengthStrategy">Answer length</label>
+        <select id="lengthStrategy"></select>
+      </div>
+      <div class="ctl" id="gridCtl">
+        <label for="phraseGrid">Phrase grid</label>
+        <select id="phraseGrid">
+          <option value="16">Pad to the bar</option>
+          <option value="8">Pad to the half bar</option>
+          <option value="0">Free — no padding</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="role">Track role</label>
+        <select id="role"></select>
+      </div>
+      <div class="ctl">
+        <label for="root">Key</label>
+        <select id="root"></select>
+      </div>
+      <div class="ctl">
+        <label for="scale">Scale</label>
+        <select id="scale"></select>
+      </div>
+      <div class="ctl">
+        <label for="octave">Octave <span class="out" id="octaveOut"></span></label>
+        <input type="range" id="octave" min="1" max="5" step="1" value="3">
+      </div>
+      <div class="ctl">
+        <label for="density">Density <span class="out" id="densityOut"></span></label>
+        <input type="range" id="density" min="15" max="100" step="5" value="85">
+      </div>
+      <div class="ctl">
+        <label for="range">Range <span class="out" id="rangeOut"></span></label>
+        <input type="range" id="range" min="1" max="3" step="0.5" value="2">
+      </div>
+      <div class="ctl">
+        <label for="seed">Seed</label>
+        <input type="number" id="seed" min="1" max="65535" value="1234">
+      </div>
+    </div>
+    <p class="blurb" id="styleBlurb"></p>
+    <p class="blurb" id="phraseBlurb"></p>
+    <div id="phraseMap"></div>
+
+    <div class="row">
+      <button class="tsl primary" id="generate">Generate 16 steps</button>
+      <button class="tsl" id="reroll">Same seed, rebuild</button>
+      <button class="tsl" id="develop" disabled>Confirm — build the 64</button>
+      <button class="tsl" id="back" style="display:none">Back to the 16</button>
+      <span class="gap"></span>
+      <button class="tsl" id="save">Save</button>
+      <button class="tsl" id="play">Audition</button>
+      <label class="inline"><input type="checkbox" id="loop" checked> loop</label>
+      <label class="inline">tempo <input type="number" id="tempo" min="40" max="220" value="120"></label>
+    </div>
+
+    <div class="warn" id="scaleWarn" style="display:none"></div>
+    <div id="meta"></div>
+    <div class="row" id="editTools">
+      <span class="lbl">Edit</span>
+      <button class="tsl" id="reroll2">Reroll unlocked</button>
+      <button class="tsl" id="lockAll">Lock all</button>
+      <button class="tsl" id="lockClear">Clear locks</button>
+      <button class="tsl" id="undo" disabled>Undo</button>
+      <button class="tsl" id="redo" disabled>Redo</button>
+      <span class="gap"></span>
+      <span id="lockCount"></span>
+    </div>
+    <div id="grid"></div>
+    <div id="stepEditor" hidden>
+      <div class="se-head">
+        <b id="seTitle">Step</b>
+        <span id="seHint">arrow keys move and nudge · R rest · L lock · Esc deselect</span>
+        <button class="tsl" id="seClose">Done</button>
+      </div>
+      <div class="se-grid">
+        <div class="ctl">
+          <label>Pitch <span class="out" id="sePitchOut"></span></label>
+          <div class="se-row">
+            <button class="tsl" data-pitch="-12">-8ve</button>
+            <button class="tsl" data-pitch="-1">&darr;</button>
+            <button class="tsl" data-pitch="1">&uarr;</button>
+            <button class="tsl" data-pitch="12">+8ve</button>
+          </div>
+        </div>
+        <div class="ctl">
+          <label for="seVel">Velocity <span class="out" id="seVelOut"></span></label>
+          <input type="range" id="seVel" min="1" max="127" step="1">
+        </div>
+        <div class="ctl">
+          <label for="seGate">Gate <span class="out" id="seGateOut"></span></label>
+          <input type="range" id="seGate" min="5" max="190" step="5">
+        </div>
+        <div class="ctl">
+          <label for="seShift">Time shift <span class="out" id="seShiftOut"></span></label>
+          <input type="range" id="seShift" min="-49" max="49" step="1">
+        </div>
+        <div class="ctl">
+          <label for="seRatchet">Ratchet <span class="out" id="seRatchetOut"></span></label>
+          <input type="range" id="seRatchet" min="1" max="8" step="1">
+        </div>
+        <div class="ctl">
+          <label>Step</label>
+          <div class="se-row">
+            <button class="tsl" id="seRest">Rest</button>
+            <button class="tsl" id="seLock">Lock</button>
+            <button class="tsl" id="seTie">Tie</button>
+          </div>
+        </div>
+        <div class="ctl">
+          <label>Chord <span class="out" id="seNotesOut"></span></label>
+          <div class="se-row">
+            <button class="tsl" id="seAddNote">Add a third</button>
+            <button class="tsl" id="seDelNote">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="ops" style="display:none"></div>
+
+    <details class="panel" id="panelLib">
+    <summary><span class="tag">Library</span> Saved patterns<i></i></summary>
+    <div class="panelbody">
+      <p class="blurb">
+        Saves the notes themselves, not just the seed. The generator keeps
+        changing, so a stored recipe would replay differently later — these
+        will not.
+      </p>
+      <div class="row">
+        <button class="tsl" id="libExport">Export as a file</button>
+        <label class="tsl" for="libImport" style="cursor:pointer">Import a file</label>
+        <input type="file" id="libImport" accept="application/json,.json" style="display:none">
+        <span class="gap"></span>
+        <span id="libUsage"></span>
+      </div>
+      <div id="library"></div>
+    </div>
+    </details>
+
+    <details class="panel" id="panelPoly">
+    <summary><span class="tag">Ensemble</span> Four parts, drifting lengths (polymeter)<i></i></summary>
+    <div class="panelbody">
+    <p class="blurb">
+      Independent track lengths make the parts drift against each other. The
+      generator writes each part knowing where the others already sit, so they
+      interlock instead of stacking up.
+    </p>
+    <div class="controls send">
+      <div class="ctl">
+        <label for="ensCount">Tracks</label>
+        <select id="ensCount">
+          <option value="2">2 tracks</option>
+          <option value="3" selected>3 tracks</option>
+          <option value="4">4 tracks</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="ensPreset">Lengths</label>
+        <select id="ensPreset"></select>
+      </div>
+      <div class="ctl">
+        <label for="ensSpace">Space <span class="out" id="ensSpaceOut"></span></label>
+        <input type="range" id="ensSpace" min="0" max="2" step="0.25" value="1">
+      </div>
+      <div class="ctl">
+        <label for="ensSeed">Seed</label>
+        <input type="number" id="ensSeed" min="1" max="65535" value="404">
+      </div>
+    </div>
+    <div class="row">
+      <button class="tsl primary" id="ensGen">Generate the ensemble</button>
+      <button class="tsl" id="ensPlay">Audition all tracks</button>
+      <button class="tsl" id="ensSave">Save ensemble</button>
+      <span class="gap"></span>
+      <span id="ensCycle"></span>
+    </div>
+    <div id="ensemble"></div>
+    </div>
+    </details>
+
+    <details class="panel" id="panelPolyR">
+    <summary><span class="tag">Polyrhythm</span> Conflicting pulses in the same span<i></i></summary>
+    <div class="panelbody">
+      <p class="blurb">
+        Two or more voices dividing the same time differently: three evenly
+        spaced notes against four, starting together, finishing together,
+        disagreeing throughout. Voices are kept deliberately plain — if every
+        part is a tune, three against four just sounds like a mess.
+      </p>
+      <div class="controls send">
+        <div class="ctl">
+          <label for="prMethod">Method</label>
+          <select id="prMethod">
+            <option value="ratio">Exact ratio</option>
+            <option value="euclid">Euclidean</option>
+            <option value="division">Hardware time divisions</option>
+          </select>
+        </div>
+        <div class="ctl">
+          <label for="prPreset">Ratio</label>
+          <select id="prPreset"></select>
+        </div>
+        <div class="ctl">
+          <label for="prCycle">Cycle <span class="out" id="prCycleOut"></span></label>
+          <input type="range" id="prCycle" min="8" max="64" step="4" value="16">
+        </div>
+        <div class="ctl">
+          <label for="prPitch">Pitch content</label>
+          <select id="prPitch"></select>
+        </div>
+      </div>
+      <div id="prVoices"></div>
+      <div class="row">
+        <button class="tsl primary" id="prGen">Build the polyrhythm</button>
+        <button class="tsl" id="prPlay">Audition</button>
+        <button class="tsl" id="prSave">Save</button>
+        <span class="gap"></span>
+        <span id="prRatio"></span>
+      </div>
+      <div id="prAnalysis"></div>
+      <div id="prLanes"></div>
+      <details class="setupsteps" id="prSetup">
+        <summary>What to set on the hardware</summary>
+        <div id="prPlan"></div>
+      </details>
+    </div>
+    </details>
+
+    <details class="panel" id="panelSend" open>
+    <summary><span class="tag">Send</span> Move it onto the hardware<i></i></summary>
+    <div class="panelbody">
+    <div class="controls send">
+      <div class="ctl">
+        <label for="mode">Method</label>
+        <select id="mode">
+          <option value="realtime">Realtime Record — keeps everything</option>
+          <option value="step">Step Record — fast, pitches only</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="track">Target track</label>
+        <select id="track">
+          <option value="1">Track 1</option>
+          <option value="2">Track 2</option>
+          <option value="3">Track 3</option>
+          <option value="4">Track 4</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="clockMode">Clock</label>
+        <select id="clockMode">
+          <option value="master">Drive the KeyStep Pro</option>
+          <option value="follow">Follow its own tempo</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="period">Step Record speed <span class="out" id="periodOut">40 ms</span></label>
+        <input type="range" id="period" min="25" max="200" step="5" value="40">
+      </div>
+    </div>
+
+    <div id="preflight"></div>
+    <div class="row">
+      <button class="tsl primary" id="send">Send to the KeyStep Pro</button>
+      <button class="tsl danger" id="abort" style="display:none">Stop</button>
+      <span class="gap"></span>
+      <span id="sendStatus"></span>
+    </div>
+    <details class="setupsteps" id="setupBox">
+      <summary>On the hardware, before you press Send</summary>
+      <div id="steps"></div>
+    </details>
+    </div>
+    </details>
+
+    <div id="supportWidget">
+      <a href="https://www.buymeacoffee.com/thermalsock" target="_blank" rel="noopener">
+        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height:38px;width:138px;">
+      </a>
+    </div>
+    <div data-related data-base="../"></div>
+    <div id="legalBar">
+      <span>© 2026 Thermalsock Labs</span>
+      <a href="../legal/privacy.html">Privacy</a>
+      <a href="../legal/disclaimer.html">Disclaimer</a>
+    </div>
+  </div>
+
+<script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
+<script src="../shared/session.js"></script>
+<script src="../shared/shortcuts.js"></script>
+<script src="panel-layout.js"></script>
+<script src="panel.js"></script>
+<script src="generator.js"></script>
+<script src="inject.js"></script>
+<script src="library.js"></script>
+<script src="editor.js"></script>
+<script src="polyrhythm.js"></script>
+<script>
+(function(){
+  'use strict';
+  /* ---------- MIDI status ----------
+     The pill used to be decorative markup that always read "not connected",
+     which is worse than having no pill at all. It now reports the real state.
+
+     Chrome asks for permission on the first requestMIDIAccess, so we only
+     reach for it unprompted when permission is already granted; otherwise the
+     pill is a button and the prompt happens on a click, where the user
+     expects it. */
+  /* The shared device pill in the top bar reports the connection now, so this
+     app-specific one was removed rather than left showing the same thing
+     twice. The functions stay, guarded, because the MIDI plumbing below still
+     calls them. */
+  var pill = document.getElementById('midiPill');
+  var midi = null;
+
+  function setPill(text, live, clickable) {
+    if (!pill) return;
+    pill.innerHTML = '<span class="status-dot' + (live ? ' live' : '') + '"></span>' + text;
+    pill.disabled = !clickable;
+  }
+
+  function describe() {
+    if (!midi) return;
+    var outs = [];
+    midi.outputs.forEach(function (o) { outs.push(o); });
+    if (!outs.length) { setPill('No MIDI outputs', false, true); return; }
+    /* Report the site-wide choice, not this page's own guess — otherwise the
+       pill claims one device while the app sends to another. */
+    var pick = (window.TSDevices && window.TSDevices.state() === 'ready' && window.TSDevices.output())
+             || outs[0];
+    var name = pick.name.length > 24 ? pick.name.slice(0, 23) + '\u2026' : pick.name;
+    setPill(name, true, false);
+    pill.title = outs.length + ' output' + (outs.length === 1 ? '' : 's') + ': ' +
+      outs.map(function (o) { return o.name; }).join(', ');
+  }
+
+  function connect() {
+    if (!navigator.requestMIDIAccess) {
+      setPill('Web MIDI unavailable', false, false);
+      pill.title = 'Web MIDI needs Chrome or Edge, over localhost or https.';
+      return;
+    }
+    setPill('Connecting\u2026', false, false);
+    navigator.requestMIDIAccess({ sysex: false }).then(function (access) {
+      midi = access;
+      midi.onstatechange = describe;
+      describe();
+    }).catch(function (e) {
+      setPill('MIDI blocked', false, true);
+      pill.title = e && e.message ? e.message : 'Permission denied.';
+    });
+  }
+
+  if (pill) pill.addEventListener('click', connect);
+
+  if (!navigator.requestMIDIAccess) {
+    setPill('Web MIDI unavailable', false, false);
+    pill.title = 'Web MIDI needs Chrome or Edge, over localhost or https.';
+  } else if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'midi', sysex: false })
+      .then(function (status) {
+        if (status.state === 'granted') connect();
+        status.onchange = function () { if (status.state === 'granted') connect(); };
+      })
+      .catch(function () { /* older browsers: leave it as a click-to-connect button */ });
+  }
+})();
+</script>
+<script src="app.js"></script>
+<script src="../shared/app-switcher.js" defer></script>
+</body>
+</html>

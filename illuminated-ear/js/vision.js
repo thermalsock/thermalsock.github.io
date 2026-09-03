@@ -41,8 +41,8 @@ export function signedInterval(fromOffset, toOffset) {
  * tritone as tension, steps and leaps distinguished from each other. */
 export function intervalColor(signedSemitones) {
   const abs = Math.abs(signedSemitones);
-  if (abs === 0) return '#6b6153';
-  if (abs === 6) return '#b8402a';        // tritone — tension
+  if (abs === 0) return '#8AA0B8';
+  if (abs === 6) return '#FF5A6E';        // tritone — tension
   if (abs === 5 || abs === 7) return '#3f7a4f'; // perfect 4th/5th — stable
   if (abs <= 2) return '#33475C';          // step (2nd)
   return '#9a6a1f';                        // 3rd/leap

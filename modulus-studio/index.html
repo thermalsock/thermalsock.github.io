@@ -7,41 +7,43 @@
 <meta name="description" content="Modulus Studio - a browser-based modulation modelling tool. Visualise LFOs, envelopes, performance controls, and random sources, and see how they combine to affect a destination.">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/chrome.css">
 <style>
   /* Header and brand rules live in ../shared/chrome.css. */
 
   :root{
-    /* Field Notes chassis tokens — same family as every other Thermalsock
+    /* Console chassis tokens — same family as every other Thermalsock
        Labs app. */
-    --chassis: #EDE6D6;
-    --panel: #E4DBC7;
-    --panel-raised: #DED2B4;
-    --hairline: rgba(43,38,32,0.14);
-    --hairline-strong: rgba(43,38,32,0.24);
-    --text: #2B2620;
-    --text-dim: #6b6153;
-    --text-faint: #8A8070;
-    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
-    --sans: 'Newsreader', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --serif-display: 'Fraunces', serif;
-    --accent-fg: #FBF6EC;
+    /* Raw components so the <canvas> drawing code can build rgba()
+       from the same ink colour the stylesheet uses. */
+    --ink-rgb: 138,160,184;
+    --chassis: #0B0D12;
+    --panel: #0F1118;
+    --panel-raised: #161A22;
+    --hairline: rgba(138,160,184,0.16);
+    --hairline-strong: rgba(138,160,184,0.30);
+    --text: #E7F4FF;
+    --text-dim: #8AA0B8;
+    --text-faint: #5E6A7A;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
+    --sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --serif-display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+    --accent-fg: #04222C;
 
     /* Signature accent for this tool + a per-source-type legend, directly
        echoing Signal Path's cable-type color coding (audio/midi/cv/sync)
        so the two "signal" tools read as siblings. Ink-family hues, darkened
        enough to read clearly on paper rather than the bright pastels that
        worked on a dark chassis. */
-    --accent:   #6a5a9c;
-    --danger:   #b8402a;
+    --accent:   #00C8FF;
+    --danger:   #FF5A6E;
 
-    --c-lfo1: #6a5a9c;
-    --c-lfo2: #33475C;
-    --c-env:  #2f7a72;
-    --c-perf: #9a6a1f;
-    --c-rand: #a34a72;
-    --c-out:  #8B4A2B;
+    --c-lfo1: #A98CFF;
+    --c-lfo2: #6FA8FF;
+    --c-env:  #3FD9C4;
+    --c-perf: #FFB454;
+    --c-rand: #FF7BB0;
+    --c-out:  #00C8FF;
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
@@ -79,7 +81,7 @@
   #tutorialBox{
     width:min(560px, 92vw); max-height:86vh; overflow-y:auto;
     background:var(--panel); border:1px solid var(--hairline-strong);
-    border-radius:12px; box-shadow:0 24px 50px rgba(43,38,32,0.22);
+    border-radius:12px; box-shadow:0 24px 50px rgba(0,0,0,0.55);
     position:relative;
   }
   #tutorialAccent{ height:4px; width:100%; border-radius:12px 12px 0 0; background:var(--accent); }
@@ -127,29 +129,13 @@
   .stage{ display:flex; gap:16px; padding:16px 18px; height:calc(100vh - 49px); min-height:0; }
 
   .sidebar{ width:360px; flex:none; display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding-right:4px; }
-  .card{
-    background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:14px 15px 15px 15px;
-  }
-  .card h3{
-    margin:0 0 10px 0; font-family:var(--mono); font-size:11px; letter-spacing:0.09em; text-transform:uppercase;
-    color:var(--text-dim); display:flex; align-items:center; gap:8px;
-  }
   .card h3 .swatch{ width:9px; height:9px; border-radius:3px; flex:none; }
-  .chip{
-    width:18px; height:18px; border-radius:6px; flex-shrink:0;
-    display:inline-flex; align-items:center; justify-content:center;
-  }
-  .chip svg{ width:11px; height:11px; }
 
   .source-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
   .source-toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
   .source-toggle input{ accent-color:var(--src-color, var(--accent)); }
   .source-toggle span{ font-size:12.5px; font-weight:600; }
 
-  .field-row{ display:grid; grid-template-columns:64px 1fr 46px; align-items:center; gap:8px; margin:7px 0; }
-  .field-row label{ font-size:10.5px; color:var(--text-dim); font-family:var(--mono); }
-  .field-row .val{ font-size:10.5px; color:var(--text-dim); font-family:var(--mono); text-align:right; }
   input[type=range]{
     -webkit-appearance:none; width:100%; height:4px; border-radius:2px;
     background:var(--hairline-strong); outline:none;
@@ -161,11 +147,6 @@
   select{
     width:100%; background:var(--panel-raised); color:var(--text); border:1px solid var(--hairline-strong);
     border-radius:6px; padding:6px 8px; font-size:12px;
-  }
-  .seg{ display:flex; gap:4px; flex-wrap:wrap; margin:7px 0; }
-  .seg button{
-    flex:1; min-width:44px; background:var(--panel-raised); border:1px solid var(--hairline-strong);
-    color:var(--text-dim); border-radius:6px; padding:5px 6px; font-size:10.5px; cursor:pointer;
   }
   .seg button.active{ background:var(--src-color, var(--accent)); border-color:var(--src-color, var(--accent)); color:var(--accent-fg); font-weight:700; }
 
@@ -237,12 +218,8 @@
 
   .bottom-row{ display:flex; gap:14px; height:150px; flex:none; }
 
-  .overview-panel{
-    flex:none; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:12px 16px 14px 16px;
-  }
+  .overview-panel{ flex:none; }
   .overview-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
-  .overview-head h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
   .overview-head p{ margin:0; font-size:11px; color:var(--text-faint); }
   .overview-strip{ display:flex; gap:10px; flex-wrap:wrap; }
   .overview-card{
@@ -254,18 +231,10 @@
   .overview-card-head .val{ font-family:var(--mono); font-size:10px; color:var(--text-faint); }
   .overview-card canvas{ display:block; width:100%; height:36px; }
   .overview-empty{ font-size:11.5px; color:var(--text-faint); padding:6px 2px; }
-  .dest-card{
-    flex:1; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:12px 16px; display:flex; flex-direction:column; gap:8px;
-  }
-  .dest-card h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
+  .dest-card{ flex:1; display:flex; flex-direction:column; gap:8px; }
   .dest-canvas-wrap{ flex:1; min-height:0; }
 
-  .audio-card{
-    flex:none; width:220px; background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
-    padding:12px 16px; display:flex; flex-direction:column; justify-content:center; gap:10px;
-  }
-  .audio-card h3{ margin:0; font-family:var(--mono); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-dim); }
+  .audio-card{ flex:none; width:220px; display:flex; flex-direction:column; justify-content:center; gap:10px; }
   .toggle-btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
     background:var(--panel-raised); border:1px solid var(--hairline-strong); color:var(--text-dim);
@@ -285,7 +254,7 @@
     position:fixed; left:0; right:0; bottom:0; z-index:9;
     display:flex; align-items:center; justify-content:center; gap:14px;
     padding:4px 12px; font-size:10px; color:var(--text-faint);
-    background:rgba(237,230,214,0.92); border-top:1px solid var(--hairline);
+    background:rgba(11, 13, 18,0.92); border-top:1px solid var(--hairline);
     font-family:var(--mono);
   }
   #legalBar a{ color:var(--text-faint); text-decoration:none; }
@@ -298,7 +267,7 @@
   ::-webkit-scrollbar-thumb{ background:var(--hairline-strong); border-radius:4px; }
 </style>
   <link rel="canonical" href="https://thermalsocklabs.com/modulus-studio/">
-  <meta name="theme-color" content="#EDE6D6">
+  <meta name="theme-color" content="#0B0D12">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Thermalsock Labs">
   <meta property="og:title" content="Modulus Studio — Thermalsock Labs">
@@ -313,64 +282,62 @@
 <body>
 
   <div class="topbar">
-    <div class="brand">
-      <a href="../index.html" class="brand-lockup">
+    <a href="../index.html" class="brand-lockup">
         <svg width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="1" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
-          <rect x="12" y="2" width="9" height="9" stroke="#3a4152" stroke-width="1.4"/>
-          <rect x="23" y="2" width="9" height="9" fill="#6a5a9c"/>
-          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#ff5a5f" stroke-width="1.6"/>
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
         </svg>
         <span class="brand-lockup-text">
           <span class="brand-appname">Modulus Studio</span>
           <span class="brand-sub">Thermalsock Labs</span>
         </span>
       </a>
-    </div>
     <div class="topbar-right">
-      <nav data-app-switcher="modulus-studio" data-base="../" aria-label="Thermalsock Labs apps"></nav>
+        <div data-device-bar></div>
       <button class="pill help-btn" id="helpBtn" type="button">? How this works</button>
-      <span class="pill" id="midiPill">MIDI unavailable</span>
       <span class="pill live"><span class="status-dot"></span>Running</span>
-    </div>
+            <nav class="page-nav" data-app-switcher="modulus-studio" data-base="../" aria-label="Thermalsock Labs apps"></nav>
+      </div>
   </div>
 
   <div class="stage">
     <div class="sidebar">
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(106,90,156,0.15);color:var(--c-lfo1)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 1</h3>
+        <h3><span class="chip violet" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 1</h3>
         <div class="source-body is-loading" id="body-lfo1"></div>
       </div>
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(51,71,92,0.15);color:var(--c-lfo2)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 2</h3>
+        <h3><span class="chip blue" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M1 8h2.5l1.5-5 3 10 1.5-5H14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LFO 2</h3>
         <div class="source-body is-loading" id="body-lfo2"></div>
       </div>
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(47,122,114,0.15);color:var(--c-env)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 13 5 4 8 8 11 6 14 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Envelope</h3>
+        <h3><span class="chip teal" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 13 5 4 8 8 11 6 14 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Envelope</h3>
         <div class="source-body is-loading" id="body-env"></div>
       </div>
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(154,106,31,0.15);color:var(--c-perf)" aria-hidden="true"><svg viewBox="0 0 16 16"><line x1="5" y1="2" x2="5" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="6" r="1.6" fill="currentColor"/><line x1="11" y1="2" x2="11" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="11" cy="10" r="1.6" fill="currentColor"/></svg></span>Performance</h3>
+        <h3><span class="chip amber" aria-hidden="true"><svg viewBox="0 0 16 16"><line x1="5" y1="2" x2="5" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="5" cy="6" r="1.6" fill="currentColor"/><line x1="11" y1="2" x2="11" y2="14" stroke="currentColor" stroke-width="1.3"/><circle cx="11" cy="10" r="1.6" fill="currentColor"/></svg></span>Performance</h3>
         <div class="source-body is-loading" id="body-perf"></div>
       </div>
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(163,74,114,0.15);color:var(--c-rand)" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="4.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="4.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="11.5" r="1.3" fill="currentColor"/></svg></span>Random</h3>
+        <h3><span class="chip pink" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="4.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="4.5" cy="11.5" r="1.3" fill="currentColor"/><circle cx="11.5" cy="11.5" r="1.3" fill="currentColor"/></svg></span>Random</h3>
         <div class="source-body is-loading" id="body-rand"></div>
       </div>
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(43,38,32,0.06);color:var(--text-dim)" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="3" cy="3" r="1.3" fill="currentColor"/><circle cx="13" cy="3" r="1.3" fill="currentColor"/><circle cx="3" cy="13" r="1.3" fill="currentColor"/><circle cx="13" cy="13" r="1.3" fill="currentColor"/><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.1" opacity="0.7"/></svg></span>Routing Matrix</h3>
+        <h3><span class="chip cyan" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="3" cy="3" r="1.3" fill="currentColor"/><circle cx="13" cy="3" r="1.3" fill="currentColor"/><circle cx="3" cy="13" r="1.3" fill="currentColor"/><circle cx="13" cy="13" r="1.3" fill="currentColor"/><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.1" opacity="0.7"/></svg></span>Routing Matrix</h3>
         <div id="routeRows"></div>
         <button class="add-route" id="addRoute">+ ADD ROUTING</button>
       </div>
 
       <div class="card">
-        <h3><span class="chip" style="background:rgba(43,38,32,0.06);color:var(--text-dim)" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2v7m0 0-3-3m3 3 3-3M3 12.5h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Preset</h3>
+        <h3><span class="chip cyan" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 2v7m0 0-3-3m3 3 3-3M3 12.5h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Preset</h3>
         <div class="io-row">
           <select id="hardwareProfile" title="Constrain LFO rates and shapes to a specific instrument">
             <option value="generic">Generic (no limits)</option>
@@ -412,7 +379,7 @@
         <div class="graph-hint">Colored lines are each active source, already scaled by its routing amount - the <strong>white line is their sum</strong>, the actual signal this destination receives. With only one source routed here, white will always be a smaller copy of its color: that's the amount scaling it down, not a second source.</div>
       </div>
 
-      <div class="overview-panel">
+      <div class="card overview-panel">
         <div class="overview-head">
           <h3>All Destinations, At Once</h3>
           <p>Every destination with an active routing, live, side by side - this is the "see the filter and the amp together" view.</p>
@@ -421,16 +388,16 @@
       </div>
 
       <div class="bottom-row">
-        <div class="dest-card">
+        <div class="card dest-card">
           <h3 id="destTitle">Destination Preview</h3>
           <div class="dest-canvas-wrap"><canvas id="destCanvas"></canvas></div>
         </div>
-        <div class="audio-card">
+        <div class="card audio-card">
           <h3>Audio Overlay</h3>
           <button class="toggle-btn" id="audioToggle">Enable Mic Input</button>
           <div class="audio-status" id="audioStatus">Off - modulation only</div>
         </div>
-        <div class="audio-card">
+        <div class="card audio-card">
           <h3>Hear It</h3>
           <button class="toggle-btn" id="testToneToggle">Play Test Tone</button>
           <div class="audio-status" id="testToneStatus">A held note, filtered and shaped live by Cutoff, Amp, Pitch &amp; Pan</div>
@@ -472,6 +439,8 @@
   </div>
 
 <script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
 <script src="../shared/session.js"></script>
 <script src="../shared/shortcuts.js"></script>
 <script>
@@ -541,9 +510,9 @@ function el(tag, attrs, children){
 }
 
 function sliderField(label, id, min, max, step, value, unit, onInput){
-  const row = el('div', {class:'field-row'});
+  const row = el('div', {class:'slider-row'});
   row.appendChild(el('label', {}, [label]));
-  const input = el('input', {type:'range', min, max, step, value, id});
+  const input = el('input', {type:'range', class:'tsl-range', min, max, step, value, id});
   const valSpan = el('span', {class:'val'}, [String(value)+(unit||'')]);
   input.addEventListener('input', () => {
     valSpan.textContent = input.value + (unit||'');
@@ -563,11 +532,11 @@ function formatHz(v){
   return (v < 1 ? v.toFixed(2) : v < 10 ? v.toFixed(1) : v.toFixed(0)) + 'Hz';
 }
 function logSliderField(label, min, max, value, onInput){
-  const row = el('div', {class:'field-row'});
+  const row = el('div', {class:'slider-row'});
   row.appendChild(el('label', {}, [label]));
   const toPos = (v) => Math.round(1000 * Math.log(v/min) / Math.log(max/min));
   const toVal = (p) => min * Math.pow(max/min, p/1000);
-  const input = el('input', {type:'range', min:0, max:1000, step:1, value:toPos(value)});
+  const input = el('input', {type:'range', class:'tsl-range', min:0, max:1000, step:1, value:toPos(value)});
   const valSpan = el('span', {class:'val'}, [formatHz(value)]);
   input.addEventListener('input', () => {
     const v = toVal(parseFloat(input.value));
@@ -1040,16 +1009,29 @@ function resizeOverviewCanvases(){
 }
 window.addEventListener('resize', resizeOverviewCanvases);
 
+
+/* ---- canvas palette ----
+   A <canvas> cannot read CSS, so these were literal ink-on-paper values and
+   stayed cream-era while the chrome went dark. They now derive from the same
+   custom properties the stylesheet uses, read once at load, so the next
+   retheme moves the drawing with it instead of leaving it behind. */
+const CSSVAR = getComputedStyle(document.documentElement);
+const INK_RGB = (CSSVAR.getPropertyValue('--ink-rgb') || '138,160,184').trim();
+function ink(a){ return 'rgba(' + INK_RGB + ',' + a + ')'; }
+function themeColor(name, fallback){
+  return (CSSVAR.getPropertyValue(name) || fallback).trim() || fallback;
+}
+
 function drawOverviewStrip(allCombined){
   Object.keys(overviewCanvases).forEach(destId => {
     const {canvas, ctx, valSpan} = overviewCanvases[destId];
     const w = canvas.width, h = canvas.height;
     if(w<=1 || h<=1) return;
     ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle = 'rgba(43,38,32,0.15)';
+    ctx.strokeStyle = ink(0.15);
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
-    drawLine(ctx, w, h, destHistory[destId], '#8B4A2B', 1.6*DPR, false);
+    drawLine(ctx, w, h, destHistory[destId], themeColor('--c-out', '#00C8FF'), 1.6*DPR, false);
     valSpan.textContent = Math.round(allCombined[destId]*100) + '%';
   });
 }
@@ -1068,7 +1050,7 @@ function renderLegend(){
     legend.appendChild(item);
   });
   const outItem = el('div', {class:'legend-item'});
-  outItem.appendChild(el('span', {class:'sw', style:'background:#8B4A2B;height:3px;'}));
+  outItem.appendChild(el('span', {class:'sw', style:`background:${themeColor('--c-out', '#00C8FF')};height:3px;`}));
   outItem.appendChild(document.createTextNode('Combined Output'));
   legend.appendChild(outItem);
 }
@@ -1124,7 +1106,7 @@ function frame(now){
 }
 
 function drawGrid(ctx, w, h, rows, cols){
-  ctx.strokeStyle = 'rgba(43,38,32,0.08)';
+  ctx.strokeStyle = ink(0.08);
   ctx.lineWidth = 1;
   for(let i=1;i<cols;i++){ const x=w*i/cols; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
   for(let j=1;j<rows;j++){ const y=h*j/rows; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
@@ -1151,7 +1133,7 @@ function drawViz(){
   vizCtx.clearRect(0,0,w,h);
   drawGrid(vizCtx, w, h, 4, 12);
 
-  vizCtx.strokeStyle = 'rgba(43,38,32,0.18)';
+  vizCtx.strokeStyle = ink(0.18);
   vizCtx.beginPath(); vizCtx.moveTo(0,h/2); vizCtx.lineTo(w,h/2); vizCtx.stroke();
 
   if(audioOn && analyser){
@@ -1163,7 +1145,7 @@ function drawViz(){
       const y = h/2 - v*(h*0.4);
       if(i===0) vizCtx.moveTo(x,y); else vizCtx.lineTo(x,y);
     }
-    vizCtx.strokeStyle = 'rgba(43,38,32,0.45)';
+    vizCtx.strokeStyle = ink(0.45);
     vizCtx.lineWidth = 1;
     vizCtx.stroke();
   }
@@ -1175,7 +1157,7 @@ function drawViz(){
     drawLine(vizCtx, w, h, history[key], colorOf(key), 1.4*DPR, false);
   });
 
-  drawLine(vizCtx, w, h, history.combined, '#8B4A2B', 2.2*DPR, true);
+  drawLine(vizCtx, w, h, history.combined, themeColor('--c-out', '#00C8FF'), 2.2*DPR, true);
 }
 
 function drawDest(value, destId){
@@ -1195,37 +1177,37 @@ function drawDest(value, destId){
       else y = h*0.18 + Math.min(1, rel/(w*0.22)) * h*0.68;
       if(x===0) destCtx.moveTo(x,y); else destCtx.lineTo(x,y);
     }
-    destCtx.strokeStyle = '#6a5a9c';
+    destCtx.strokeStyle = themeColor('--c-lfo1', '#A98CFF');
     destCtx.lineWidth = 2.2*DPR;
-    destCtx.shadowColor = '#6a5a9c'; destCtx.shadowBlur = 6;
+    destCtx.shadowColor = themeColor('--c-lfo1', '#A98CFF'); destCtx.shadowBlur = 6;
     destCtx.stroke();
     destCtx.shadowBlur = 0;
     destCtx.beginPath();
     destCtx.moveTo(cutoffX, 0); destCtx.lineTo(cutoffX, h);
-    destCtx.strokeStyle = 'rgba(43,38,32,0.35)'; destCtx.lineWidth = 1;
+    destCtx.strokeStyle = ink(0.35); destCtx.lineWidth = 1;
     destCtx.setLineDash([4,4]);
     destCtx.stroke();
     destCtx.setLineDash([]);
   } else {
     // Generic gauge: centered bar, marker position = value
     const midY = h/2;
-    destCtx.strokeStyle = 'rgba(43,38,32,0.22)';
+    destCtx.strokeStyle = ink(0.22);
     destCtx.lineWidth = 2;
     destCtx.beginPath(); destCtx.moveTo(w*0.06, midY); destCtx.lineTo(w*0.94, midY); destCtx.stroke();
     destCtx.beginPath(); destCtx.moveTo(w/2, midY-10*DPR); destCtx.lineTo(w/2, midY+10*DPR);
-    destCtx.strokeStyle = 'rgba(43,38,32,0.4)'; destCtx.stroke();
+    destCtx.strokeStyle = ink(0.4); destCtx.stroke();
 
     const x = w*0.5 + value*(w*0.44);
     const r = 9*DPR;
     destCtx.beginPath();
     destCtx.arc(x, midY, r, 0, Math.PI*2);
-    destCtx.fillStyle = '#8B4A2B';
-    destCtx.shadowColor = '#8B4A2B'; destCtx.shadowBlur = 6;
+    destCtx.fillStyle = themeColor('--c-out', '#00C8FF');
+    destCtx.shadowColor = themeColor('--c-out', '#00C8FF'); destCtx.shadowBlur = 6;
     destCtx.fill();
     destCtx.shadowBlur = 0;
 
     destCtx.font = `${11*DPR}px ui-monospace, monospace`;
-    destCtx.fillStyle = 'rgba(43,38,32,0.6)';
+    destCtx.fillStyle = ink(0.6);
     destCtx.textAlign = 'center';
     destCtx.fillText((value*100).toFixed(0)+'%', x, midY - 18*DPR);
     destCtx.textAlign = 'left';
@@ -1290,8 +1272,10 @@ if(navigator.requestMIDIAccess){
   navigator.requestMIDIAccess().then(access => {
     const inputs = [...access.inputs.values()];
     if(inputs.length === 0) return;
-    document.getElementById('midiPill').textContent = 'MIDI: ' + (inputs[0].name || 'connected');
-    document.getElementById('midiPill').classList.add('live');
+    /* The shared top-bar pill reports the device now; this stays guarded in
+       case the element is reinstated. */
+    var mp = document.getElementById('midiPill');
+    if (mp) { mp.textContent = 'MIDI: ' + (inputs[0].name || 'connected'); mp.classList.add('live'); }
     inputs.forEach(input => {
       input.onmidimessage = (msg) => {
         const [status, d1, d2] = msg.data;
@@ -1331,10 +1315,10 @@ const TUTORIAL_STEPS = [
     body: `
       <p>Five modulation generators, each with its own color and its own <strong>Enabled</strong> checkbox. Nothing contributes to anything until it's switched on:</p>
       <ul>
-        <li><span class="swatch-inline" style="background:#6a5a9c"></span><strong>LFO 1 / LFO 2</strong> - shape, rate, depth, phase, and uni/bi polarity, same controls a hardware LFO would give you.</li>
-        <li><span class="swatch-inline" style="background:#2f7a72"></span><strong>Envelope</strong> - a real ADSR. Hit <code>TRIGGER</code> to fire it once, or turn on <code>Loop</code> to have it auto-retrigger.</li>
-        <li><span class="swatch-inline" style="background:#9a6a1f"></span><strong>Performance</strong> - mod wheel, aftertouch, or velocity. Drag the slider by hand, or plug in a MIDI controller and it'll respond live.</li>
-        <li><span class="swatch-inline" style="background:#a34a72"></span><strong>Random</strong> - sample &amp; hold, smooth random, or a random walk, with a chaos amount.</li>
+        <li><span class="swatch-inline" style="background:var(--c-lfo1)"></span><strong>LFO 1 / LFO 2</strong> - shape, rate, depth, phase, and uni/bi polarity, same controls a hardware LFO would give you.</li>
+        <li><span class="swatch-inline" style="background:var(--c-env)"></span><strong>Envelope</strong> - a real ADSR. Hit <code>TRIGGER</code> to fire it once, or turn on <code>Loop</code> to have it auto-retrigger.</li>
+        <li><span class="swatch-inline" style="background:var(--c-perf)"></span><strong>Performance</strong> - mod wheel, aftertouch, or velocity. Drag the slider by hand, or plug in a MIDI controller and it'll respond live.</li>
+        <li><span class="swatch-inline" style="background:var(--c-rand)"></span><strong>Random</strong> - sample &amp; hold, smooth random, or a random walk, with a chaos amount.</li>
       </ul>
       <p>These panels are just the instrument. Nothing happens until a source is wired to a destination - that's the next step.</p>
     `
@@ -1425,6 +1409,38 @@ tutNext.addEventListener('click', () => {
 try{
   if(!localStorage.getItem('modviz-tutorial-seen')) openTutorial(true);
 }catch(e){ /* localStorage unavailable (e.g. private browsing) -- skip auto-open, help button still works */ }
+
+
+/* ---- bridge to the hardware-profile block ----
+   Same fault Loom had: everything above is inside an IIFE, and the second
+   <script> below was written as though these were globals. It threw
+   ReferenceError on load, which aborted wireModulusExtras part way through —
+   so hardware profiles never applied and whatever that function wires after
+   that point never got connected.
+
+   Two of the borrowed names are ASSIGNED by the other block, so a plain copy
+   would desynchronise: block 2 would update its own global while the drawing
+   code kept reading the private one. Those two get accessors that write
+   back through. */
+Object.defineProperty(window, 'routes', {
+  configurable: true,
+  get: function(){ return routes; },
+  set: function(v){ routes = v; }
+});
+Object.defineProperty(window, 'routeIdCounter', {
+  configurable: true,
+  get: function(){ return routeIdCounter; },
+  set: function(v){ routeIdCounter = v; }
+});
+window.SOURCES = SOURCES;
+window.buildLFO = buildLFO;
+window.buildEnv = buildEnv;
+window.buildPerf = buildPerf;
+window.buildRand = buildRand;
+window.focusSelect = focusSelect;
+window.renderRoutes = renderRoutes;
+window.renderLegend = renderLegend;
+window.frame = frame;
 
 })();
 </script>

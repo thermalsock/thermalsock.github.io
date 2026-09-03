@@ -55,7 +55,7 @@
 }
 .sound-nav-item:hover { background: var(--panel-raised); color: var(--text); }
 .sound-nav-item.active {
-  background: rgba(139, 74, 43, 0.1);
+  background: rgba(0, 200, 255, 0.1);
   color: var(--accent);
   font-weight: 600;
 }
@@ -117,7 +117,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 24px;
 }
 
 /* preserveAspectRatio="xMidYMid meet" on the SVG itself keeps the chart's
@@ -242,7 +241,7 @@
   fill: url(#knobBodyGrad);
   stroke: var(--hairline-strong);
   stroke-width: 1;
-  filter: drop-shadow(0 2px 3px rgba(43, 38, 32, 0.35));
+  filter: drop-shadow(0 2px 3px rgba(138, 160, 184, 0.35));
 }
 .knob-pointer {
   transform-origin: 35px 35px;
@@ -252,11 +251,11 @@
   stroke: var(--accent);
   stroke-width: 2.6;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(43, 38, 32, 0.4));
+  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(138, 160, 184, 0.4));
 }
 .knob-pointer-dot {
   fill: var(--accent);
-  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(43, 38, 32, 0.4));
+  filter: drop-shadow(0 0 1px var(--accent-fg)) drop-shadow(0 0 2px rgba(138, 160, 184, 0.4));
 }
 
 .knob-label {
@@ -322,7 +321,7 @@
   border-radius: 5px;
   background: linear-gradient(160deg, var(--panel-raised), var(--panel));
   border: 1px solid var(--hairline-strong);
-  box-shadow: 0 1px 2px rgba(43, 38, 32, 0.25), inset 0 1px 1px rgba(255, 250, 240, 0.5);
+  box-shadow: 0 1px 2px rgba(138, 160, 184, 0.25), inset 0 1px 1px rgba(255, 250, 240, 0.5);
 }
 .mini-btn.on {
   border-color: var(--accent-dim);
@@ -439,7 +438,7 @@
   align-items: center;
   justify-content: center;
 }
-.patch-btn.on { color: var(--accent); border-color: var(--accent-dim); background: rgba(139, 74, 43, 0.08); }
+.patch-btn.on { color: var(--accent); border-color: var(--accent-dim); background: rgba(0, 200, 255, 0.08); }
 
 @media (max-width: 900px) {
   .synth-row { flex-direction: column; }
@@ -595,11 +594,11 @@
   position: absolute;
   top: -6px; left: 50%;
   transform: translateX(-50%);
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 9px;
   letter-spacing: 0.04em;
   color: var(--accent);
-  background: var(--paper, #EDE6D6);
+  background: var(--paper, var(--chassis));
   padding: 1px 5px;
   border-radius: 4px;
   opacity: 0;
@@ -613,7 +612,7 @@
    documented preset, and it should say so rather than quietly diverge. */
 .edited-badge {
   display: none;
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 9.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -628,7 +627,7 @@
 .edited-badge.show { display: inline-block; }
 
 .pill.action {
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 11px;
   color: var(--text-dim);
   background: transparent;
@@ -644,7 +643,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 10.5px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -667,17 +666,17 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 9.5px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 .note-picker select {
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 11px;
   color: var(--text);
-  background: rgba(43, 38, 32, 0.05);
+  background: rgba(138, 160, 184, 0.05);
   border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 5px 9px;
@@ -689,10 +688,10 @@
 .sidebar-search { padding: 0 0 10px 0; }
 .sidebar-search input {
   width: 100%;
-  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-family: var(--mono, var(--mono), monospace);
   font-size: 11px;
   color: var(--text);
-  background: var(--paper-deep, #E4DBC7);
+  background: var(--paper-deep, var(--panel));
   border: 1px solid var(--hairline);
   border-radius: 8px;
   padding: 8px 11px;

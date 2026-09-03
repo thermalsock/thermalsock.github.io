@@ -7,17 +7,18 @@
 <meta name="description" content="That page isn't here. Everything else in the studio is.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#EDE6D6">
+<meta name="theme-color" content="#0B0D12">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600&family=Newsreader:ital,wght@0,400;0,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#EDE6D6; --paper-deep:#E4DBC7; --grid-line:rgba(43,38,32,0.09);
-    --ink:#2B2620; --ink-soft:#5C5346; --ink-faint:#8A8070;
-    --rust:#8B4A2B; --hairline:rgba(43,38,32,0.14);
-    --serif-display:'Fraunces', Georgia, serif;
-    --serif-body:'Newsreader', Georgia, serif;
-    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    color-scheme: dark;
+    --paper:#0B0D12; --paper-deep:#0F1118; --grid-line:rgba(138,160,184,0.07);
+    --ink:#E7F4FF; --ink-soft:#8AA0B8; --ink-faint:#5E6A7A;
+    --rust:#00C8FF; --hairline:rgba(138,160,184,0.16);
+    --serif-display:'Space Grotesk', -apple-system, system-ui, sans-serif;
+    --serif-body:'Space Grotesk', -apple-system, system-ui, sans-serif;
+    --mono:'JetBrains Mono', ui-monospace, monospace;
   }
   *{box-sizing:border-box;}
   body{
@@ -68,7 +69,7 @@
     padding:9px 20px; display:inline-block; transform:rotate(-1.2deg);
     transition:transform .3s, background .3s;
   }
-  .stamp-btn:hover{ transform:rotate(0deg) translateY(-2px); background:rgba(139,74,43,0.12); }
+  .stamp-btn:hover{ transform:rotate(0deg) translateY(-2px); background:rgba(0, 200, 255,0.12); }
 
   footer{
     position:relative; z-index:1; border-top:1px solid var(--hairline);
@@ -91,8 +92,8 @@
   <header>
     <a href="index.html" class="brand-lockup">
       <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
-        <circle cx="15" cy="15" r="13" stroke="#2B2620" stroke-width="1.4"/>
-        <circle cx="15" cy="15" r="4" fill="#8B4A2B"/>
+        <circle cx="15" cy="15" r="13" stroke="#8AA0B8" stroke-width="1.4"/>
+        <circle cx="15" cy="15" r="4" fill="#00C8FF"/>
       </svg>
       <span class="brand-lockup-text">
         <span class="brand-appname">Thermalsock Labs</span>

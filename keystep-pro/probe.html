@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en" data-app="keystep-pro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyStep Pro — MIDI Injection Probe — Thermalsock Labs</title>
+  <meta name="description" content="Timed MIDI tests that establish exactly what the KeyStep Pro's Step Record captures from an external source.">
+  <link rel="canonical" href="https://thermalsocklabs.com/keystep-pro/probe.html">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#0B0D12">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Thermalsock Labs">
+  <meta property="og:title" content="KeyStep Pro — MIDI Injection Probe">
+  <meta property="og:description" content="Timed MIDI tests that establish exactly what the KeyStep Pro's Step Record captures from an external source.">
+  <meta property="og:url" content="https://thermalsocklabs.com/keystep-pro/probe.html">
+  <meta property="og:image" content="https://thermalsocklabs.com/share-card.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="KeyStep Pro — MIDI Injection Probe">
+  <meta name="twitter:description" content="Timed MIDI tests that establish exactly what the KeyStep Pro's Step Record captures from an external source.">
+  <meta name="twitter:image" content="https://thermalsocklabs.com/share-card.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif-body); }
+  .wrap{ max-width:920px; margin:0 auto; padding:22px 24px 60px; }
+
+  h1{ font-family:var(--serif-display); font-weight:600; font-size:26px; margin:6px 0 8px; }
+  .lede{ font-size:15px; color:var(--ink-soft); line-height:1.6; max-width:70ch; margin:0 0 22px; }
+  .lede + .lede{ margin-top:-12px; }
+
+  .rig{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:rgba(138,160,184,0.06); border:1px solid var(--hairline);
+    border-radius:10px; padding:13px 15px; margin-bottom:8px;
+  }
+  .rig label{ font-family:var(--mono); font-size:10px; letter-spacing:.09em;
+              text-transform:uppercase; color:var(--ink-faint); }
+  select, input[type=number]{
+    font-family:var(--mono); font-size:12px; color:var(--ink);
+    background:var(--paper); border:1px solid var(--hairline);
+    border-radius:6px; padding:7px 9px; outline:none;
+  }
+  select:focus, input:focus{ border-color:var(--app-accent); }
+  input[type=number]{ width:74px; }
+
+  button.tsl{
+    font-family:var(--mono); font-size:11px; letter-spacing:.04em;
+    color:var(--ink-soft); background:rgba(138,160,184,0.05);
+    border:1px solid var(--hairline); border-radius:999px;
+    padding:8px 14px; cursor:pointer;
+  }
+  button.tsl:hover:not(:disabled){ color:var(--ink); border-color:var(--app-accent); }
+  button.tsl:disabled{ opacity:.4; cursor:default; }
+  button.tsl.primary{ background:var(--app-accent); border-color:var(--app-accent); color:var(--paper); font-weight:600; }
+  button.tsl.primary:hover:not(:disabled){ filter:brightness(1.1); color:var(--paper); }
+  button.tsl.danger:hover:not(:disabled){ color:var(--danger); border-color:var(--danger); }
+
+  #outWarn button{
+    font-family:var(--mono); font-size:11px; margin-left:8px;
+    background:var(--paper); border:1px solid rgba(255,90,110,0.48);
+    border-radius:999px; padding:5px 11px; cursor:pointer; color:var(--ink);
+  }
+  #outWarn button:hover{ border-color:var(--danger); }
+  .warn{
+    font-family:var(--mono); font-size:11.5px; line-height:1.6;
+    background:rgba(255,90,110,0.10); border:1px solid rgba(255,90,110,0.34);
+    border-radius:8px; padding:11px 13px; margin:10px 0 24px; color:var(--ink);
+  }
+
+  .probe{
+    border:1px solid var(--hairline); border-radius:10px;
+    padding:16px 18px; margin-bottom:14px; background:rgba(138,160,184,0.03);
+  }
+  .probe[data-answered="yes"]{ border-color:rgba(0,200,255,0.5); background:rgba(0,200,255,0.06); }
+  .probe h2{
+    font-family:var(--serif-display); font-size:17px; font-weight:600;
+    margin:0 0 4px; display:flex; align-items:baseline; gap:9px;
+  }
+  .probe h2 .n{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:.08em; }
+  .probe .asks{ font-size:14px; color:var(--ink-soft); margin:0 0 10px; line-height:1.55; }
+  .setup{
+    font-family:var(--mono); font-size:11.5px; line-height:1.7;
+    background:rgba(138,160,184,0.06); border-left:3px solid var(--app-accent);
+    border-radius:0 6px 6px 0; padding:9px 12px; margin:0 0 12px;
+  }
+  .setup b{ color:var(--ink); font-weight:600; }
+  .sends{ font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin:0 0 11px; line-height:1.6; }
+  .look{ font-size:13.5px; color:var(--ink-soft); margin:0 0 11px; line-height:1.55; }
+  .look b{ color:var(--ink); }
+  .actions{ display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+  .actions .sep{ width:1px; align-self:stretch; background:var(--hairline); margin:0 4px; }
+  button.ans{
+    font-family:var(--mono); font-size:11px; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--hairline);
+    border-radius:6px; padding:7px 11px; cursor:pointer;
+  }
+  button.ans:hover{ color:var(--ink); border-color:var(--app-accent); }
+  button.ans[aria-pressed="true"]{ background:var(--app-accent); border-color:var(--app-accent); color:var(--paper); }
+  .note{
+    width:100%; margin-top:9px; font-family:var(--mono); font-size:11.5px;
+    background:var(--paper); border:1px solid var(--hairline);
+    border-radius:6px; padding:8px 10px; color:var(--ink); outline:none;
+  }
+  .note:focus{ border-color:var(--app-accent); }
+
+  #monitor{
+    font-family:var(--mono); font-size:11px; line-height:1.55;
+    background:rgba(138,160,184,0.06); border:1px solid var(--hairline);
+    border-radius:8px; padding:11px 13px; height:150px; overflow-y:auto;
+    color:var(--ink-soft); white-space:pre-wrap; margin-top:8px;
+  }
+  h3{ font-family:var(--serif-display); font-size:16px; font-weight:600; margin:28px 0 6px; }
+  #summary{
+    font-family:var(--mono); font-size:11px; line-height:1.6;
+    background:rgba(138,160,184,0.06); border:1px solid var(--hairline);
+    border-radius:8px; padding:12px 14px; white-space:pre-wrap;
+    color:var(--ink-soft); margin-top:8px; min-height:40px;
+  }
+  #legalBar{
+    display:flex; gap:14px; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:10px; letter-spacing:.05em;
+    color:var(--ink-faint); padding:30px 0 8px;
+  }
+  #legalBar a{ color:var(--ink-faint); text-decoration:none; }
+  #legalBar a:hover{ color:var(--ink); }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <a href="../index.html" class="brand-lockup">
+        <svg width="30" height="11" viewBox="0 0 40 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="12" y="2" width="9" height="9" stroke="#5E6A7A" stroke-width="1.4"/>
+          <rect x="23" y="2" width="9" height="9" fill="#00C8FF"/>
+          <line x1="18" y1="6.5" x2="37" y2="6.5" stroke="#00C8FF" stroke-width="1.6"/>
+        </svg>
+        <span class="brand-lockup-text">
+          <span class="brand-appname">MIDI Injection Probe</span>
+          <span class="brand-sub">KeyStep Pro · Thermalsock Labs</span>
+        </span>
+      </a>
+    </div>
+    <div class="topbar-right">
+      <div data-device-bar></div>
+      
+      <a class="pill" href="index.html" style="text-decoration:none">← Panel</a>
+      <a class="pill" href="guide.html" style="text-decoration:none">Sequencing school</a>
+      <span class="pill" id="midiPill"><span class="status-dot"></span>MIDI idle</span>
+          <nav class="page-nav" data-app-switcher="keystep-pro" data-base="../" aria-label="Thermalsock Labs apps"></nav>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>What does Step Record actually capture?</h1>
+    <p class="lede">
+      The manual says notes arriving on a track's input MIDI channel are processed
+      by that track, but it does not say what survives the trip. These probes settle it. Each one sends a deliberately shaped burst of MIDI, then tells you
+      what to look for on the device. Answer as you go and copy the summary at the
+      bottom.
+    </p>
+    <p class="lede">
+      Budget about ten minutes for the first eight, five more for the follow-ups. Work through them in order — the later probes assume
+      the earlier ones passed.
+    </p>
+
+    <div class="rig">
+      <label for="outSel">Output</label>
+      <select id="outSel"><option>Connect MIDI first</option></select>
+      <label for="inSel">Input</label>
+      <select id="inSel"><option>—</option></select>
+      <label for="chan">Channel</label>
+      <input type="number" id="chan" min="1" max="16" value="1">
+      <button class="tsl primary" id="connect">Connect MIDI</button>
+      <button class="tsl danger" id="panic">All notes off</button>
+    </div>
+    <div class="warn" id="outWarn" style="display:none"></div>
+    <div class="warn" id="warn">
+      Web MIDI needs Chrome or Edge over http://localhost or https. Firefox and Safari
+      will not expose the device. Nothing here sends SysEx, so no permission prompt
+      beyond the standard MIDI one.
+    </div>
+
+    <div id="probes"></div>
+
+    <h3>MIDI coming back from the device</h3>
+    <p class="lede" style="margin-bottom:0">
+      Useful for probe 7 and for spotting whether the KeyStep Pro is echoing what you
+      send. Clock messages are filtered out or this would scroll past reading speed.
+    </p>
+    <div id="monitor">Waiting…</div>
+    <div class="actions" style="margin-top:8px">
+      <button class="tsl" id="clearMon">Clear</button>
+      <label style="margin-left:6px"><input type="checkbox" id="showClock"> show clock</label>
+    </div>
+
+    <h3>Results</h3>
+    <div id="summary">Nothing recorded yet.</div>
+    <div class="actions" style="margin-top:8px">
+      <button class="tsl primary" id="copy">Copy results</button>
+      <button class="tsl danger" id="reset">Start over</button>
+    </div>
+
+    <div id="legalBar">
+      <span>© 2026 Thermalsock Labs</span>
+      <a href="../legal/privacy.html">Privacy</a>
+      <a href="../legal/disclaimer.html">Disclaimer</a>
+    </div>
+  </div>
+
+<script src="../shared/persist.js"></script>
+<script src="../shared/devices.js"></script>
+<script src="../shared/devicebar.js" defer></script>
+<script src="../shared/session.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var store = window.TSStore ? window.TSStore.create('keystep-probe') : null;
+  var midi = null, out = null, input = null;
+  var pill = document.getElementById('midiPill');
+  var monitor = document.getElementById('monitor');
+  var monLines = [];
+
+  function setPill(text, live) {
+    pill.innerHTML = '<span class="status-dot' + (live ? ' live' : '') + '"></span>' + text;
+  }
+  var lastLine = null;
+  function log(line) {
+    if (line === lastLine) return;   /* onstatechange fires in bursts */
+    lastLine = line;
+    monLines.push(line);
+    if (monLines.length > 300) monLines.shift();
+    monitor.textContent = monLines.join('\n');
+    monitor.scrollTop = monitor.scrollHeight;
+  }
+
+  /* ---------- MIDI plumbing ---------- */
+
+  function chan() {
+    var v = parseInt(document.getElementById('chan').value, 10);
+    return Math.min(16, Math.max(1, isNaN(v) ? 1 : v)) - 1;
+  }
+  function send(bytes, at) {
+    if (!out) return;
+    try { out.send(bytes, at); } catch (e) { log('send failed: ' + e.message); }
+  }
+  /* One note, scheduled: on at t, off at t + gate. */
+  function note(pitch, vel, t, gate) {
+    send([0x90 | chan(), pitch, vel], t);
+    send([0x80 | chan(), pitch, 0], t + gate);
+  }
+  function panic() {
+    if (!out) return;
+    for (var c = 0; c < 16; c++) {
+      send([0xB0 | c, 123, 0]);
+      for (var n = 0; n < 128; n++) send([0x80 | c, n, 0]);
+    }
+    log('panic — all notes off on every channel');
+  }
+
+  function onMidiMessage(ev) {
+    var d = ev.data, status = d[0] & 0xF0, ch = (d[0] & 0x0F) + 1;
+    if (d[0] >= 0xF8) {
+      if (!document.getElementById('showClock').checked) return;
+      log('  realtime ' + d[0].toString(16));
+      return;
+    }
+    var names = { 0x80: 'note off', 0x90: 'note on', 0xA0: 'aftertouch',
+                  0xB0: 'CC', 0xC0: 'program change', 0xE0: 'pitch bend' };
+    log('ch' + ch + '  ' + (names[status] || ('status ' + status.toString(16))) +
+        '  ' + Array.prototype.slice.call(d, 1).join(' '));
+  }
+
+  var userPicked = false;
+  function populate() {
+    var os = document.getElementById('outSel'), is = document.getElementById('inSel');
+    var keepOut = userPicked && out ? out.id : null;
+    os.innerHTML = ''; is.innerHTML = '';
+    var n = 0;
+    midi.outputs.forEach(function (o) {
+      var opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.name; os.appendChild(opt); n++;
+    });
+    var m = 0;
+    var none = document.createElement('option');
+    none.value = ''; none.textContent = '(none)'; is.appendChild(none);
+    midi.inputs.forEach(function (i) {
+      var opt = document.createElement('option');
+      opt.value = i.id; opt.textContent = i.name; is.appendChild(opt); m++;
+    });
+    if (!n) {
+      var opt = document.createElement('option');
+      opt.textContent = 'No MIDI outputs found'; os.appendChild(opt);
+      setPill('No outputs', false);
+      return;
+    }
+    /* Prefer something that looks like the KeyStep Pro. */
+    var saved = (window.TSDevices && window.TSDevices.savedOutputId())
+             || (store && store.get('outId', null));
+    var pick = null;
+    midi.outputs.forEach(function (o) {
+      if (!pick && saved && o.id === saved) pick = o;
+    });
+    midi.outputs.forEach(function (o) {
+      if (!pick && /keystep/i.test(o.name)) pick = o;
+    });
+    if (!pick) midi.outputs.forEach(function (o) { if (!pick) pick = o; });
+    os.value = (keepOut && midi.outputs.get(keepOut)) ? keepOut : pick.id;
+    selectOut();
+    var savedIn = store && store.get('inId', null);
+    if (savedIn) { is.value = savedIn; selectIn(); }
+    else {
+      var pin = null;
+      midi.inputs.forEach(function (i) { if (!pin && /keystep/i.test(i.name)) pin = i; });
+      if (pin) { is.value = pin.id; selectIn(); }
+    }
+  }
+
+  /* `fromUser` matters. selectOut() also runs while the dropdown is being
+     populated, and writing back then would overwrite the site-wide choice
+     with this page's own guess — which is exactly what happened: pick a port
+     on the home page, open the probe, and the probe silently replaced it. */
+  function selectOut(fromUser) {
+    var id = document.getElementById('outSel').value;
+    out = midi.outputs.get(id) || null;
+    if (out) {
+      if (store) store.set('outId', id);
+      if (fromUser && window.TSDevices) window.TSDevices.setOutput(id);
+      setPill(out.name.slice(0, 22), true);
+      log('output: ' + out.name);
+    }
+    checkOut();
+  }
+
+  /* A saved selection outsurvives everything, including plugging the actual
+     sequencer in afterwards. If the chosen output does not look like a
+     KeyStep Pro but one is present, say so loudly — a probe fired into an
+     audio interface's MIDI port fails silently, which is the worst way to
+     fail. */
+  function checkOut() {
+    var box = document.getElementById('outWarn');
+    if (!out || !midi) { box.style.display = 'none'; return; }
+    if (/keystep/i.test(out.name)) { box.style.display = 'none'; return; }
+    var ksp = null;
+    midi.outputs.forEach(function (o) { if (!ksp && /keystep/i.test(o.name)) ksp = o; });
+    if (!ksp) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    box.textContent = 'Sending to "' + out.name + '", but "' + ksp.name +
+      '" is also connected. Probes fired at the wrong port do nothing and look like a failure.';
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'Use ' + ksp.name;
+    b.addEventListener('click', function () {
+      document.getElementById('outSel').value = ksp.id;
+      selectOut();
+    });
+    box.appendChild(b);
+  }
+  function selectIn(fromUser) {
+    var id = document.getElementById('inSel').value;
+    if (input) input.onmidimessage = null;
+    input = id ? midi.inputs.get(id) : null;
+    if (input) {
+      input.onmidimessage = onMidiMessage;
+      if (store) store.set('inId', id);
+      if (fromUser && window.TSDevices) window.TSDevices.setInput(id);
+      log('input: ' + input.name);
+    }
+  }
+
+  function doConnect() {
+    if (!navigator.requestMIDIAccess) {
+      setPill('Web MIDI unavailable', false);
+      log('This browser has no Web MIDI. Use Chrome or Edge.');
+      return;
+    }
+    navigator.requestMIDIAccess({ sysex: false }).then(function (access) {
+      midi = access;
+      midi.onstatechange = function () { populate(); };
+      populate();
+      document.getElementById('warn').style.display = 'none';
+    }).catch(function (e) {
+      setPill('MIDI blocked', false);
+      log('requestMIDIAccess failed: ' + e.message);
+    });
+  }
+  document.getElementById('connect').addEventListener('click', doConnect);
+
+  /* If the browser has already granted MIDI in this origin, skip the button —
+     no prompt is raised by requestMIDIAccess once permission is on record. */
+  if (!navigator.requestMIDIAccess) {
+    setPill('Web MIDI unavailable', false);
+  } else if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'midi', sysex: false })
+      .then(function (status) { if (status.state === 'granted') doConnect(); })
+      .catch(function () { /* fall back to the button */ });
+  }
+  document.getElementById('outSel').addEventListener('change', function () {
+    userPicked = true; selectOut(true);
+  });
+  document.getElementById('inSel').addEventListener('change', function () { selectIn(true); });
+  document.getElementById('panic').addEventListener('click', panic);
+  document.getElementById('clearMon').addEventListener('click', function () {
+    monLines = []; monitor.textContent = 'Cleared.';
+  });
+
+  /* ---------- the probes ----------
+     Every run() gets `t`, a performance.now() baseline a beat in the future, so
+     the whole burst is scheduled rather than fired from a timer chain. Timer
+     jitter is exactly what these tests are trying to measure, so it must not
+     come from us. */
+
+  var LEAD = 250;   // ms of headroom before the first note
+
+  var PROBES = [
+    {
+      id: 'p1', title: 'Does external MIDI reach the sequencer at all?',
+      asks: 'Everything else depends on this. If it fails, check that the track input channel matches and that the KeyStep Pro is not filtering the port.',
+      setup: 'Select <b>Track 1</b>. Press <b>Record</b> so Step Record is armed — the display jumps to step 1 and waits. Do not press Play.',
+      sends: 'C3 E3 G3 B3, velocity 100, 120 ms gate, 400 ms apart, on the channel above.',
+      look: 'Steps <b>1–4</b> should now hold those four notes. Press <b>Step Edit</b> and step through to confirm the pitches.',
+      answers: ['All four landed', 'Some landed', 'Nothing landed'],
+      run: function (t) {
+        [48, 52, 55, 59].forEach(function (p, i) { note(p, 100, t + i * 400, 120); });
+      }
+    },
+    {
+      id: 'p2', title: 'Is velocity captured from the incoming note-on?',
+      asks: 'If yes, the generator can write dynamics straight into the pattern. If no, velocity has to become a knob crib sheet the user dials by hand.',
+      setup: 'Clear the pattern (<b>Shift</b> + step 1, "Clr Ptn"). Arm <b>Record</b> again.',
+      sends: 'Four notes on C3, velocities 20 / 55 / 95 / 127, 400 ms apart.',
+      look: 'In <b>Step Edit</b>, select each of steps 1–4 and watch the <b>Velocity</b> encoder ring. Four clearly different readings means yes; four identical ones means the KeyStep Pro substitutes a default.',
+      answers: ['Four different values', 'All the same', 'Only two levels'],
+      run: function (t) {
+        [20, 55, 95, 127].forEach(function (v, i) { note(48, v, t + i * 400, 120); });
+      }
+    },
+    {
+      id: 'p3', title: 'Does a simultaneous chord land on one step?',
+      asks: 'A step holds up to 16 notes, so chords should stack. The question is whether identical timestamps are read as one gesture or three.',
+      setup: 'Clear the pattern. Arm <b>Record</b>.',
+      sends: 'C3 + E3 + G3, all three note-ons at the same timestamp, all three note-offs 300 ms later.',
+      look: 'Either <b>step 1</b> holds a three-note chord, or steps 1–3 each hold one note. Press step 1 to hear what is stored there.',
+      answers: ['One step, three notes', 'Three separate steps', 'Something else'],
+      run: function (t) {
+        [48, 52, 55].forEach(function (p) { note(p, 100, t, 300); });
+      }
+    },
+    {
+      id: 'p4', title: 'How much stagger breaks a chord apart?',
+      asks: 'Real playing is never perfectly simultaneous, and neither is a scheduler under load. This finds the window we have to stay inside.',
+      setup: 'Clear the pattern. Arm <b>Record</b>. This probe sends three chords in a row.',
+      sends: 'Chord A at 0 ms stagger, chord B at 5 ms, chord C at 25 ms — separated by 900 ms.',
+      look: 'Count how many steps got used. Three steps means every chord held together. More than three means one of them split — note which.',
+      answers: ['3 steps (all held)', '4–5 steps', '6+ steps (all split)'],
+      run: function (t) {
+        [[0, 0], [1, 5], [2, 25]].forEach(function (pair) {
+          var slot = pair[0], stag = pair[1], base = t + slot * 900;
+          [48, 52, 55].forEach(function (p, i) { note(p, 100, base + i * stag, 300); });
+        });
+      }
+    },
+    {
+      id: 'p5', title: 'What is the shortest note that still registers?',
+      asks: 'Injection wants to be fast. If a 10 ms note registers, sixty-four steps take under two seconds. If it needs 100 ms, it takes seven.',
+      setup: 'Clear the pattern. Arm <b>Record</b>.',
+      sends: 'Four notes with gates of 5 / 15 / 40 / 100 ms, 500 ms apart, ascending pitch so you can tell which is which.',
+      look: 'Count how many steps got filled, and which pitches are present. C3 = 5 ms, D3 = 15 ms, E3 = 40 ms, F3 = 100 ms.',
+      answers: ['All four', 'Only 15 ms and up', 'Only 40 ms and up', 'Only 100 ms'],
+      run: function (t) {
+        [[48, 5], [50, 15], [52, 40], [53, 100]].forEach(function (pair, i) {
+          note(pair[0], 100, t + i * 500, pair[1]);
+        });
+      }
+    },
+    {
+      id: 'p6', title: 'Does note duration set the step Gate value?',
+      asks: 'Same question as velocity, for gate length. Gate is what makes a line feel legato or staccato, so it matters more than it sounds.',
+      setup: 'Clear the pattern. Arm <b>Record</b>.',
+      sends: 'Three notes on C3 with gates of 60 / 250 / 600 ms, 900 ms apart.',
+      look: 'In <b>Step Edit</b>, compare the <b>Gate</b> encoder ring on steps 1, 2 and 3.',
+      answers: ['Three different gates', 'All the same', 'Not sure'],
+      run: function (t) {
+        [60, 250, 600].forEach(function (g, i) { note(48, 100, t + i * 900, g); });
+      }
+    },
+    {
+      id: 'p7', title: 'Does Program Change switch the pattern?',
+      asks: 'If it does, the browser can act as an arranger for the standalone box — firing patterns in sequence during a performance.',
+      setup: 'Leave Step Record. Make sure the track has more than one pattern with something in it.',
+      sends: 'Program Change 0, then Program Change 2, four seconds apart, on the track input channel.',
+      look: 'Watch the <b>Pattern</b> indicator and the step LEDs. Does the selected pattern change on its own?',
+      answers: ['Pattern changed', 'No change', 'Changed but wrong pattern'],
+      run: function (t) {
+        send([0xC0 | chan(), 0], t);
+        send([0xC0 | chan(), 2], t + 4000);
+      }
+    },
+    {
+      id: 'p8', title: 'Does realtime record quantise cleanly?',
+      asks: 'The fallback if Step Record turns out to be lossy. Slower and tempo-bound, but it captures gate and velocity from the performance.',
+      setup: 'Set the KeyStep Pro to <b>120 BPM</b>, time division 1/16, quantise on. Hold <b>Record</b> and press <b>Play</b> to enter Realtime Record.',
+      sends: 'Sixteen notes at exactly 125 ms apart — 1/16 notes at 120 BPM — walking up a scale.',
+      look: 'Stop, then step through. Sixteen consecutive steps in ascending order means the timing survived. Gaps or doubles mean it drifted.',
+      answers: ['16 clean consecutive steps', 'Mostly right, some drift', 'Badly scattered'],
+      run: function (t) {
+        var scale = [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74];
+        scale.forEach(function (p, i) { note(p, 100, t + i * 125, 90); });
+      }
+    },
+    {
+      id: 'p9', title: 'Realtime Record: is velocity captured?',
+      asks: 'Step Record threw velocity away. This is the mode that might keep it, and the answer decides whether injection is one pass or two.',
+      setup: 'Clear the pattern. Set <b>120 BPM</b>, time division <b>1/16</b>, quantise on. Hold <b>Record</b> and press <b>Play</b> to enter Realtime Record.',
+      sends: 'Four notes a beat apart (500 ms) at velocities 20 / 55 / 95 / 127, ascending C3 D3 E3 F3.',
+      look: 'Stop. The notes should be on steps <b>1, 5, 9 and 13</b>. Select each in <b>Step Edit</b> and compare the <b>Velocity</b> ring. Four different readings means realtime keeps dynamics.',
+      answers: ['Four different values', 'All the same', 'Only two levels'],
+      run: function (t) {
+        [[48, 20], [50, 55], [52, 95], [53, 127]].forEach(function (pair, i) {
+          note(pair[0], pair[1], t + i * 500, 200);
+        });
+      }
+    },
+    {
+      id: 'p10', title: 'Realtime Record: is gate length captured?',
+      asks: 'Same question for note duration. Gate is what makes a line read as legato or staccato — losing it flattens the character of everything we generate.',
+      setup: 'Clear the pattern. Still <b>120 BPM</b>, <b>1/16</b>, quantise on. Hold <b>Record</b> + <b>Play</b> again.',
+      sends: 'Four notes a beat apart with gates of 40 / 120 / 240 / 440 ms — staccato through to nearly tied.',
+      look: 'On steps <b>1, 5, 9 and 13</b>, compare the <b>Gate</b> ring. A spread from short to long means realtime keeps articulation.',
+      answers: ['Four different gates', 'All the same', 'Only long vs short'],
+      run: function (t) {
+        [[48, 40], [50, 120], [52, 240], [53, 440]].forEach(function (pair, i) {
+          note(pair[0], 100, t + i * 500, pair[1]);
+        });
+      }
+    },
+    {
+      id: 'p11', title: 'How fast can Step Record be driven?',
+      asks: 'Probe 5 proved short notes register, but not short gaps between them. This sets how long a 64-step injection takes: three seconds or thirty.',
+      setup: 'Clear the pattern. Set pattern length to <b>32</b> or more. Arm <b>Record</b> for Step Record.',
+      sends: 'Three groups of eight notes at 200 ms, 60 ms and 25 ms per step, four seconds apart. Group 1 is around C3, group 2 around C4, group 3 around C5.',
+      look: 'Step through and count. <b>24 filled steps</b> means even 25 ms per step is safe. If the C5 group is short or missing, 25 ms is too fast; if the C4 group is short too, we are stuck near 200 ms.',
+      answers: ['All 24 steps filled', 'C3 and C4 groups only', 'C3 group only', 'Even C3 dropped notes'],
+      run: function (t) {
+        [[0, 200, 48, 60], [4000, 60, 60, 25], [7000, 25, 72, 10]].forEach(function (g) {
+          for (var i = 0; i < 8; i++) note(g[2] + i, 100, t + g[0] + i * g[1], g[3]);
+        });
+      }
+    },
+    {
+      id: 'p12', title: 'Do chords stack in Realtime Record too?',
+      asks: 'Step Record stacks them. If realtime does not, we cannot use realtime for anything polyphonic and the two-pass split comes back.',
+      setup: 'Clear the pattern. <b>120 BPM</b>, <b>1/16</b>, quantise on. Hold <b>Record</b> + <b>Play</b>.',
+      sends: 'C3+E3+G3 on the first beat, then D3+F3+A3 on the second.',
+      look: 'Two steps holding three notes each, or six steps holding one note each?',
+      answers: ['Two steps, three notes each', 'Spread across many steps', 'Only one note per chord kept'],
+      run: function (t) {
+        [48, 52, 55].forEach(function (p) { note(p, 100, t, 300); });
+        [50, 53, 57].forEach(function (p) { note(p, 100, t + 500, 300); });
+      }
+    },
+    {
+      id: 'p13', title: 'What happens when injection overruns the pattern?',
+      asks: 'The manual says Step Record loops back and overwrites. If it does, the injector has to know the pattern length and stop — otherwise the end of a sequence quietly eats its own beginning.',
+      setup: 'Clear the pattern. Set pattern length to exactly <b>16</b>. Arm <b>Record</b>.',
+      sends: 'Twenty ascending notes, 300 ms apart — four more than the pattern can hold.',
+      look: 'Check <b>steps 1–4</b>. If they hold the last four notes of the run rather than the first four, it wrapped and overwrote. If they still hold the first four, it stopped at the end.',
+      answers: ['Wrapped and overwrote', 'Stopped at step 16', 'Something else'],
+      run: function (t) {
+        for (var i = 0; i < 20; i++) note(48 + i, 100, t + i * 300, 120);
+      }
+    }
+  ];
+
+  /* ---------- render ---------- */
+
+  var results = (store && store.get('results', {})) || {};
+  var host = document.getElementById('probes');
+
+  PROBES.forEach(function (pr, idx) {
+    var card = document.createElement('div');
+    card.className = 'probe';
+    card.id = pr.id;
+
+    var h = document.createElement('h2');
+    h.innerHTML = '<span class="n">PROBE ' + (idx + 1) + '</span>' + pr.title;
+    card.appendChild(h);
+
+    var asks = document.createElement('p');
+    asks.className = 'asks'; asks.textContent = pr.asks; card.appendChild(asks);
+
+    var setup = document.createElement('div');
+    setup.className = 'setup'; setup.innerHTML = 'Set up: ' + pr.setup; card.appendChild(setup);
+
+    var sends = document.createElement('p');
+    sends.className = 'sends'; sends.textContent = 'Sends → ' + pr.sends; card.appendChild(sends);
+
+    var look = document.createElement('p');
+    look.className = 'look'; look.innerHTML = pr.look; card.appendChild(look);
+
+    var actions = document.createElement('div');
+    actions.className = 'actions';
+
+    var runBtn = document.createElement('button');
+    runBtn.className = 'tsl primary'; runBtn.textContent = 'Run probe ' + (idx + 1);
+    runBtn.addEventListener('click', function () {
+      if (!out) { log('No output selected — press Connect MIDI first.'); return; }
+      var t = performance.now() + LEAD;
+      pr.run(t);
+      log('probe ' + (idx + 1) + ' fired on channel ' + (chan() + 1));
+      runBtn.textContent = 'Run again';
+    });
+    actions.appendChild(runBtn);
+
+    var sep = document.createElement('div');
+    sep.className = 'sep'; actions.appendChild(sep);
+
+    pr.answers.forEach(function (a) {
+      var b = document.createElement('button');
+      b.className = 'ans'; b.textContent = a; b.type = 'button';
+      b.setAttribute('aria-pressed', results[pr.id] && results[pr.id].answer === a ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        results[pr.id] = results[pr.id] || {};
+        results[pr.id].answer = a;
+        results[pr.id].title = pr.title;
+        Array.prototype.forEach.call(actions.querySelectorAll('.ans'), function (o) {
+          o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+        });
+        card.setAttribute('data-answered', 'yes');
+        save();
+      });
+      actions.appendChild(b);
+    });
+    card.appendChild(actions);
+
+    var noteField = document.createElement('input');
+    noteField.className = 'note'; noteField.type = 'text';
+    noteField.placeholder = 'Anything odd? (optional)';
+    noteField.value = (results[pr.id] && results[pr.id].note) || '';
+    noteField.addEventListener('input', function () {
+      results[pr.id] = results[pr.id] || {};
+      results[pr.id].note = noteField.value;
+      results[pr.id].title = pr.title;
+      save();
+    });
+    card.appendChild(noteField);
+
+    if (results[pr.id] && results[pr.id].answer) card.setAttribute('data-answered', 'yes');
+    host.appendChild(card);
+  });
+
+  /* ---------- summary ---------- */
+
+  var summary = document.getElementById('summary');
+  function render() {
+    var lines = ['KeyStep Pro — MIDI injection probe results', ''];
+    var any = false;
+    PROBES.forEach(function (pr, i) {
+      var r = results[pr.id];
+      if (!r || (!r.answer && !r.note)) return;
+      any = true;
+      lines.push((i + 1) + '. ' + pr.title);
+      if (r.answer) lines.push('   → ' + r.answer);
+      if (r.note) lines.push('   note: ' + r.note);
+      lines.push('');
+    });
+    summary.textContent = any ? lines.join('\n') : 'Nothing recorded yet.';
+  }
+  function save() { if (store) store.set('results', results); render(); }
+  render();
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var text = summary.textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        var b = document.getElementById('copy');
+        b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy results'; }, 1400);
+      });
+    }
+  });
+  document.getElementById('reset').addEventListener('click', function () {
+    results = {}; if (store) store.set('results', {});
+    Array.prototype.forEach.call(document.querySelectorAll('.probe'), function (c) {
+      c.removeAttribute('data-answered');
+      Array.prototype.forEach.call(c.querySelectorAll('.ans'), function (b) {
+        b.setAttribute('aria-pressed', 'false');
+      });
+      var n = c.querySelector('.note'); if (n) n.value = '';
+    });
+    render();
+  });
+})();
+</script>
+<script src="../shared/app-switcher.js" defer></script>
+</body>
+</html>

@@ -87,7 +87,7 @@ export class SpectrogramView {
 
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const chipW = 62 * dpr, chipH = 18 * dpr, gap = 6 * dpr, pad = 8 * dpr;
-    ctx.font = `${Math.round(10 * dpr)}px "IBM Plex Mono", monospace`;
+    ctx.font = `${Math.round(10 * dpr)}px "JetBrains Mono", monospace`;
     ctx.textBaseline = 'middle';
     const drawChip = (x, label, active) => {
       ctx.fillStyle = active ? 'rgba(211,160,90,0.92)' : 'rgba(0,0,0,0.35)';

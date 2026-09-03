@@ -6,13 +6,13 @@ export const themes = {
   fieldNotes: {
     id: 'fieldNotes',
     label: 'Field Notes',
-    background: '#E4DBC7',
+    background: '#0F1118',
     graticuleColor: 'rgba(43, 38, 32, 0.16)',
     graticuleMinorColor: 'rgba(43, 38, 32, 0.07)',
     textColor: 'rgba(43, 38, 32, 0.82)',
     // Rust for channel A, ink-blue for channel B — the same two-accent pairing
     // used across the rest of the site (cable/link color + a secondary ink).
-    traceColors: ['#8B4A2B', '#33475C'],
+    traceColors: ['#00C8FF', '#33475C'],
     cursorColor: 'rgba(43, 38, 32, 0.65)',
     glow: false, // no CRT glow — this is ink on paper, not a phosphor tube
     glowStrength: 0,

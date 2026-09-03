@@ -23,12 +23,19 @@
 
 .hint { font-size: 12px; line-height: 1.55; color: var(--text-dim); margin: 0 0 14px 0; }
 
+/* Matches .card-title in chrome.css — the layout properties are inherited
+   from there via the shared selector; only the alias is declared here. */
 .section-title {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  margin: 0 0 8px 0;
-  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin: 0 0 12px;
 }
 
 .card { margin-bottom: 16px; }
@@ -46,7 +53,7 @@
   font-weight: 600;
   color: var(--accent);
   line-height: 1.1;
-  text-shadow: 0 0 18px rgba(139, 74, 43, 0.4);
+  text-shadow: 0 0 18px rgba(0, 200, 255, 0.4);
   margin-bottom: 4px;
 }
 .root-value .unit { font-size: 15px; color: var(--text-dim); text-shadow: none; margin-left: 4px; }
@@ -121,7 +128,7 @@
   font-family: var(--mono);
 }
 .divide-table tr:last-child td { border-bottom: none; }
-.divide-table tr.is-sub1 { background: rgba(139, 74, 43, 0.07); }
+.divide-table tr.is-sub1 { background: rgba(0, 200, 255, 0.07); }
 .divide-table tr.is-sub2 { background: rgba(167, 139, 250, 0.08); }
 .divide-table .n-col { color: var(--text-dim); width: 40px; }
 .divide-table .note-col { color: var(--text); font-weight: 600; }
@@ -138,7 +145,7 @@
   border-radius: 999px;
   padding: 3px 9px;
 }
-.assign-badge.sub1 { color: var(--accent); background: rgba(139, 74, 43, 0.15); }
+.assign-badge.sub1 { color: var(--accent); background: rgba(0, 200, 255, 0.15); }
 .assign-badge.sub2 { color: var(--violet); background: rgba(167, 139, 250, 0.15); }
 
 .sub-assign-row { display: flex; gap: 10px; margin-top: 14px; }
@@ -230,13 +237,13 @@
 }
 .library-item:hover { border-color: var(--accent-dim); }
 .library-item.active {
-  border-color: var(--accent); background: rgba(139, 74, 43, 0.08); color: var(--accent); font-weight: 600;
+  border-color: var(--accent); background: rgba(0, 200, 255, 0.08); color: var(--accent); font-weight: 600;
 }
-.library-detail { flex: 1; min-width: 0; padding: 22px; }
+.library-detail { flex: 1; min-width: 0; }
 .library-detail-title { font-size: 19px; font-weight: 700; margin: 0 0 6px 0; }
 .library-detail-cat {
   display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--accent); background: rgba(139, 74, 43, 0.1); border: 1px solid var(--accent-dim);
+  color: var(--accent); background: rgba(0, 200, 255, 0.1); border: 1px solid var(--accent-dim);
   border-radius: 999px; padding: 3px 10px; margin-bottom: 16px;
 }
 .library-detail-blurb { font-size: 13.5px; line-height: 1.65; color: var(--text-dim); margin: 0 0 22px 0; max-width: 620px; }
